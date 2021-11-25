@@ -1,10 +1,10 @@
 package io.agora.cruise.core;
 
+import io.agora.cruise.core.merge.RelNodeMergeable;
 import org.apache.calcite.rel.RelNode;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 /** NodeRel. */
 public class NodeRel extends Node<RelNode> {
@@ -32,22 +32,8 @@ public class NodeRel extends Node<RelNode> {
         if (otherNode == null) {
             return ResultNode.of(childrenResultNode);
         }
-        RelNode newPayload = mergeable.merge(this, otherNode);
-        if (newPayload == null) {
-            return ResultNode.of(childrenResultNode);
-        }
-
-        if (childrenResultNode == null) {
-            return ResultNode.of(newPayload);
-        }
-
-        return ResultNode.of(
-                newPayload.copy(
-                        newPayload.getTraitSet(),
-                        childrenResultNode.stream()
-                                .map(v -> v.payload)
-                                .collect(Collectors.toList())),
-                childrenResultNode);
+        RelNode newPayload = mergeable.merge(this, otherNode, childrenResultNode);
+        return ResultNode.of(newPayload, childrenResultNode);
     }
 
     /**

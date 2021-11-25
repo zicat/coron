@@ -174,12 +174,12 @@ public class Node<T> {
      * @param <T> payload
      * @return list
      */
-    public static <T> List<ResultNode<T>> findSubNode(Node<T> rootFrom, Node<T> nodeTo) {
+    public static <T> ResultNodeList<T> findSubNode(Node<T> rootFrom, Node<T> nodeTo) {
 
         List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
         List<Node<T>> nodeToLeaves = findAllFirstLeafNode(nodeTo);
 
-        List<ResultNode<T>> result = new ResultNodeList<>();
+        ResultNodeList<T> result = new ResultNodeList<>();
         for (Node<T> toLeaf : nodeToLeaves) {
             for (Node<T> fromLeaf : nodeFromLeaves) {
                 int size = sameSize(fromLeaf.rightBrotherSize(), toLeaf.rightBrotherSize());

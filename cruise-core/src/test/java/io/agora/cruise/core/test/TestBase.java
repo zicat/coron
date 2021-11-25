@@ -18,10 +18,10 @@ public class TestBase extends CalciteContext {
     protected static final Logger LOG = LoggerFactory.getLogger(TestBase.class);
 
     protected String ddl1 =
-            "CREATE TABLE IF NOT EXISTS test_db.test_table (c INT, d INT64, a STRING, b STRING)";
+            "CREATE TABLE IF NOT EXISTS test_db.test_table (c INT64, d INT64, a INT64, b INT64)";
 
     protected String ddl2 =
-            "CREATE TABLE IF NOT EXISTS test_db.test_table2 (e INT32, f BIGINT, g VARCHAR, h VARCHAR)";
+            "CREATE TABLE IF NOT EXISTS test_db.test_table2 (e INT64, f BIGINT, g INT64, h INT64)";
 
     public TestBase() throws SqlParseException {
         super();

@@ -14,17 +14,6 @@ import java.util.List;
 /** ProjectMergeable. */
 public class ProjectMergeable {
 
-    private static int containsField(List<RelDataTypeField> fields, RelDataTypeField field) {
-        for (int i = 0; i < fields.size(); i++) {
-            RelDataTypeField oneField = fields.get(i);
-            if (oneField.getName().equals(field.getName())
-                    && oneField.getType().equals(field.getType())) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     /**
      * merge from project and to project with children node.
      *
@@ -36,9 +25,6 @@ public class ProjectMergeable {
     public static RelNode merge(
             Project fromProject, Project toProject, ResultNodeList<RelNode> childrenResultNode) {
 
-        if (!fromProject.getInput().getRowType().equals(toProject.getInput().getRowType())) {
-            return null;
-        }
         RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
         List<RexNode> newProjects = new ArrayList<>(fromProject.getProjects());
@@ -48,14 +34,17 @@ public class ProjectMergeable {
             RexNode rexNode = toProject.getProjects().get(i);
             RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
             int fieldNameContains = containsField(newFields, field);
-            if (fieldNameContains != -1 && newProjects.get(fieldNameContains).equals(rexNode)) {
-                continue;
-            }
+            // alias name not exist, we can add this alias and it's RexNode
             if (fieldNameContains == -1) {
                 newProjects.add(rexNode);
                 newFields.add(field);
                 continue;
             }
+            if (newProjects.get(fieldNameContains).equals(rexNode)) {
+                continue;
+            }
+            // important: once alias name is equal, RexNode not equal,
+            // <p> parent RelNode fail to mapping id with name
             return null;
         }
 
@@ -66,5 +55,23 @@ public class ProjectMergeable {
                         newProjects,
                         new RelRecordType(newFields));
         return RelNodeMergeable.copy(newProject, childrenResultNode);
+    }
+
+    /**
+     * find field in field list, only check name and type.
+     *
+     * @param fields fields
+     * @param field field
+     * @return -1 if not found, else return position
+     */
+    private static int containsField(List<RelDataTypeField> fields, RelDataTypeField field) {
+        for (int i = 0; i < fields.size(); i++) {
+            RelDataTypeField oneField = fields.get(i);
+            if (oneField.getName().equals(field.getName())
+                    && oneField.getType().equals(field.getType())) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

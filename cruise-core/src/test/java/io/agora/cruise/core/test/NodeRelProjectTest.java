@@ -23,6 +23,7 @@ public class NodeRelProjectTest extends NodeRelTest {
         String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
         String sql2 = "SELECT a, b  FROM test_db.test_table";
         String expectSql = "SELECT a, b, ABS(a) c\nFROM test_db.test_table";
+        String expectSql2 = "SELECT ABS(a) c, b, a\nFROM test_db.test_table";
 
         SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
@@ -33,6 +34,10 @@ public class NodeRelProjectTest extends NodeRelTest {
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql2, resultNode);
     }
 
     @Test
@@ -48,6 +53,9 @@ public class NodeRelProjectTest extends NodeRelTest {
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        Assert.assertTrue(similar.isEmpty());
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         Assert.assertTrue(similar.isEmpty());
     }
 
@@ -65,6 +73,8 @@ public class NodeRelProjectTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         Assert.assertTrue(similar.isEmpty());
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        Assert.assertTrue(similar.isEmpty());
     }
 
     @Test
@@ -81,8 +91,11 @@ public class NodeRelProjectTest extends NodeRelTest {
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql, resultNode);
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
     }
 
@@ -92,6 +105,7 @@ public class NodeRelProjectTest extends NodeRelTest {
         String sql1 = "SELECT * FROM test_db.test_table";
         String sql2 = "SELECT abs(a) as x, b FROM test_db.test_table";
         String expectSql = "SELECT ABS(a) x, b, c, d, a\nFROM test_db.test_table";
+        String expectSql2 = "SELECT c, d, a, b, ABS(a) x\nFROM test_db.test_table";
 
         SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
@@ -100,9 +114,12 @@ public class NodeRelProjectTest extends NodeRelTest {
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql2, resultNode);
     }
 
     @Test
@@ -118,7 +135,9 @@ public class NodeRelProjectTest extends NodeRelTest {
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        Assert.assertTrue(similar.isEmpty());
 
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         Assert.assertTrue(similar.isEmpty());
     }
 
@@ -128,6 +147,7 @@ public class NodeRelProjectTest extends NodeRelTest {
         String sql1 = "SELECT a as f, b as g FROM test_db.test_table";
         String sql2 = "SELECT * FROM test_db.test_table";
         String expectSql = "SELECT c, d, a, b, a f, b g\nFROM test_db.test_table";
+        String expectSql2 = "SELECT a f, b g, c, d, a, b\nFROM test_db.test_table";
 
         SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
@@ -138,5 +158,9 @@ public class NodeRelProjectTest extends NodeRelTest {
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql2, resultNode);
     }
 }

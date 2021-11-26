@@ -25,6 +25,7 @@ public class FilterMergeable {
             ResultNodeList<RelNode> childrenResultNode,
             RexBuilder rexBuilder) {
 
+        // merge from filter condition and to filter condition with Operator OR
         final RexNode newCondition =
                 rexBuilder.makeCall(
                         SqlStdOperatorTable.OR,

@@ -143,10 +143,6 @@ public class Node<T> {
         return parent.children.get(offset);
     }
 
-    private static int sameSize(int size1, int size2) {
-        return size1 == size2 ? size1 : -1;
-    }
-
     /**
      * merge one right brother.
      *
@@ -261,5 +257,16 @@ public class Node<T> {
             }
         }
         return result;
+    }
+
+    /**
+     * checkout two size is equals.
+     *
+     * @param size1 size1
+     * @param size2 size2
+     * @return if not equals return -1 else return size
+     */
+    private static int sameSize(int size1, int size2) {
+        return size1 == size2 ? size1 : -1;
     }
 }

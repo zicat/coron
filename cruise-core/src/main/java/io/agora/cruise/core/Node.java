@@ -115,6 +115,9 @@ public class Node<T> {
      * @return size
      */
     public final int rightBrotherSize() {
+        if (isRoot()) {
+            return -1;
+        }
         return parent.children.size() - getIndexInParent();
     }
 
@@ -183,10 +186,6 @@ public class Node<T> {
         ResultNodeList<T> result = new ResultNodeList<>();
         for (Node<T> toLeaf : nodeToLeaves) {
             for (Node<T> fromLeaf : nodeFromLeaves) {
-                int size = sameSize(fromLeaf.rightBrotherSize(), toLeaf.rightBrotherSize());
-                if (size == -1) {
-                    continue;
-                }
                 ResultNode<T> leafResult = toLeaf.leafMerge(fromLeaf);
                 if (!leafResult.isPresent()) {
                     continue;
@@ -196,6 +195,7 @@ public class Node<T> {
                 Node<T> fromOffset = fromLeaf;
                 ResultNode<T> maxResultNode = null;
                 while (!toOffset.isRoot()) {
+                    int size = sameSize(fromOffset.rightBrotherSize(), toOffset.rightBrotherSize());
                     for (int i = 0; i < size; i++) {
                         if (!resultOffset.add(toOffset.rightBrotherMerge(fromOffset, i))) {
                             break;

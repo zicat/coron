@@ -31,10 +31,7 @@ public class FilterProjectMerge extends MergeRule<Filter, Project> {
         public static final Config DEFAULT = new Config(Filter.class, Project.class);
 
         public Config(Class<Filter> fromRelNodeType, Class<Project> toRelNodeType) {
-            super(
-                    fromRelNodeType,
-                    toRelNodeType,
-                    new TwoMergeType<Project, RelNode>(Project.class, RelNode.class, null) {});
+            super(fromRelNodeType, toRelNodeType, new TwoMergeType<>(Project.class, RelNode.class));
         }
 
         @Override

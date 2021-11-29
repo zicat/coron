@@ -15,5 +15,10 @@ public abstract class MergeConfig<F extends RelNode, T extends RelNode> extends 
         super(fromRelNodeType, toRelNodeType, parent);
     }
 
+    /**
+     * create merge rule by merge config.
+     *
+     * @return MergeRule
+     */
     public abstract MergeRule<F, T> toMergeRule();
 }

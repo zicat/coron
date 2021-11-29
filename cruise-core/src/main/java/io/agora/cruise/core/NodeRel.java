@@ -27,17 +27,17 @@ public class NodeRel extends Node<RelNode> {
     /**
      * boolean is similar.
      *
-     * @param otherNode other node
+     * @param toNode other node
      * @return boolean
      */
     @Override
     public ResultNode<RelNode> merge(
-            Node<RelNode> otherNode, ResultNodeList<RelNode> childrenResultNode) {
+            Node<RelNode> toNode, ResultNodeList<RelNode> childrenResultNode) {
 
-        if (otherNode == null) {
+        if (toNode == null) {
             return ResultNode.of(childrenResultNode);
         }
-        return mergePlanner.merge(this, otherNode, childrenResultNode);
+        return mergePlanner.merge(this, toNode, childrenResultNode);
     }
 
     /**

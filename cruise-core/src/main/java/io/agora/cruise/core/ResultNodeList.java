@@ -20,7 +20,7 @@ public class ResultNodeList<T> extends ArrayList<ResultNode<T>> {
 
     @Override
     public boolean add(ResultNode<T> e) {
-        if (e == null || !e.isPresent()) {
+        if (e == null || e.isEmpty()) {
             return false;
         }
         return super.add(e);

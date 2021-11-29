@@ -3,16 +3,17 @@ package io.agora.cruise.core.merge;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
+import io.agora.cruise.core.merge.rule.MergeRule;
 import org.apache.calcite.rel.RelNode;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-/** RelNodeSimilar. */
+/** RelNodeMergePlanner. */
 public class RelNodeMergePlanner {
 
-    protected List<MergeConfig<?, ?>> mergeRuleConfigs;
+    protected final List<MergeConfig<?, ?>> mergeRuleConfigs;
 
     public RelNodeMergePlanner(List<MergeConfig<?, ?>> mergeRuleConfigs) {
         this.mergeRuleConfigs = mergeRuleConfigs;
@@ -33,29 +34,34 @@ public class RelNodeMergePlanner {
 
         for (MergeConfig<?, ?> config : mergeRuleConfigs) {
             if (match(config, fromNode, toNode)) {
-                RelNode relNode = config.toMergeRule().merge(fromNode, toNode, childrenResultNode);
-                ResultNode<RelNode> resultNode = ResultNode.of(relNode, childrenResultNode);
-                resultNode.setThisLookAHead(lookAhead(config, true));
-                resultNode.setOtherLookAhead(lookAhead(config, false));
+                final MergeRule<?, ?> rule = config.toMergeRule();
+                final RelNode relNode = rule.merge(fromNode, toNode, childrenResultNode);
+                final ResultNode<RelNode> resultNode = ResultNode.of(relNode, childrenResultNode);
+                resultNode.setFromLookAhead(lookAhead(config, TwoMergeType::fromRelNodeType));
+                resultNode.setToLookAhead(lookAhead(config, TwoMergeType::toRelNodeType));
                 return resultNode;
             }
         }
         return ResultNode.of(null, childrenResultNode);
     }
 
-    private int lookAhead(TwoMergeType<?, ?> root, boolean from) {
+    /**
+     * compute the look ahead size by TwoMergeType.
+     *
+     * @param root root TwoMergeType
+     * @param handler type handler
+     * @return look ahead size
+     */
+    private int lookAhead(TwoMergeType<?, ?> root, ConfigRelNodeTypeHandler handler) {
         int ahead = 0;
         final Queue<TwoMergeType<?, ?>> queue = new LinkedList<>();
         queue.offer(root);
         while (!queue.isEmpty()) {
-            TwoMergeType<?, ?> config = queue.poll();
+            final TwoMergeType<?, ?> config = queue.poll();
             if (config.parent != null) {
                 queue.offer(config.parent);
             }
-            if (from && config.fromRelNodeType != RelNode.class) {
-                ahead++;
-            }
-            if (!from && config.toRelNodeType != RelNode.class) {
+            if (handler.getType(config) != RelNode.class) {
                 ahead++;
             }
         }
@@ -85,5 +91,17 @@ public class RelNodeMergePlanner {
             return fromTrue && toTrue;
         }
         return false;
+    }
+
+    /** ConfigRelNodeTypeHandler. */
+    private interface ConfigRelNodeTypeHandler {
+
+        /**
+         * get one type of TowMergeType.
+         *
+         * @param config TwoMergeType
+         * @return Class
+         */
+        Class<?> getType(TwoMergeType<?, ?> config);
     }
 }

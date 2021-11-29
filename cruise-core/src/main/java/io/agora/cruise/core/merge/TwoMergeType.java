@@ -16,15 +16,19 @@ public class TwoMergeType<F extends RelNode, T extends RelNode> {
         this.parent = parent;
     }
 
-    public Class<F> fromRelNodeType() {
+    public TwoMergeType(Class<F> fromRelNodeType, Class<T> toRelNodeType) {
+        this(fromRelNodeType, toRelNodeType, null);
+    }
+
+    public final Class<F> fromRelNodeType() {
         return fromRelNodeType;
     }
 
-    public TwoMergeType<?, ?> getParent() {
+    public final TwoMergeType<?, ?> getParent() {
         return parent;
     }
 
-    public Class<T> toRelNodeType() {
+    public final Class<T> toRelNodeType() {
         return toRelNodeType;
     }
 }

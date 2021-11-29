@@ -1,6 +1,7 @@
 package io.agora.cruise.core;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Node. */
 public class Node<T> {
@@ -10,11 +11,11 @@ public class Node<T> {
     protected final T payload;
     protected final int indexInParent;
 
-    public Node(T payload) {
+    protected Node(T payload) {
         this(null, payload);
     }
 
-    public Node(Node<T> parent, T payload) {
+    protected Node(Node<T> parent, T payload) {
         if (payload == null) {
             throw new IllegalArgumentException("pay load is null");
         }
@@ -105,7 +106,7 @@ public class Node<T> {
      * @param otherNode other node.
      * @return result node
      */
-    public final ResultNode<T> leafMerge(Node<T> otherNode) {
+    public final ResultNode<T> merge(Node<T> otherNode) {
         return merge(otherNode, null);
     }
 
@@ -158,7 +159,7 @@ public class Node<T> {
      * @param i i from this
      * @return result node
      */
-    private ResultNode<T> rightBrotherMerge(Node<T> otherNode, int i) {
+    protected ResultNode<T> rightBrotherMerge(Node<T> otherNode, int i) {
 
         if (otherNode.isRoot() || this.isRoot()) {
             return ResultNode.of(null);
@@ -171,133 +172,6 @@ public class Node<T> {
                 || !otherBrother.isLeaf()) {
             return ResultNode.of(null);
         }
-        return brother.leafMerge(otherBrother);
-    }
-
-    /**
-     * find the same sub node from rootFrom by nodeTo.
-     *
-     * @param rootFrom node from
-     * @param nodeTo node to
-     * @param <T> payload
-     * @return list
-     */
-    public static <T> ResultNodeList<T> findSubNode(Node<T> rootFrom, Node<T> nodeTo) {
-
-        List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
-        List<Node<T>> nodeToLeaves = findAllFirstLeafNode(nodeTo);
-
-        ResultNodeList<T> result = new ResultNodeList<>();
-        for (Node<T> toLeaf : nodeToLeaves) {
-            for (Node<T> fromLeaf : nodeFromLeaves) {
-                ResultNode<T> leafResult = toLeaf.leafMerge(fromLeaf);
-                if (!leafResult.isPresent()) {
-                    continue;
-                }
-                ResultNodeList<T> resultOffset = new ResultNodeList<>(leafResult);
-                Node<T> fromOffset = lookAHead(fromLeaf, 0);
-                Node<T> toOffset = lookAHead(toLeaf, 0);
-                ResultNode<T> maxResultNode = null;
-                while (!toOffset.isRoot()) {
-                    int size = sameSize(fromOffset.rightBrotherSize(), toOffset.rightBrotherSize());
-                    for (int i = 0; i < size; i++) {
-                        if (!resultOffset.add(toOffset.rightBrotherMerge(fromOffset, i))) {
-                            break;
-                        }
-                    }
-                    if (resultOffset.size() != size) {
-                        break;
-                    }
-                    ResultNode<T> parentResultNode = toOffset.parentMerge(fromOffset, resultOffset);
-                    if (!parentResultNode.isPresent()) {
-                        break;
-                    }
-                    resultOffset = new ResultNodeList<>(parentResultNode);
-                    fromOffset = lookAHead(fromOffset, parentResultNode.otherLookAhead);
-                    toOffset = lookAHead(toOffset, parentResultNode.thisLookAHead);
-                    maxResultNode = parentResultNode;
-                }
-                result.add(maxResultNode);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * look ahead the input node.
-     *
-     * @param node node
-     * @param ahead ahead
-     * @param <T> payload
-     * @return node
-     */
-    protected static <T> Node<T> lookAHead(Node<T> node, int ahead) {
-
-        if (ahead < 0) {
-            throw new RuntimeException("ahead must >= 0");
-        }
-        int offset = ahead;
-        Node<T> result = node;
-        while (offset > 0) {
-            result = result.parent;
-            offset--;
-        }
-        return result;
-    }
-
-    /**
-     * find all first leave nodes.
-     *
-     * <p>Example:
-     *
-     * <p>a -> b -> e
-     *
-     * <p>a -> b ->f
-     *
-     * <p>a -> c
-     *
-     * <p>a -> d
-     *
-     * <p>Got Node [e, c]
-     *
-     * @param node parent node
-     * @param <T> payload
-     * @return list
-     */
-    private static <T> List<Node<T>> findAllFirstLeafNode(Node<T> node) {
-
-        List<Node<T>> result = new ArrayList<>();
-        if (node == null) {
-            return result;
-        }
-
-        Set<Node<T>> parent = new HashSet<>();
-        Stack<Node<T>> stack = new Stack<>();
-        stack.push(node);
-        while (!stack.isEmpty()) {
-            Node<T> popNode = stack.pop();
-            if (!popNode.isLeaf()) {
-                for (int i = popNode.children.size() - 1; i >= 0; i--) {
-                    stack.push(popNode.children.get(i));
-                }
-            } else {
-                if (!popNode.isRoot() && !parent.contains(popNode.parent)) {
-                    result.add(popNode);
-                    parent.add(popNode.parent);
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * checkout two size is equals.
-     *
-     * @param size1 size1
-     * @param size2 size2
-     * @return if not equals return -1 else return size
-     */
-    private static int sameSize(int size1, int size2) {
-        return size1 == size2 ? size1 : -1;
+        return brother.merge(otherBrother);
     }
 }

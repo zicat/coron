@@ -12,8 +12,8 @@ public class ResultNode<T> {
     protected ResultNode<T> parent;
     protected final List<ResultNode<T>> children;
     protected final T payload;
-    protected int thisLookAHead = 1;
-    protected int otherLookAhead = 1;
+    protected int fromLookAhead = 1;
+    protected int toLookAhead = 1;
 
     private ResultNode(T payload, List<ResultNode<T>> children) {
         this.payload = payload;
@@ -23,16 +23,12 @@ public class ResultNode<T> {
         }
     }
 
-    public void setThisLookAHead(int thisLookAHead) {
-        this.thisLookAHead = thisLookAHead;
+    public void setFromLookAhead(int fromLookAhead) {
+        this.fromLookAhead = fromLookAhead;
     }
 
-    public void setOtherLookAhead(int otherLookAhead) {
-        this.otherLookAhead = otherLookAhead;
-    }
-
-    public static <T> ResultNode<T> of(T payload) {
-        return of(payload, null);
+    public void setToLookAhead(int toLookAhead) {
+        this.toLookAhead = toLookAhead;
     }
 
     public static <T> ResultNode<T> of(T payload, List<ResultNode<T>> children) {
@@ -51,8 +47,8 @@ public class ResultNode<T> {
         return children;
     }
 
-    public final boolean isPresent() {
-        return payload != null;
+    public final boolean isEmpty() {
+        return payload == null;
     }
 
     @Override

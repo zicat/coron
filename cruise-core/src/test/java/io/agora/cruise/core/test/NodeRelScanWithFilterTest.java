@@ -8,8 +8,8 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Test;
 
-import static io.agora.cruise.core.Node.findSubNode;
 import static io.agora.cruise.core.NodeRel.createNodeRelRoot;
+import static io.agora.cruise.core.NodeUtils.findSubNode;
 
 /** NodeRelScanWithFilterTest. */
 public class NodeRelScanWithFilterTest extends NodeRelTest {

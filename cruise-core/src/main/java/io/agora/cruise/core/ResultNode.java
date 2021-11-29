@@ -12,6 +12,8 @@ public class ResultNode<T> {
     protected ResultNode<T> parent;
     protected final List<ResultNode<T>> children;
     protected final T payload;
+    protected int thisLookAHead = 1;
+    protected int otherLookAhead = 1;
 
     private ResultNode(T payload, List<ResultNode<T>> children) {
         this.payload = payload;
@@ -19,6 +21,14 @@ public class ResultNode<T> {
         if (children != null) {
             children.forEach(child -> child.setParent(this));
         }
+    }
+
+    public void setThisLookAHead(int thisLookAHead) {
+        this.thisLookAHead = thisLookAHead;
+    }
+
+    public void setOtherLookAhead(int otherLookAhead) {
+        this.otherLookAhead = otherLookAhead;
     }
 
     public static <T> ResultNode<T> of(T payload) {

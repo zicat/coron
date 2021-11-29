@@ -133,6 +133,10 @@ public class Node<T> {
         return indexInParent;
     }
 
+    public final Node<T> getParent() {
+        return parent;
+    }
+
     /**
      * get right brother from index.
      *
@@ -191,8 +195,8 @@ public class Node<T> {
                     continue;
                 }
                 ResultNodeList<T> resultOffset = new ResultNodeList<>(leafResult);
-                Node<T> toOffset = toLeaf;
-                Node<T> fromOffset = fromLeaf;
+                Node<T> fromOffset = lookAHead(fromLeaf, 0);
+                Node<T> toOffset = lookAHead(toLeaf, 0);
                 ResultNode<T> maxResultNode = null;
                 while (!toOffset.isRoot()) {
                     int size = sameSize(fromOffset.rightBrotherSize(), toOffset.rightBrotherSize());
@@ -209,12 +213,34 @@ public class Node<T> {
                         break;
                     }
                     resultOffset = new ResultNodeList<>(parentResultNode);
-                    toOffset = toOffset.parent;
-                    fromOffset = fromOffset.parent;
+                    fromOffset = lookAHead(fromOffset, parentResultNode.otherLookAhead);
+                    toOffset = lookAHead(toOffset, parentResultNode.thisLookAHead);
                     maxResultNode = parentResultNode;
                 }
                 result.add(maxResultNode);
             }
+        }
+        return result;
+    }
+
+    /**
+     * look ahead the input node.
+     *
+     * @param node node
+     * @param ahead ahead
+     * @param <T> payload
+     * @return node
+     */
+    protected static <T> Node<T> lookAHead(Node<T> node, int ahead) {
+
+        if (ahead < 0) {
+            throw new RuntimeException("ahead must >= 0");
+        }
+        int offset = ahead;
+        Node<T> result = node;
+        while (offset > 0) {
+            result = result.parent;
+            offset--;
         }
         return result;
     }

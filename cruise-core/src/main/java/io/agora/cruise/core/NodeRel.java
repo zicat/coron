@@ -37,8 +37,7 @@ public class NodeRel extends Node<RelNode> {
         if (otherNode == null) {
             return ResultNode.of(childrenResultNode);
         }
-        final RelNode newPayload = mergePlanner.merge(this, otherNode, childrenResultNode);
-        return ResultNode.of(newPayload, childrenResultNode);
+        return mergePlanner.merge(this, otherNode, childrenResultNode);
     }
 
     /**
@@ -74,7 +73,9 @@ public class NodeRel extends Node<RelNode> {
                         ProjectMergeRule.Config.DEFAULT,
                         FilterMergeRule.Config.DEFAULT,
                         AggregateMergeRule.Config.DEFAULT,
-                        JoinMergeRule.Config.DEFAULT);
+                        JoinMergeRule.Config.DEFAULT,
+                        FilterProjectMerge.Config.DEFAULT,
+                        ProjectFilterMerge.Config.DEFAULT);
 
         RelNodeMergePlanner mergePlanner = new RelNodeMergePlanner(mergeRuleConfigs);
         return createNodeRelRoot(relRoot, mergePlanner);

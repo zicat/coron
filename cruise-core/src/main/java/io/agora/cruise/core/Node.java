@@ -152,6 +152,10 @@ public class Node<T> {
      * @return result node
      */
     private ResultNode<T> rightBrotherMerge(Node<T> otherNode, int i) {
+
+        if (otherNode.isRoot() || this.isRoot()) {
+            return ResultNode.of(null);
+        }
         Node<T> brother = rightBrother(i);
         Node<T> otherBrother = otherNode.rightBrother(i);
         if (brother == null

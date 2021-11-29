@@ -2,7 +2,7 @@ package io.agora.cruise.core;
 
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.RelNodeMergePlanner;
-import io.agora.cruise.core.merge.rule.AggregationMergeRule;
+import io.agora.cruise.core.merge.rule.AggregateMergeRule;
 import io.agora.cruise.core.merge.rule.FilterMergeRule;
 import io.agora.cruise.core.merge.rule.ProjectMergeRule;
 import io.agora.cruise.core.merge.rule.TableScanMergeRule;
@@ -76,7 +76,7 @@ public class NodeRel extends Node<RelNode> {
                         TableScanMergeRule.Config.DEFAULT,
                         ProjectMergeRule.Config.DEFAULT,
                         FilterMergeRule.Config.DEFAULT,
-                        AggregationMergeRule.Config.DEFAULT);
+                        AggregateMergeRule.Config.DEFAULT);
 
         RelNodeMergePlanner mergePlanner = new RelNodeMergePlanner(mergeRuleConfigs);
         return createNodeRelRoot(relRoot, mergePlanner);

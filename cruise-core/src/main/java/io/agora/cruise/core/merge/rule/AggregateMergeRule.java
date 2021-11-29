@@ -16,10 +16,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** AggregationMergeable. */
-public class AggregationMergeRule extends MergeRule<Aggregate, Aggregate> {
+/** AggregateMergeRule. */
+public class AggregateMergeRule extends MergeRule<Aggregate, Aggregate> {
 
-    public AggregationMergeRule(AggregationMergeRule.Config mergeConfig) {
+    public AggregateMergeRule(AggregateMergeRule.Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -227,6 +227,11 @@ public class AggregationMergeRule extends MergeRule<Aggregate, Aggregate> {
             if (toCall == null) {
                 continue;
             }
+            // if fromCall name equals toCall name, but function not equals, replace fail
+            // <example> from: select sum(p) as a ; to: select max(p) as a
+            // <reason> because all merge logic base on name, parent get name from it's input and
+            // try to found the index in merge input by name, but merge input has multi
+            // RexNode(sump(p),max(p)), and fail to select which is actually need
             if (!fromCall.equals(toCall)) {
                 return null;
             }
@@ -359,8 +364,8 @@ public class AggregationMergeRule extends MergeRule<Aggregate, Aggregate> {
         }
 
         @Override
-        public AggregationMergeRule toMergeRule() {
-            return new AggregationMergeRule(this);
+        public AggregateMergeRule toMergeRule() {
+            return new AggregateMergeRule(this);
         }
     }
 }

@@ -8,7 +8,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexShuttle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,26 +28,39 @@ public class ProjectMergeRule extends MergeRule<Project, Project> {
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode) {
 
+        // project only has one input
+        if (childrenResultNode.size() != 1) {
+            return null;
+        }
+
         final Project fromProject = (Project) fromNode.getPayload();
         final Project toProject = (Project) toNode.getPayload();
+        final RelNode newInput = childrenResultNode.get(0).getPayload();
 
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
-        final List<RexNode> newProjects = new ArrayList<>(fromProject.getProjects());
+        final List<RexNode> newProjects = new ArrayList<>();
+        for (int i = 0; i < fromProject.getProjects().size(); i++) {
+            RexNode rexNode = fromProject.getProjects().get(i);
+            RexNode newRexNode = createNewInputRexNode(rexNode, fromProject.getInput(), newInput);
+            newProjects.add(newRexNode);
+        }
+
         final List<RelDataTypeField> newFields =
                 new ArrayList<>(fromProject.getRowType().getFieldList());
 
         for (int i = 0; i < toProject.getProjects().size(); i++) {
             RexNode rexNode = toProject.getProjects().get(i);
+            RexNode newRexNode = createNewInputRexNode(rexNode, toProject.getInput(), newInput);
             RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
             int fieldNameContains = containsField(newFields, field);
-            // alias name not exist, we can add this alias and it's RexNode
             if (fieldNameContains == -1) {
-                newProjects.add(rexNode);
+                newProjects.add(newRexNode);
                 newFields.add(field);
                 continue;
             }
-            if (newProjects.get(fieldNameContains).equals(rexNode)) {
+
+            if (newProjects.get(fieldNameContains).equals(newRexNode)) {
                 continue;
             }
             // important: once alias name is equal, RexNode not equal,
@@ -53,13 +68,31 @@ public class ProjectMergeRule extends MergeRule<Project, Project> {
             return null;
         }
 
-        final Project newProject =
-                fromProject.copy(
-                        newRelTraitSet,
-                        fromProject.getInput(),
-                        newProjects,
-                        new RelRecordType(newFields));
-        return copy(newProject, childrenResultNode);
+        return fromProject.copy(
+                newRelTraitSet, newInput, newProjects, new RelRecordType(newFields));
+    }
+
+    /**
+     * create new RexNode that inputRef replace from fromInput to newInput.
+     *
+     * @param rexNode rexNode
+     * @param fromInput fromInput
+     * @param toInput toInput
+     * @return RexNode
+     */
+    private RexNode createNewInputRexNode(RexNode rexNode, RelNode fromInput, RelNode toInput) {
+        return rexNode.accept(
+                new RexShuttle() {
+                    @Override
+                    public RexNode visitInputRef(RexInputRef inputRef) {
+                        int index = inputRef.getIndex();
+                        String name = fromInput.getRowType().getFieldNames().get(index);
+                        int newIndex = findIndexByName(toInput.getRowType(), name);
+                        return newIndex == -1
+                                ? inputRef
+                                : new RexInputRef(newIndex, inputRef.getType());
+                    }
+                });
     }
 
     /**

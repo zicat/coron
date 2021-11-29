@@ -5,6 +5,7 @@ import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,5 +51,21 @@ public abstract class MergeRule<F extends RelNode, T extends RelNode> {
             inputs.add(resultNode.getPayload());
         }
         return relNode.copy(relNode.getTraitSet(), inputs);
+    }
+
+    /**
+     * find index by name from RelDataType.
+     *
+     * @param relDataType relDataType
+     * @param name name
+     * @return -1 if not found else return position
+     */
+    protected final int findIndexByName(RelDataType relDataType, String name) {
+        for (int i = 0; i < relDataType.getFieldNames().size(); i++) {
+            if (relDataType.getFieldNames().get(i).equals(name)) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

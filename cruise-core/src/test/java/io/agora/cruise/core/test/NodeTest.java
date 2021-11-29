@@ -4,8 +4,6 @@ import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNode;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -13,8 +11,6 @@ import static io.agora.cruise.core.Node.findSubNode;
 
 /** NodeTest. */
 public class NodeTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(NodeTest.class);
 
     @Test
     public void testNode() {

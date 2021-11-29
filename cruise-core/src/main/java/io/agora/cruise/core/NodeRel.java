@@ -1,22 +1,30 @@
 package io.agora.cruise.core;
 
-import io.agora.cruise.core.merge.RelNodeMergeable;
+import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.RelNodeMergePlanner;
+import io.agora.cruise.core.merge.rule.AggregationMergeRule;
+import io.agora.cruise.core.merge.rule.FilterMergeRule;
+import io.agora.cruise.core.merge.rule.ProjectMergeRule;
+import io.agora.cruise.core.merge.rule.TableScanMergeRule;
 import org.apache.calcite.rel.RelNode;
 
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 /** NodeRel. */
 public class NodeRel extends Node<RelNode> {
 
-    final RelNodeMergeable mergeable = new RelNodeMergeable();
+    protected final RelNodeMergePlanner mergePlanner;
 
-    protected NodeRel(Node<RelNode> parent, RelNode payload) {
+    protected NodeRel(RelNodeMergePlanner mergePlanner, Node<RelNode> parent, RelNode payload) {
         super(parent, payload);
+        this.mergePlanner = mergePlanner;
     }
 
-    protected NodeRel(RelNode payload) {
-        super(payload);
+    protected NodeRel(RelNodeMergePlanner mergePlanner, RelNode payload) {
+        this(mergePlanner, null, payload);
     }
 
     /**
@@ -32,7 +40,7 @@ public class NodeRel extends Node<RelNode> {
         if (otherNode == null) {
             return ResultNode.of(childrenResultNode);
         }
-        RelNode newPayload = mergeable.merge(this, otherNode, childrenResultNode);
+        final RelNode newPayload = mergePlanner.merge(this, otherNode, childrenResultNode);
         return ResultNode.of(newPayload, childrenResultNode);
     }
 
@@ -42,17 +50,35 @@ public class NodeRel extends Node<RelNode> {
      * @param relRoot rel root
      * @return node rel
      */
-    public static NodeRel createNodeRelRoot(RelNode relRoot) {
-        Queue<NodeRel> queue = new LinkedList<>();
-        NodeRel nodeRoot = new NodeRel(relRoot);
+    public static NodeRel createNodeRelRoot(RelNode relRoot, RelNodeMergePlanner mergePlanner) {
+        final Queue<NodeRel> queue = new LinkedList<>();
+        final NodeRel nodeRoot = new NodeRel(mergePlanner, relRoot);
         queue.offer(nodeRoot);
         while (!queue.isEmpty()) {
             Node<RelNode> node = queue.poll();
             RelNode relNode = node.getPayload();
             for (int i = 0; i < relNode.getInputs().size(); i++) {
-                queue.offer(new NodeRel(node, relNode.getInput(i)));
+                queue.offer(new NodeRel(mergePlanner, node, relNode.getInput(i)));
             }
         }
         return nodeRoot;
+    }
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(RelNode relRoot) {
+        List<MergeConfig<?, ?>> mergeRuleConfigs =
+                Arrays.asList(
+                        TableScanMergeRule.Config.DEFAULT,
+                        ProjectMergeRule.Config.DEFAULT,
+                        FilterMergeRule.Config.DEFAULT,
+                        AggregationMergeRule.Config.DEFAULT);
+
+        RelNodeMergePlanner mergePlanner = new RelNodeMergePlanner(mergeRuleConfigs);
+        return createNodeRelRoot(relRoot, mergePlanner);
     }
 }

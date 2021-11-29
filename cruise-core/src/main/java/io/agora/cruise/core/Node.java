@@ -67,7 +67,7 @@ public class Node<T> {
      *
      * @return t
      */
-    public T getPayload() {
+    public final T getPayload() {
         return payload;
     }
 
@@ -91,7 +91,8 @@ public class Node<T> {
      * @param otherNode other node
      * @return result node
      */
-    public ResultNode<T> parentMerge(Node<T> otherNode, ResultNodeList<T> childrenResultNode) {
+    public final ResultNode<T> parentMerge(
+            Node<T> otherNode, ResultNodeList<T> childrenResultNode) {
         if (otherNode == null || isRoot() || otherNode.isRoot()) {
             return ResultNode.of(null, childrenResultNode);
         }
@@ -104,7 +105,7 @@ public class Node<T> {
      * @param otherNode other node.
      * @return result node
      */
-    public ResultNode<T> leafMerge(Node<T> otherNode) {
+    public final ResultNode<T> leafMerge(Node<T> otherNode) {
         return merge(otherNode, null);
     }
 
@@ -113,7 +114,7 @@ public class Node<T> {
      *
      * @return size
      */
-    public int rightBrotherSize() {
+    public final int rightBrotherSize() {
         return parent.children.size() - getIndexInParent();
     }
 
@@ -135,7 +136,7 @@ public class Node<T> {
      * @param i index
      * @return node
      */
-    public Node<T> rightBrother(int i) {
+    public final Node<T> rightBrother(int i) {
         int offset = getIndexInParent() + i + 1;
         if (offset >= parent.children.size()) {
             return null;

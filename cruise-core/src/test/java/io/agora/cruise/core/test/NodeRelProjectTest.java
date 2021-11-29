@@ -20,15 +20,15 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject() throws SqlParseException {
 
-        String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
-        String sql2 = "SELECT a, b  FROM test_db.test_table";
-        String expectSql = "SELECT a, b, ABS(a) c\nFROM test_db.test_table";
-        String expectSql2 = "SELECT ABS(a) c, b, a\nFROM test_db.test_table";
+        final String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
+        final String sql2 = "SELECT a, b  FROM test_db.test_table";
+        final String expectSql = "SELECT a, b, ABS(a) c\nFROM test_db.test_table";
+        final String expectSql2 = "SELECT ABS(a) c, b, a\nFROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -43,13 +43,13 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject2() throws SqlParseException {
 
-        String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
-        String sql2 = "SELECT c, b  FROM test_db.test_table";
+        final String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
+        final String sql2 = "SELECT c, b  FROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -62,13 +62,13 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject3() throws SqlParseException {
 
-        String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
-        String sql2 = "SELECT abs(d) as c, b  FROM test_db.test_table";
+        final String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
+        final String sql2 = "SELECT abs(d) as c, b  FROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -80,14 +80,14 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject4() throws SqlParseException {
 
-        String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
-        String sql2 = "SELECT abs(a) as c, b FROM test_db.test_table";
-        String expectSql = "SELECT ABS(a) c, b\nFROM test_db.test_table";
+        final String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
+        final String sql2 = "SELECT abs(a) as c, b FROM test_db.test_table";
+        final String expectSql = "SELECT ABS(a) c, b\nFROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -102,15 +102,15 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject5() throws SqlParseException {
 
-        String sql1 = "SELECT * FROM test_db.test_table";
-        String sql2 = "SELECT abs(a) as x, b FROM test_db.test_table";
-        String expectSql = "SELECT ABS(a) x, b, c, d, a\nFROM test_db.test_table";
-        String expectSql2 = "SELECT c, d, a, b, ABS(a) x\nFROM test_db.test_table";
+        final String sql1 = "SELECT * FROM test_db.test_table";
+        final String sql2 = "SELECT abs(a) as x, b FROM test_db.test_table";
+        final String expectSql = "SELECT ABS(a) x, b, c, d, a\nFROM test_db.test_table";
+        final String expectSql2 = "SELECT c, d, a, b, ABS(a) x\nFROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -125,13 +125,13 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject6() throws SqlParseException {
 
-        String sql1 = "SELECT abs(a) as f, abs(b) as g FROM test_db.test_table";
-        String sql2 = "SELECT abs(b) as f, abs(a) as g FROM test_db.test_table";
+        final String sql1 = "SELECT abs(a) as f, abs(b) as g FROM test_db.test_table";
+        final String sql2 = "SELECT abs(b) as f, abs(a) as g FROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -144,15 +144,15 @@ public class NodeRelProjectTest extends NodeRelTest {
     @Test
     public void testProject7() throws SqlParseException {
 
-        String sql1 = "SELECT a as f, b as g FROM test_db.test_table";
-        String sql2 = "SELECT * FROM test_db.test_table";
-        String expectSql = "SELECT c, d, a, b, a f, b g\nFROM test_db.test_table";
-        String expectSql2 = "SELECT a f, b g, c, d, a, b\nFROM test_db.test_table";
+        final String sql1 = "SELECT a as f, b as g FROM test_db.test_table";
+        final String sql2 = "SELECT * FROM test_db.test_table";
+        final String expectSql = "SELECT c, d, a, b, a f, b g\nFROM test_db.test_table";
+        final String expectSql2 = "SELECT a f, b g, c, d, a, b\nFROM test_db.test_table";
 
-        SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));

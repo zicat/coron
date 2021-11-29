@@ -9,13 +9,9 @@ import org.apache.calcite.rel.rel2sql.SqlImplementor;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** TestBase. */
 public class TestBase extends CalciteContext {
-
-    protected static final Logger LOG = LoggerFactory.getLogger(TestBase.class);
 
     protected String ddl1 =
             "CREATE TABLE IF NOT EXISTS test_db.test_table (c INT64, d INT64, a INT64, b INT64)";

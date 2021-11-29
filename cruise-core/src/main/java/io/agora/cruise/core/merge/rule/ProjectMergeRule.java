@@ -1,6 +1,8 @@
-package io.agora.cruise.core.merge;
+package io.agora.cruise.core.merge.rule;
 
+import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
+import io.agora.cruise.core.merge.MergeConfig;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
@@ -12,23 +14,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** ProjectMergeable. */
-public class ProjectMergeable {
+public class ProjectMergeRule extends MergeRule<Project, Project> {
 
-    /**
-     * merge from project and to project with children node.
-     *
-     * @param fromProject from project
-     * @param toProject to project
-     * @param childrenResultNode children node
-     * @return new project
-     */
-    public static RelNode merge(
-            Project fromProject, Project toProject, ResultNodeList<RelNode> childrenResultNode) {
+    public ProjectMergeRule(ProjectMergeRule.Config mergeConfig) {
+        super(mergeConfig);
+    }
 
-        RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
+    @Override
+    public RelNode merge(
+            Node<RelNode> fromNode,
+            Node<RelNode> toNode,
+            ResultNodeList<RelNode> childrenResultNode) {
+
+        final Project fromProject = (Project) fromNode.getPayload();
+        final Project toProject = (Project) toNode.getPayload();
+
+        final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
-        List<RexNode> newProjects = new ArrayList<>(fromProject.getProjects());
-        List<RelDataTypeField> newFields = new ArrayList<>(fromProject.getRowType().getFieldList());
+        final List<RexNode> newProjects = new ArrayList<>(fromProject.getProjects());
+        final List<RelDataTypeField> newFields =
+                new ArrayList<>(fromProject.getRowType().getFieldList());
 
         for (int i = 0; i < toProject.getProjects().size(); i++) {
             RexNode rexNode = toProject.getProjects().get(i);
@@ -48,13 +53,13 @@ public class ProjectMergeable {
             return null;
         }
 
-        Project newProject =
+        final Project newProject =
                 fromProject.copy(
                         newRelTraitSet,
                         fromProject.getInput(),
                         newProjects,
                         new RelRecordType(newFields));
-        return RelNodeMergeable.copy(newProject, childrenResultNode);
+        return copy(newProject, childrenResultNode);
     }
 
     /**
@@ -64,7 +69,7 @@ public class ProjectMergeable {
      * @param field field
      * @return -1 if not found, else return position
      */
-    private static int containsField(List<RelDataTypeField> fields, RelDataTypeField field) {
+    private int containsField(List<RelDataTypeField> fields, RelDataTypeField field) {
         for (int i = 0; i < fields.size(); i++) {
             RelDataTypeField oneField = fields.get(i);
             if (oneField.getName().equals(field.getName())
@@ -73,5 +78,20 @@ public class ProjectMergeable {
             }
         }
         return -1;
+    }
+
+    /** project config. */
+    public static class Config extends MergeConfig<Project, Project> {
+
+        public static final Config DEFAULT = new Config(Project.class, Project.class);
+
+        public Config(Class<Project> fromRelNodeType, Class<Project> toRelNodeType) {
+            super(fromRelNodeType, toRelNodeType);
+        }
+
+        @Override
+        public ProjectMergeRule toMergeRule() {
+            return new ProjectMergeRule(this);
+        }
     }
 }

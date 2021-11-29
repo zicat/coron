@@ -1,7 +1,9 @@
-package io.agora.cruise.core.merge;
+package io.agora.cruise.core.merge.rule;
 
 import com.google.common.collect.ImmutableList;
+import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
+import io.agora.cruise.core.merge.MergeConfig;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
@@ -15,19 +17,16 @@ import java.util.List;
 import java.util.Map;
 
 /** AggregationMergeable. */
-public class AggregationMergeable {
+public class AggregationMergeRule extends MergeRule<Aggregate, Aggregate> {
 
-    /**
-     * merge from aggregate and ot aggregate with children node.
-     *
-     * @param fromAggregate from aggregate
-     * @param toAggregate to aggregate
-     * @param childrenResultNode children node
-     * @return new aggregate
-     */
-    public static RelNode merge(
-            Aggregate fromAggregate,
-            Aggregate toAggregate,
+    public AggregationMergeRule(AggregationMergeRule.Config mergeConfig) {
+        super(mergeConfig);
+    }
+
+    @Override
+    public RelNode merge(
+            Node<RelNode> fromNode,
+            Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode) {
 
         // aggregate only has one input
@@ -35,17 +34,22 @@ public class AggregationMergeable {
             return null;
         }
 
+        final Aggregate fromAggregate = (Aggregate) fromNode.getPayload();
+        final Aggregate toAggregate = (Aggregate) toNode.getPayload();
+
         // create new group set
-        RelNode newInput = childrenResultNode.get(0).getPayload();
-        ImmutableBitSet newGroupSet = createNewGroupSet(fromAggregate, toAggregate, newInput);
+        final RelNode newInput = childrenResultNode.get(0).getPayload();
+        final ImmutableBitSet newGroupSet = createNewGroupSet(fromAggregate, toAggregate, newInput);
         if (newGroupSet == null) {
             return null;
         }
 
-        List<AggregateCall> newAggCalls =
+        final List<AggregateCall> newAggCalls =
                 createNewAggregateCalls(fromAggregate, toAggregate, newInput);
-        RelTraitSet newRelTraitSet = fromAggregate.getTraitSet().merge(toAggregate.getTraitSet());
-        return RelNodeMergeable.copy(
+        final RelTraitSet newRelTraitSet =
+                fromAggregate.getTraitSet().merge(toAggregate.getTraitSet());
+
+        return copy(
                 fromAggregate.copy(newRelTraitSet, newInput, newGroupSet, null, newAggCalls),
                 childrenResultNode);
     }
@@ -63,11 +67,11 @@ public class AggregationMergeable {
         if (bitSet == null) {
             return null;
         }
-        List<String> fields = createNameByBitSetType(bitSet, from.getRowType());
+        final List<String> fields = createNameByBitSetType(bitSet, from.getRowType());
         if (fields == null) {
             return null;
         }
-        List<Integer> result = new ArrayList<>();
+        final List<Integer> result = new ArrayList<>();
         for (String field : fields) {
             int index = findIdByName(field, to.getRowType());
             if (index == -1) {
@@ -87,14 +91,15 @@ public class AggregationMergeable {
      * @return bit set
      */
     private static List<Integer> reMappingBitSet(List<Integer> bitSet, RelNode from, RelNode to) {
+
         if (bitSet == null) {
             return null;
         }
-        List<String> fields = createNameByBitSetType(bitSet, from.getRowType());
+        final List<String> fields = createNameByBitSetType(bitSet, from.getRowType());
         if (fields == null) {
             return null;
         }
-        List<Integer> result = new ArrayList<>();
+        final List<Integer> result = new ArrayList<>();
         for (String field : fields) {
             int index = findIdByName(field, to.getRowType());
             if (index == -1) {
@@ -115,12 +120,13 @@ public class AggregationMergeable {
      */
     private static AggregateCall newAggregateCall(
             AggregateCall call, Aggregate parentAggregate, RelNode newInput) {
-        List<Integer> newArgIds =
+
+        final List<Integer> newArgIds =
                 reMappingBitSet(call.getArgList(), parentAggregate.getInput(), newInput);
         if (newArgIds == null) {
             return null;
         }
-        int newFilterArg =
+        final int newFilterArg =
                 call.filterArg < 0
                         ? call.filterArg
                         : findIdByName(
@@ -160,10 +166,10 @@ public class AggregationMergeable {
     private static List<AggregateCall> createNewAggregateCalls(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode newInput) {
 
-        List<AggregateCall> newAggCalls = new ArrayList<>();
+        final List<AggregateCall> newAggCalls = new ArrayList<>();
         for (int i = 0; i < fromAggregate.getAggCallList().size(); i++) {
-            AggregateCall call = fromAggregate.getAggCallList().get(i);
-            AggregateCall newCall = newAggregateCall(call, fromAggregate, newInput);
+            final AggregateCall call = fromAggregate.getAggCallList().get(i);
+            final AggregateCall newCall = newAggregateCall(call, fromAggregate, newInput);
             if (newCall == null) {
                 return null;
             }
@@ -171,8 +177,8 @@ public class AggregationMergeable {
         }
 
         for (int i = 0; i < toAggregate.getAggCallList().size(); i++) {
-            AggregateCall call = toAggregate.getAggCallList().get(i);
-            AggregateCall newCall = newAggregateCall(call, toAggregate, newInput);
+            final AggregateCall call = toAggregate.getAggCallList().get(i);
+            final AggregateCall newCall = newAggregateCall(call, toAggregate, newInput);
             if (newCall == null) {
                 return null;
             }
@@ -201,7 +207,8 @@ public class AggregationMergeable {
         if (fromFields.size() != toFields.size()) {
             return null;
         }
-        List<Integer> newGroupSet = new ArrayList<>();
+
+        final List<Integer> newGroupSet = new ArrayList<>();
         for (String field : fromFields) {
             if (!toFields.contains(field)) {
                 return null;
@@ -226,35 +233,39 @@ public class AggregationMergeable {
     private static ImmutableBitSet createNewGroupSet(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode input) {
 
-        if (!sameImmutableList(
+        if (differImmutableList(
                         fromAggregate.getGroupSets(), ImmutableList.of(fromAggregate.getGroupSet()))
-                || !sameImmutableList(
+                || differImmutableList(
                         toAggregate.getGroupSets(), ImmutableList.of(toAggregate.getGroupSet()))) {
             return null;
         }
-        List<String> fromGroupFields = groupSetNames(fromAggregate);
-        List<String> toGroupFields = groupSetNames(toAggregate);
-        Map<String, AggregateCall> fromNameCallMapping = new HashMap<>();
+
+        final List<String> fromGroupFields = groupSetNames(fromAggregate);
+        final Map<String, AggregateCall> fromNameCallMapping = new HashMap<>();
         for (int i = 0; i < fromAggregate.getRowType().getFieldNames().size(); i++) {
             String aggregationName = fromAggregate.getRowType().getFieldNames().get(i);
             if (fromGroupFields.contains(aggregationName)) {
                 continue;
             }
-            AggregateCall call = fromAggregate.getAggCallList().get(i - fromGroupFields.size());
-            AggregateCall newCall = newAggregateCall(call, fromAggregate, input);
+            final AggregateCall call =
+                    fromAggregate.getAggCallList().get(i - fromGroupFields.size());
+            final AggregateCall newCall = newAggregateCall(call, fromAggregate, input);
             fromNameCallMapping.put(aggregationName, newCall);
         }
-        Map<String, AggregateCall> toNameCallMapping = new HashMap<>();
+
+        final List<String> toGroupFields = groupSetNames(toAggregate);
+        final Map<String, AggregateCall> toNameCallMapping = new HashMap<>();
         for (int i = 0; i < toAggregate.getRowType().getFieldNames().size(); i++) {
             String aggregationName = toAggregate.getRowType().getFieldNames().get(i);
             if (toGroupFields.contains(aggregationName)) {
                 continue;
             }
 
-            AggregateCall call = toAggregate.getAggCallList().get(i - toGroupFields.size());
-            AggregateCall newCall = newAggregateCall(call, toAggregate, input);
+            final AggregateCall call = toAggregate.getAggCallList().get(i - toGroupFields.size());
+            final AggregateCall newCall = newAggregateCall(call, toAggregate, input);
             toNameCallMapping.put(aggregationName, newCall);
         }
+
         for (Map.Entry<String, AggregateCall> entry : fromNameCallMapping.entrySet()) {
             AggregateCall toCall = toNameCallMapping.get(entry.getKey());
             if (toCall == null) {
@@ -265,7 +276,7 @@ public class AggregationMergeable {
             }
         }
 
-        List<Integer> newGroupSet =
+        final List<Integer> newGroupSet =
                 sameIndexMapping(fromGroupFields, toGroupFields, input.getRowType());
         return newGroupSet == null ? null : ImmutableBitSet.of(newGroupSet);
     }
@@ -325,11 +336,11 @@ public class AggregationMergeable {
     private static List<String> createNameByBitSetType(
             List<Integer> bitSet, RelDataType relDataType) {
         List<String> result = new ArrayList<>();
-        for (int i = 0; i < bitSet.size(); i++) {
-            if (relDataType.getFieldNames().size() <= bitSet.get(i)) {
+        for (Integer integer : bitSet) {
+            if (relDataType.getFieldNames().size() <= integer) {
                 return null;
             }
-            result.add(relDataType.getFieldNames().get(bitSet.get(i)));
+            result.add(relDataType.getFieldNames().get(integer));
         }
         return result;
     }
@@ -341,18 +352,33 @@ public class AggregationMergeable {
      * @param list2 list2
      * @return boolean
      */
-    private static boolean sameImmutableList(
+    private static boolean differImmutableList(
             ImmutableList<ImmutableBitSet> list1, ImmutableList<ImmutableBitSet> list2) {
         if (list1.size() != list2.size()) {
-            return false;
+            return true;
         }
         for (int i = 0; i < list1.size(); i++) {
             ImmutableBitSet bs1 = list1.get(i);
             ImmutableBitSet bs2 = list2.get(i);
             if (!bs1.equals(bs2)) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
+    }
+
+    /** aggregate config. */
+    public static class Config extends MergeConfig<Aggregate, Aggregate> {
+
+        public static final Config DEFAULT = new Config(Aggregate.class, Aggregate.class);
+
+        public Config(Class<Aggregate> fromRelNodeType, Class<Aggregate> toRelNodeType) {
+            super(fromRelNodeType, toRelNodeType);
+        }
+
+        @Override
+        public AggregationMergeRule toMergeRule() {
+            return new AggregationMergeRule(this);
+        }
     }
 }

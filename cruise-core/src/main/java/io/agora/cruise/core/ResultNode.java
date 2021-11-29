@@ -41,7 +41,7 @@ public class ResultNode<T> {
         return children;
     }
 
-    public boolean isPresent() {
+    public final boolean isPresent() {
         return payload != null;
     }
 

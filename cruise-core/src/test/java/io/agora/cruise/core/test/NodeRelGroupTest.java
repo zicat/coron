@@ -176,4 +176,30 @@ public class NodeRelGroupTest extends NodeRelTest {
         resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
     }
+
+    @Test
+    public void testGroup7() throws SqlParseException {
+        final String sql1 =
+                "select a, nvl(b, null) as b1, count(distinct if(c > 0, b, a)) as c1 from test_db.test_table group by a, nvl(b, null)";
+        final String sql2 =
+                "select a, nvl(b, null) as b1, sum(d) as sd from test_db.test_table group by a, nvl(b, null)";
+        final String expectSql =
+                "SELECT a, nvl(b, NULL) b1, COUNT(DISTINCT if(c > 0, b, a)) c1, SUM(d) sd\n"
+                        + "FROM test_db.test_table\n"
+                        + "GROUP BY nvl(b, NULL), a";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNodeList<RelNode> similar =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        ResultNode<RelNode> resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql, resultNode);
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql, resultNode);
+    }
 }

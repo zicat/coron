@@ -48,4 +48,14 @@ public class SqlToRelConverterToolTest extends TestBase {
         Assert.assertNotNull(relRoot.rel);
         LOG.info(relRoot.rel.explain());
     }
+
+    @Test
+    public void testDistinct() throws SqlParseException {
+        final String querySql =
+                "select a, count(distinct if(c > 0, b, a)) as c1 from test_db.test_table group by a";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        Assert.assertNotNull(relRoot.rel);
+        LOG.info(relRoot.rel.explain());
+    }
 }

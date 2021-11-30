@@ -7,7 +7,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 
 /** TableScanMergeable. */
-public class TableScanMergeRule extends MergeRule<TableScan, TableScan> {
+public class TableScanMergeRule extends MergeRule {
 
     public TableScanMergeRule(TableScanMergeRule.Config mergeConfig) {
         super(mergeConfig);
@@ -27,7 +27,7 @@ public class TableScanMergeRule extends MergeRule<TableScan, TableScan> {
     }
 
     /** table scan config. */
-    public static class Config extends MergeConfig<TableScan, TableScan> {
+    public static class Config extends MergeConfig {
 
         public static final Config DEFAULT = new Config(TableScan.class, TableScan.class);
 

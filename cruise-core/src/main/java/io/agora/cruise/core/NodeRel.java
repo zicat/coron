@@ -67,7 +67,7 @@ public class NodeRel extends Node<RelNode> {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot) {
-        List<MergeConfig<?, ?>> mergeRuleConfigs =
+        List<MergeConfig> mergeRuleConfigs =
                 Arrays.asList(
                         TableScanMergeRule.Config.DEFAULT,
                         ProjectMergeRule.Config.DEFAULT,

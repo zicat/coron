@@ -12,7 +12,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 /** FilterMergeable. */
-public class FilterMergeRule extends MergeRule<Filter, Filter> {
+public class FilterMergeRule extends MergeRule {
 
     final RexBuilder rexBuilder = new RexBuilder(CalciteContext.sqlTypeFactory());
 
@@ -38,7 +38,7 @@ public class FilterMergeRule extends MergeRule<Filter, Filter> {
     }
 
     /** Filter Config. */
-    public static class Config extends MergeConfig<Filter, Filter> {
+    public static class Config extends MergeConfig {
 
         public static final Config DEFAULT = new Config(Filter.class, Filter.class);
 

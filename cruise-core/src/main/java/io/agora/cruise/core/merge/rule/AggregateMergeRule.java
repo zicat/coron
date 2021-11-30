@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /** AggregateMergeRule. */
-public class AggregateMergeRule extends MergeRule<Aggregate, Aggregate> {
+public class AggregateMergeRule extends MergeRule {
 
     public AggregateMergeRule(AggregateMergeRule.Config mergeConfig) {
         super(mergeConfig);
@@ -355,7 +355,7 @@ public class AggregateMergeRule extends MergeRule<Aggregate, Aggregate> {
     }
 
     /** aggregate config. */
-    public static class Config extends MergeConfig<Aggregate, Aggregate> {
+    public static class Config extends MergeConfig {
 
         public static final Config DEFAULT = new Config(Aggregate.class, Aggregate.class);
 

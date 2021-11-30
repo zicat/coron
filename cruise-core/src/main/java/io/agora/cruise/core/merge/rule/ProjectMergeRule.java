@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** ProjectMergeable. */
-public class ProjectMergeRule extends MergeRule<Project, Project> {
+public class ProjectMergeRule extends MergeRule {
 
     public ProjectMergeRule(ProjectMergeRule.Config mergeConfig) {
         super(mergeConfig);
@@ -114,7 +114,7 @@ public class ProjectMergeRule extends MergeRule<Project, Project> {
     }
 
     /** project config. */
-    public static class Config extends MergeConfig<Project, Project> {
+    public static class Config extends MergeConfig {
 
         public static final Config DEFAULT = new Config(Project.class, Project.class);
 

@@ -1,34 +1,31 @@
 package io.agora.cruise.core.merge;
 
-import org.apache.calcite.rel.RelNode;
-
 /** TwoMergeType. */
-public class TwoMergeType<F extends RelNode, T extends RelNode> {
+public class TwoMergeType {
 
-    protected final Class<F> fromRelNodeType;
-    protected final Class<T> toRelNodeType;
-    protected final TwoMergeType<?, ?> parent;
+    protected final Class<?> fromRelNodeType;
+    protected final Class<?> toRelNodeType;
+    protected final TwoMergeType parent;
 
-    public TwoMergeType(
-            Class<F> fromRelNodeType, Class<T> toRelNodeType, TwoMergeType<?, ?> parent) {
+    public TwoMergeType(Class<?> fromRelNodeType, Class<?> toRelNodeType, TwoMergeType parent) {
         this.fromRelNodeType = fromRelNodeType;
         this.toRelNodeType = toRelNodeType;
         this.parent = parent;
     }
 
-    public TwoMergeType(Class<F> fromRelNodeType, Class<T> toRelNodeType) {
+    public TwoMergeType(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
         this(fromRelNodeType, toRelNodeType, null);
     }
 
-    public final Class<F> fromRelNodeType() {
+    public final Class<?> fromRelNodeType() {
         return fromRelNodeType;
     }
 
-    public final TwoMergeType<?, ?> getParent() {
+    public final TwoMergeType getParent() {
         return parent;
     }
 
-    public final Class<T> toRelNodeType() {
+    public final Class<?> toRelNodeType() {
         return toRelNodeType;
     }
 }

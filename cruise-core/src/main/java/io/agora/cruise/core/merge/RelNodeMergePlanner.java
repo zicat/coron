@@ -13,9 +13,9 @@ import java.util.Queue;
 /** RelNodeMergePlanner. */
 public class RelNodeMergePlanner {
 
-    protected final List<MergeConfig<?, ?>> mergeRuleConfigs;
+    protected final List<MergeConfig> mergeRuleConfigs;
 
-    public RelNodeMergePlanner(List<MergeConfig<?, ?>> mergeRuleConfigs) {
+    public RelNodeMergePlanner(List<MergeConfig> mergeRuleConfigs) {
         this.mergeRuleConfigs = mergeRuleConfigs;
     }
 
@@ -32,9 +32,9 @@ public class RelNodeMergePlanner {
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode) {
 
-        for (MergeConfig<?, ?> config : mergeRuleConfigs) {
+        for (MergeConfig config : mergeRuleConfigs) {
             if (match(config, fromNode, toNode)) {
-                final MergeRule<?, ?> rule = config.toMergeRule();
+                final MergeRule rule = config.toMergeRule();
                 final RelNode relNode = rule.merge(fromNode, toNode, childrenResultNode);
                 final ResultNode<RelNode> resultNode = ResultNode.of(relNode, childrenResultNode);
                 resultNode.setFromLookAhead(lookAhead(config, TwoMergeType::fromRelNodeType));
@@ -52,12 +52,12 @@ public class RelNodeMergePlanner {
      * @param handler type handler
      * @return look ahead size
      */
-    private int lookAhead(TwoMergeType<?, ?> root, ConfigRelNodeTypeHandler handler) {
+    private int lookAhead(TwoMergeType root, ConfigRelNodeTypeHandler handler) {
         int ahead = 0;
-        final Queue<TwoMergeType<?, ?>> queue = new LinkedList<>();
+        final Queue<TwoMergeType> queue = new LinkedList<>();
         queue.offer(root);
         while (!queue.isEmpty()) {
-            final TwoMergeType<?, ?> config = queue.poll();
+            final TwoMergeType config = queue.poll();
             if (config.parent != null) {
                 queue.offer(config.parent);
             }
@@ -76,7 +76,7 @@ public class RelNodeMergePlanner {
      * @param toNode toNode
      * @return boolean
      */
-    private boolean match(TwoMergeType<?, ?> config, Node<RelNode> fromNode, Node<RelNode> toNode) {
+    private boolean match(TwoMergeType config, Node<RelNode> fromNode, Node<RelNode> toNode) {
 
         if (config.parent == null
                 || match(config.parent, fromNode.getParent(), toNode.getParent())) {
@@ -102,6 +102,6 @@ public class RelNodeMergePlanner {
          * @param config TwoMergeType
          * @return Class
          */
-        Class<?> getType(TwoMergeType<?, ?> config);
+        Class<?> getType(TwoMergeType config);
     }
 }

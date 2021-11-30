@@ -1,17 +1,15 @@
 package io.agora.cruise.core.merge;
 
 import io.agora.cruise.core.merge.rule.MergeRule;
-import org.apache.calcite.rel.RelNode;
 
 /** MergeConfig. */
-public abstract class MergeConfig<F extends RelNode, T extends RelNode> extends TwoMergeType<F, T> {
+public abstract class MergeConfig extends TwoMergeType {
 
-    public MergeConfig(Class<F> fromRelNodeType, Class<T> toRelNodeType) {
+    public MergeConfig(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
         this(fromRelNodeType, toRelNodeType, null);
     }
 
-    public MergeConfig(
-            Class<F> fromRelNodeType, Class<T> toRelNodeType, TwoMergeType<?, ?> parent) {
+    public MergeConfig(Class<?> fromRelNodeType, Class<?> toRelNodeType, TwoMergeType parent) {
         super(fromRelNodeType, toRelNodeType, parent);
     }
 
@@ -20,5 +18,5 @@ public abstract class MergeConfig<F extends RelNode, T extends RelNode> extends 
      *
      * @return MergeRule
      */
-    public abstract MergeRule<F, T> toMergeRule();
+    public abstract MergeRule toMergeRule();
 }

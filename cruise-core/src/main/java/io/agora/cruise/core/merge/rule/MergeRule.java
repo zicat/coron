@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** MergeRule. */
-public abstract class MergeRule<F extends RelNode, T extends RelNode> {
+public abstract class MergeRule {
 
-    protected final MergeConfig<F, T> mergeConfig;
+    protected final MergeConfig mergeConfig;
 
-    public MergeRule(MergeConfig<F, T> mergeConfig) {
+    public MergeRule(MergeConfig mergeConfig) {
         this.mergeConfig = mergeConfig;
     }
 

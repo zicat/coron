@@ -9,11 +9,11 @@ import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 
 /** ProjectFilterMerge. */
-public class ProjectFilterMerge extends MergeRule<Project, Filter> {
+public class ProjectFilterMerge extends MergeRule {
 
     final ProjectMergeRule projectMergeRule = new ProjectMergeRule(ProjectMergeRule.Config.DEFAULT);
 
-    public ProjectFilterMerge(MergeConfig<Project, Filter> mergeConfig) {
+    public ProjectFilterMerge(MergeConfig mergeConfig) {
         super(mergeConfig);
     }
 
@@ -26,12 +26,12 @@ public class ProjectFilterMerge extends MergeRule<Project, Filter> {
     }
 
     /** ProjectFilterMerge Config. */
-    public static class Config extends MergeConfig<Project, Filter> {
+    public static class Config extends MergeConfig {
 
         public static final Config DEFAULT = new Config(Project.class, Filter.class);
 
         public Config(Class<Project> fromRelNodeType, Class<Filter> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType, new TwoMergeType<>(RelNode.class, Project.class));
+            super(fromRelNodeType, toRelNodeType, new TwoMergeType(RelNode.class, Project.class));
         }
 
         @Override

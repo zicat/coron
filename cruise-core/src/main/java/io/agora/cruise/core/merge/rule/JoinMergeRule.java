@@ -7,9 +7,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
 
 /** JoinMergeRule. */
-public class JoinMergeRule extends MergeRule<Join, Join> {
+public class JoinMergeRule extends MergeRule {
 
-    public JoinMergeRule(MergeConfig<Join, Join> mergeConfig) {
+    public JoinMergeRule(MergeConfig mergeConfig) {
         super(mergeConfig);
     }
 
@@ -47,7 +47,7 @@ public class JoinMergeRule extends MergeRule<Join, Join> {
     }
 
     /** Join Config. */
-    public static class Config extends MergeConfig<Join, Join> {
+    public static class Config extends MergeConfig {
 
         public static final Config DEFAULT = new Config(Join.class, Join.class);
 

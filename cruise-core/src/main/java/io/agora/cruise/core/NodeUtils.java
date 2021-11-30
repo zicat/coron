@@ -1,9 +1,55 @@
 package io.agora.cruise.core;
 
+import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.RelNodeMergePlanner;
+import io.agora.cruise.core.merge.rule.*;
+import org.apache.calcite.rel.RelNode;
+
 import java.util.*;
 
 /** NodeUtils. */
 public class NodeUtils {
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(RelNode relRoot, RelNodeMergePlanner mergePlanner) {
+        final Queue<NodeRel> queue = new LinkedList<>();
+        final NodeRel nodeRoot = new NodeRel(mergePlanner, relRoot);
+        queue.offer(nodeRoot);
+        while (!queue.isEmpty()) {
+            Node<RelNode> node = queue.poll();
+            RelNode relNode = node.getPayload();
+            for (int i = 0; i < relNode.getInputs().size(); i++) {
+                queue.offer(new NodeRel(mergePlanner, node, relNode.getInput(i)));
+            }
+        }
+        return nodeRoot;
+    }
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(RelNode relRoot) {
+        List<MergeConfig> mergeRuleConfigs =
+                Arrays.asList(
+                        TableScanMergeRule.Config.DEFAULT,
+                        ProjectMergeRule.Config.DEFAULT,
+                        FilterMergeRule.Config.DEFAULT,
+                        AggregateMergeRule.Config.DEFAULT,
+                        JoinMergeRule.Config.DEFAULT,
+                        FilterProjectMerge.Config.DEFAULT,
+                        ProjectFilterMerge.Config.DEFAULT);
+
+        RelNodeMergePlanner mergePlanner = new RelNodeMergePlanner(mergeRuleConfigs);
+        return createNodeRelRoot(relRoot, mergePlanner);
+    }
 
     /**
      * find the same sub nodes from rootFrom and rootTo.

@@ -9,7 +9,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static io.agora.cruise.core.NodeRel.createNodeRelRoot;
+import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findSubNode;
 
 /** NodeRelJoinTest. */

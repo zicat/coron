@@ -109,11 +109,7 @@ public class NodeRelJoinTest extends NodeRelTest {
                 "select t2.a as x from test_db.test_table t1 "
                         + "inner join test_db.test_table t2 "
                         + "on t1.a = t2.a and t1.b=t2.b ";
-        final String expectSql1 =
-                "SELECT test_table0.a x, test_table.a\n"
-                        + "FROM test_db.test_table\n"
-                        + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
-        final String expectSql2 =
+        final String expectSql =
                 "SELECT test_table.a, test_table0.a x\n"
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
@@ -126,11 +122,11 @@ public class NodeRelJoinTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test

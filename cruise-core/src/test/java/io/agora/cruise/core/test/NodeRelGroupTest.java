@@ -23,10 +23,7 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as aa, b as bb, sum(c) from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 =
                 "select a as cc, c as dd, sum(d) from test_db.test_table WHERE c < 1000 group by a, c";
-
-        final String expectSql1 =
-                "SELECT a, c, d, b\nFROM test_db.test_table\nWHERE c < 1000 OR c < 5000";
-        final String expectSql2 =
+        final String expectSql =
                 "SELECT a, b, c, d\nFROM test_db.test_table\nWHERE c < 5000 OR c < 1000";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
@@ -37,11 +34,11 @@ public class NodeRelGroupTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test
@@ -50,9 +47,7 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as aa, b as bb, sum(c) from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 =
                 "select a as cc, b as dd, sum(d) from test_db.test_table WHERE c < 1000 group by a, b";
-        final String expectSql1 =
-                "SELECT a, b, d, c\nFROM test_db.test_table\nWHERE c < 1000 OR c < 5000";
-        final String expectSql2 =
+        final String expectSql =
                 "SELECT a, b, c, d\nFROM test_db.test_table\nWHERE c < 5000 OR c < 1000";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
@@ -63,11 +58,11 @@ public class NodeRelGroupTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test
@@ -77,13 +72,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as aa, b as bb, sum(c) as p from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 =
                 "select a as cc, b as dd, max(c) as t from test_db.test_table WHERE c < 1000 group by a, b";
-        final String expectSql1 =
-                "SELECT a cc, b dd, MAX(c) t, a aa, b bb, SUM(c) p\n"
-                        + "FROM test_db.test_table\n"
-                        + "WHERE c < 1000 OR c < 5000\n"
-                        + "GROUP BY a, b";
-        final String expectSql2 =
-                "SELECT a aa, b bb, SUM(c) p, a cc, b dd, MAX(c) t\n"
+        final String expectSql =
+                "SELECT a aa, b bb, a cc, b dd, SUM(c) p, MAX(c) t\n"
                         + "FROM test_db.test_table\n"
                         + "WHERE c < 5000 OR c < 1000\n"
                         + "GROUP BY a, b";
@@ -96,11 +86,11 @@ public class NodeRelGroupTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test
@@ -110,13 +100,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as aa, b as bb, sum(c) from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 =
                 "select a as cc, b as dd, sum(c) from test_db.test_table WHERE c < 1000 group by a, b";
-        final String expectSql1 =
-                "SELECT a cc, b dd, SUM(c), a aa, b bb\n"
-                        + "FROM test_db.test_table\n"
-                        + "WHERE c < 1000 OR c < 5000\n"
-                        + "GROUP BY a, b";
-        final String expectSql2 =
-                "SELECT a aa, b bb, SUM(c), a cc, b dd\n"
+        final String expectSql =
+                "SELECT SUM(c), a aa, b bb, a cc, b dd\n"
                         + "FROM test_db.test_table\n"
                         + "WHERE c < 5000 OR c < 1000\n"
                         + "GROUP BY a, b";
@@ -129,11 +114,11 @@ public class NodeRelGroupTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test
@@ -143,13 +128,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as aa, b as bb, sum(c) as p from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 =
                 "select a as cc, b as dd, sum(c) as t from test_db.test_table WHERE c < 1000 group by a, b";
-        final String expectSql1 =
-                "SELECT a cc, b dd, SUM(c) t, a aa, b bb, SUM(c) p\n"
-                        + "FROM test_db.test_table\n"
-                        + "WHERE c < 1000 OR c < 5000\n"
-                        + "GROUP BY a, b";
-        final String expectSql2 =
-                "SELECT a aa, b bb, SUM(c) p, a cc, b dd, SUM(c) t\n"
+        final String expectSql =
+                "SELECT a aa, b bb, a cc, b dd, SUM(c) p, SUM(c) t\n"
                         + "FROM test_db.test_table\n"
                         + "WHERE c < 5000 OR c < 1000\n"
                         + "GROUP BY a, b";
@@ -162,11 +142,11 @@ public class NodeRelGroupTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test
@@ -176,13 +156,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as aa, sum(c) as p from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 =
                 "select a as cc, b, sum(c) as t from test_db.test_table WHERE c < 1000 group by a, b";
-        final String expectSql1 =
-                "SELECT a cc, b, SUM(c) t, a aa, SUM(c) p\n"
-                        + "FROM test_db.test_table\n"
-                        + "WHERE c < 1000 OR c < 5000\n"
-                        + "GROUP BY a, b";
-        final String expectSql2 =
-                "SELECT a aa, SUM(c) p, a cc, b, SUM(c) t\n"
+        final String expectSql =
+                "SELECT a aa, b, a cc, SUM(c) p, SUM(c) t\n"
                         + "FROM test_db.test_table\n"
                         + "WHERE c < 5000 OR c < 1000\n"
                         + "GROUP BY a, b";
@@ -195,10 +170,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 }

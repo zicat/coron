@@ -13,8 +13,7 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /** ProjectMergeable. */
 public class ProjectMergeRule extends MergeRule {
@@ -40,28 +39,24 @@ public class ProjectMergeRule extends MergeRule {
 
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
-        final List<RexNode> newProjects = new ArrayList<>();
+        final Map<RelDataTypeField, RexNode> projectRexMapping = new HashMap<>();
         for (int i = 0; i < fromProject.getProjects().size(); i++) {
             RexNode rexNode = fromProject.getProjects().get(i);
             RexNode newRexNode = createNewInputRexNode(rexNode, fromProject.getInput(), newInput);
-            newProjects.add(newRexNode);
+            projectRexMapping.put(fromProject.getRowType().getFieldList().get(i), newRexNode);
         }
-
-        final List<RelDataTypeField> newFields =
-                new ArrayList<>(fromProject.getRowType().getFieldList());
 
         for (int i = 0; i < toProject.getProjects().size(); i++) {
             RexNode rexNode = toProject.getProjects().get(i);
             RexNode newRexNode = createNewInputRexNode(rexNode, toProject.getInput(), newInput);
             RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
-            int fieldNameContains = containsField(newFields, field);
-            if (fieldNameContains == -1) {
-                newProjects.add(newRexNode);
-                newFields.add(field);
+            RexNode fromRexNode = findRexNode(projectRexMapping, field);
+            if (fromRexNode == null) {
+                projectRexMapping.put(field, newRexNode);
                 continue;
             }
 
-            if (newProjects.get(fieldNameContains).equals(newRexNode)) {
+            if (fromRexNode.equals(newRexNode)) {
                 continue;
             }
             // important: once alias name is equal, RexNode not equal,
@@ -69,8 +64,14 @@ public class ProjectMergeRule extends MergeRule {
             return null;
         }
 
+        // sort field to make output result uniqueness
+        final List<RelDataTypeField> newFields = new ArrayList<>(projectRexMapping.keySet());
+        newFields.sort(Comparator.comparing(RelDataTypeField::getName));
+        final List<RexNode> newRexNodes = new ArrayList<>();
+        newFields.forEach(field -> newRexNodes.add(projectRexMapping.get(field)));
+
         return fromProject.copy(
-                newRelTraitSet, newInput, newProjects, new RelRecordType(newFields));
+                newRelTraitSet, newInput, newRexNodes, new RelRecordType(newFields));
     }
 
     /**
@@ -97,21 +98,22 @@ public class ProjectMergeRule extends MergeRule {
     }
 
     /**
-     * find field in field list, only check name and type.
+     * found RexNode by name.
      *
-     * @param fields fields
+     * @param project projects
      * @param field field
-     * @return -1 if not found, else return position
+     * @return null if not found else return RexNode
      */
-    private int containsField(List<RelDataTypeField> fields, RelDataTypeField field) {
-        for (int i = 0; i < fields.size(); i++) {
-            RelDataTypeField oneField = fields.get(i);
+    private RexNode findRexNode(Map<RelDataTypeField, RexNode> project, RelDataTypeField field) {
+        for (Map.Entry<RelDataTypeField, RexNode> entry : project.entrySet()) {
+            final RelDataTypeField oneField = entry.getKey();
+            final RexNode value = entry.getValue();
             if (oneField.getName().equals(field.getName())
                     && oneField.getType().equals(field.getType())) {
-                return i;
+                return value;
             }
         }
-        return -1;
+        return null;
     }
 
     /** project config. */

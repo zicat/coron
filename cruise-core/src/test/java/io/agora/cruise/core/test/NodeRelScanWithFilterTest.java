@@ -21,8 +21,7 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
 
         final String sql1 = "SELECT a as s, b AS aaa FROM test_db.test_table WHERE c < 5000";
         final String sql2 = "SELECT a, b, c  FROM test_db.test_table";
-        final String expectSql1 = "SELECT a, b, c, a s, b aaa\nFROM test_db.test_table";
-        final String expectSql2 = "SELECT a s, b aaa, a, b, c\nFROM test_db.test_table";
+        final String expectSql = "SELECT a, b aaa, b, c, a s\nFROM test_db.test_table";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
@@ -32,11 +31,11 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 
     @Test
@@ -45,12 +44,8 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
         final String sql1 =
                 "select a as aa, b as bb, sum(c) as t from test_db.test_table WHERE c < 5000 group by a, b";
         final String sql2 = "select a as cc, b as dd, sum(d) from test_db.test_table group by a, b";
-        final String expectSql1 =
-                "SELECT a cc, b dd, SUM(d), a aa, b bb, SUM(c) t\n"
-                        + "FROM test_db.test_table\n"
-                        + "GROUP BY a, b";
-        final String expectSql2 =
-                "SELECT a aa, b bb, SUM(c) t, a cc, b dd, SUM(d)\n"
+        final String expectSql =
+                "SELECT SUM(d), a aa, b bb, a cc, b dd, SUM(c) t\n"
                         + "FROM test_db.test_table\n"
                         + "GROUP BY a, b";
 
@@ -62,10 +57,10 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 }

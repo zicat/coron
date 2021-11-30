@@ -29,10 +29,19 @@ public class FilterMergeRule extends MergeRule {
 
         final Filter fromFilter = (Filter) fromNode.getPayload();
         final Filter toFilter = (Filter) toNode.getPayload();
+
+        // sort condition to make output result uniqueness
         final RexNode newCondition =
-                rexBuilder.makeCall(
-                        SqlStdOperatorTable.OR,
-                        ImmutableList.of(fromFilter.getCondition(), toFilter.getCondition()));
+                fromFilter.getCondition().toString().compareTo(toFilter.getCondition().toString())
+                                > 0
+                        ? rexBuilder.makeCall(
+                                SqlStdOperatorTable.OR,
+                                ImmutableList.of(
+                                        fromFilter.getCondition(), toFilter.getCondition()))
+                        : rexBuilder.makeCall(
+                                SqlStdOperatorTable.OR,
+                                ImmutableList.of(
+                                        toFilter.getCondition(), fromFilter.getCondition()));
         final Filter newFilter =
                 fromFilter.copy(fromFilter.getTraitSet(), fromFilter.getInput(), newCondition);
         return copy(newFilter, childrenResultNode);

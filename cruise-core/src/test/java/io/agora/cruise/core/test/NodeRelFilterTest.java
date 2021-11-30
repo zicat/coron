@@ -22,12 +22,8 @@ public class NodeRelFilterTest extends NodeRelTest {
         final String sql1 =
                 "SELECT a as s, b AS aaa FROM test_db.test_table WHERE c < 5000 UNION ALL SELECT g, h FROM test_db.test_table2";
         final String sql2 = "SELECT a, b, c  FROM test_db.test_table WHERE c < 1000";
-        final String expectSql1 =
-                "SELECT a, b, c, a s, b aaa\n"
-                        + "FROM test_db.test_table\n"
-                        + "WHERE c < 1000 OR c < 5000";
-        final String expectSql2 =
-                "SELECT a s, b aaa, a, b, c\n"
+        final String expectSql =
+                "SELECT a, b aaa, b, c, a s\n"
                         + "FROM test_db.test_table\n"
                         + "WHERE c < 5000 OR c < 1000";
 
@@ -39,10 +35,10 @@ public class NodeRelFilterTest extends NodeRelTest {
         ResultNodeList<RelNode> similar =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         ResultNode<RelNode> resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql1, resultNode);
+        assertResultNode(expectSql, resultNode);
 
         similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         resultNode = oneResultCheck(similar);
-        assertResultNode(expectSql2, resultNode);
+        assertResultNode(expectSql, resultNode);
     }
 }

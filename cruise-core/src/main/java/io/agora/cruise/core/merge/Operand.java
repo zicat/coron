@@ -1,27 +1,33 @@
 package io.agora.cruise.core.merge;
 
 /** TwoMergeType. */
-public class TwoMergeType {
+public class Operand {
+
+    public static final Class<?> ENY_NODE_TYPE = Object.class;
 
     protected final Class<?> fromRelNodeType;
     protected final Class<?> toRelNodeType;
-    protected final TwoMergeType parent;
+    protected Operand parent;
 
-    public TwoMergeType(Class<?> fromRelNodeType, Class<?> toRelNodeType, TwoMergeType parent) {
+    public Operand(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
         this.fromRelNodeType = fromRelNodeType;
         this.toRelNodeType = toRelNodeType;
-        this.parent = parent;
     }
 
-    public TwoMergeType(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
-        this(fromRelNodeType, toRelNodeType, null);
+    public Operand operand(Operand parent) {
+        this.parent = parent;
+        return this;
+    }
+
+    public static Operand of(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
+        return new Operand(fromRelNodeType, toRelNodeType);
     }
 
     public final Class<?> fromRelNodeType() {
         return fromRelNodeType;
     }
 
-    public final TwoMergeType getParent() {
+    public final Operand parent() {
         return parent;
     }
 

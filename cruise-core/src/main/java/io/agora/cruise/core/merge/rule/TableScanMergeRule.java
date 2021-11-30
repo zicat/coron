@@ -3,13 +3,14 @@ package io.agora.cruise.core.merge.rule;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 
 /** TableScanMergeable. */
 public class TableScanMergeRule extends MergeRule {
 
-    public TableScanMergeRule(TableScanMergeRule.Config mergeConfig) {
+    public TableScanMergeRule(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -29,11 +30,10 @@ public class TableScanMergeRule extends MergeRule {
     /** table scan config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT = new Config(TableScan.class, TableScan.class);
-
-        public Config(Class<TableScan> fromRelNodeType, Class<TableScan> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType);
-        }
+        public static final Config DEFAULT =
+                new Config()
+                        .withOperandSupplier(Operand.of(TableScan.class, TableScan.class))
+                        .as(Config.class);
 
         @Override
         public TableScanMergeRule toMergeRule() {

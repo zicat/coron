@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import static io.agora.cruise.core.merge.Operand.ENY_NODE_TYPE;
+
 /** RelNodeMergePlanner. */
 public class RelNodeMergePlanner {
 
@@ -33,12 +35,12 @@ public class RelNodeMergePlanner {
             ResultNodeList<RelNode> childrenResultNode) {
 
         for (MergeConfig config : mergeRuleConfigs) {
-            if (match(config, fromNode, toNode)) {
+            if (match(config.operand(), fromNode, toNode)) {
                 final MergeRule rule = config.toMergeRule();
                 final RelNode relNode = rule.merge(fromNode, toNode, childrenResultNode);
                 final ResultNode<RelNode> resultNode = ResultNode.of(relNode, childrenResultNode);
-                resultNode.setFromLookAhead(lookAhead(config, TwoMergeType::fromRelNodeType));
-                resultNode.setToLookAhead(lookAhead(config, TwoMergeType::toRelNodeType));
+                resultNode.setFromLookAhead(lookAhead(config.operand(), Operand::fromRelNodeType));
+                resultNode.setToLookAhead(lookAhead(config.operand(), Operand::toRelNodeType));
                 return resultNode;
             }
         }
@@ -52,16 +54,16 @@ public class RelNodeMergePlanner {
      * @param handler type handler
      * @return look ahead size
      */
-    private int lookAhead(TwoMergeType root, ConfigRelNodeTypeHandler handler) {
+    private int lookAhead(Operand root, ConfigRelNodeTypeHandler handler) {
         int ahead = 0;
-        final Queue<TwoMergeType> queue = new LinkedList<>();
+        final Queue<Operand> queue = new LinkedList<>();
         queue.offer(root);
         while (!queue.isEmpty()) {
-            final TwoMergeType config = queue.poll();
-            if (config.parent != null) {
-                queue.offer(config.parent);
+            final Operand operand = queue.poll();
+            if (operand.parent() != null) {
+                queue.offer(operand.parent());
             }
-            if (handler.getType(config) != RelNode.class) {
+            if (handler.getType(operand) != ENY_NODE_TYPE) {
                 ahead++;
             }
         }
@@ -71,23 +73,23 @@ public class RelNodeMergePlanner {
     /**
      * match config with from node and to node.
      *
-     * @param config config
+     * @param operand config
      * @param fromNode fromNode
      * @param toNode toNode
      * @return boolean
      */
-    private boolean match(TwoMergeType config, Node<RelNode> fromNode, Node<RelNode> toNode) {
+    private boolean match(Operand operand, Node<RelNode> fromNode, Node<RelNode> toNode) {
 
-        if (config.parent == null
-                || match(config.parent, fromNode.getParent(), toNode.getParent())) {
+        if (operand.parent() == null
+                || match(operand.parent(), fromNode.getParent(), toNode.getParent())) {
             boolean fromTrue =
-                    (config.fromRelNodeType == RelNode.class)
+                    (operand.fromRelNodeType() == ENY_NODE_TYPE)
                             || (fromNode != null
-                                    && config.fromRelNodeType.isInstance(fromNode.getPayload()));
+                                    && operand.fromRelNodeType().isInstance(fromNode.getPayload()));
             boolean toTrue =
-                    (config.toRelNodeType == RelNode.class)
+                    (operand.toRelNodeType() == ENY_NODE_TYPE)
                             || (toNode != null
-                                    && config.toRelNodeType.isInstance(toNode.getPayload()));
+                                    && operand.toRelNodeType().isInstance(toNode.getPayload()));
             return fromTrue && toTrue;
         }
         return false;
@@ -102,6 +104,6 @@ public class RelNodeMergePlanner {
          * @param config TwoMergeType
          * @return Class
          */
-        Class<?> getType(TwoMergeType config);
+        Class<?> getType(Operand config);
     }
 }

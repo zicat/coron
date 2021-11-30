@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
@@ -19,7 +20,7 @@ import java.util.Map;
 /** AggregateMergeRule. */
 public class AggregateMergeRule extends MergeRule {
 
-    public AggregateMergeRule(AggregateMergeRule.Config mergeConfig) {
+    public AggregateMergeRule(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -357,11 +358,10 @@ public class AggregateMergeRule extends MergeRule {
     /** aggregate config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT = new Config(Aggregate.class, Aggregate.class);
-
-        public Config(Class<Aggregate> fromRelNodeType, Class<Aggregate> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType);
-        }
+        public static final Config DEFAULT =
+                new Config()
+                        .withOperandSupplier(Operand.of(Aggregate.class, Aggregate.class))
+                        .as(Config.class);
 
         @Override
         public AggregateMergeRule toMergeRule() {

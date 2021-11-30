@@ -3,6 +3,7 @@ package io.agora.cruise.core.merge.rule;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
@@ -18,7 +19,7 @@ import java.util.List;
 /** ProjectMergeable. */
 public class ProjectMergeRule extends MergeRule {
 
-    public ProjectMergeRule(ProjectMergeRule.Config mergeConfig) {
+    public ProjectMergeRule(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -116,11 +117,10 @@ public class ProjectMergeRule extends MergeRule {
     /** project config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT = new Config(Project.class, Project.class);
-
-        public Config(Class<Project> fromRelNodeType, Class<Project> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType);
-        }
+        public static final Config DEFAULT =
+                new Config()
+                        .withOperandSupplier(Operand.of(Project.class, Project.class))
+                        .as(Config.class);
 
         @Override
         public ProjectMergeRule toMergeRule() {

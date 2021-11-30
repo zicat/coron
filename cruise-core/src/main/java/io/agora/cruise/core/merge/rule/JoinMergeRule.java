@@ -3,13 +3,14 @@ package io.agora.cruise.core.merge.rule;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
 
 /** JoinMergeRule. */
 public class JoinMergeRule extends MergeRule {
 
-    public JoinMergeRule(MergeConfig mergeConfig) {
+    public JoinMergeRule(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -49,11 +50,10 @@ public class JoinMergeRule extends MergeRule {
     /** Join Config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT = new Config(Join.class, Join.class);
-
-        public Config(Class<Join> fromRelNodeType, Class<Join> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType);
-        }
+        public static final Config DEFAULT =
+                new Config()
+                        .withOperandSupplier(Operand.of(Join.class, Join.class))
+                        .as(Config.class);
 
         @Override
         public JoinMergeRule toMergeRule() {

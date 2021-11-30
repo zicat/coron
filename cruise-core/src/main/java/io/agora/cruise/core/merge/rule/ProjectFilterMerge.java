@@ -3,17 +3,19 @@ package io.agora.cruise.core.merge.rule;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
-import io.agora.cruise.core.merge.TwoMergeType;
+import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
+
+import static io.agora.cruise.core.merge.Operand.ENY_NODE_TYPE;
 
 /** ProjectFilterMerge. */
 public class ProjectFilterMerge extends MergeRule {
 
     final ProjectMergeRule projectMergeRule = new ProjectMergeRule(ProjectMergeRule.Config.DEFAULT);
 
-    public ProjectFilterMerge(MergeConfig mergeConfig) {
+    public ProjectFilterMerge(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -28,11 +30,12 @@ public class ProjectFilterMerge extends MergeRule {
     /** ProjectFilterMerge Config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT = new Config(Project.class, Filter.class);
-
-        public Config(Class<Project> fromRelNodeType, Class<Filter> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType, new TwoMergeType(RelNode.class, Project.class));
-        }
+        public static final Config DEFAULT =
+                new Config()
+                        .withOperandSupplier(
+                                Operand.of(Project.class, Filter.class)
+                                        .operand(Operand.of(ENY_NODE_TYPE, Project.class)))
+                        .as(Config.class);
 
         @Override
         public ProjectFilterMerge toMergeRule() {

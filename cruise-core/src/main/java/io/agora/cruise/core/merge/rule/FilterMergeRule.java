@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.core.merge.Operand;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
@@ -16,7 +17,7 @@ public class FilterMergeRule extends MergeRule {
 
     final RexBuilder rexBuilder = new RexBuilder(CalciteContext.sqlTypeFactory());
 
-    public FilterMergeRule(FilterMergeRule.Config mergeConfig) {
+    public FilterMergeRule(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -40,11 +41,10 @@ public class FilterMergeRule extends MergeRule {
     /** Filter Config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT = new Config(Filter.class, Filter.class);
-
-        public Config(Class<Filter> fromRelNodeType, Class<Filter> toRelNodeType) {
-            super(fromRelNodeType, toRelNodeType);
-        }
+        public static final Config DEFAULT =
+                new Config()
+                        .withOperandSupplier(Operand.of(Filter.class, Filter.class))
+                        .as(Config.class);
 
         @Override
         public FilterMergeRule toMergeRule() {

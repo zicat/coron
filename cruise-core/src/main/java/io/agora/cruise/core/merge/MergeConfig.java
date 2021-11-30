@@ -3,14 +3,37 @@ package io.agora.cruise.core.merge;
 import io.agora.cruise.core.merge.rule.MergeRule;
 
 /** MergeConfig. */
-public abstract class MergeConfig extends TwoMergeType {
+public abstract class MergeConfig {
 
-    public MergeConfig(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
-        this(fromRelNodeType, toRelNodeType, null);
+    protected Operand operand;
+
+    public final MergeConfig withOperandSupplier(Operand operand) {
+        this.operand = operand;
+        return this;
     }
 
-    public MergeConfig(Class<?> fromRelNodeType, Class<?> toRelNodeType, TwoMergeType parent) {
-        super(fromRelNodeType, toRelNodeType, parent);
+    /**
+     * get operand.
+     *
+     * @return operand
+     */
+    public final Operand operand() {
+        return operand;
+    }
+
+    /**
+     * cast as sub class.
+     *
+     * @param clazz clazz
+     * @param <T> type t
+     * @return sub class instance
+     */
+    @SuppressWarnings({"unchecked"})
+    public <T> T as(Class<T> clazz) {
+        if (clazz.isInstance(this)) {
+            return (T) this;
+        }
+        throw new RuntimeException("cast error");
     }
 
     /**

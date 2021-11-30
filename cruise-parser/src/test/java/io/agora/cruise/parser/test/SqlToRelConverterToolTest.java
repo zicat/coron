@@ -35,4 +35,17 @@ public class SqlToRelConverterToolTest extends TestBase {
         Assert.assertNotNull(relRoot.rel);
         LOG.info(relRoot.rel.explain());
     }
+
+    @Test
+    public void testOverWindow() throws SqlParseException {
+        final String querySql =
+                "select * from(select a, b "
+                        + ",row_number() over (partition by a order by b asc) as row_num"
+                        + ",max(c) over (partition by a)  as max_c "
+                        + "from test_db.test_table) t where t.row_num = 1";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        Assert.assertNotNull(relRoot.rel);
+        LOG.info(relRoot.rel.explain());
+    }
 }

@@ -6,6 +6,9 @@ import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexShuttle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,29 @@ public abstract class MergeRule {
             Node<RelNode> fromNode,
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode);
+
+    /**
+     * create new RexNode that inputRef replace from fromInput to newInput.
+     *
+     * @param rexNode rexNode
+     * @param fromInput fromInput
+     * @param toInput toInput
+     * @return RexNode
+     */
+    protected RexNode createNewInputRexNode(RexNode rexNode, RelNode fromInput, RelNode toInput) {
+        return rexNode.accept(
+                new RexShuttle() {
+                    @Override
+                    public RexNode visitInputRef(RexInputRef inputRef) {
+                        int index = inputRef.getIndex();
+                        String name = fromInput.getRowType().getFieldNames().get(index);
+                        int newIndex = findIndexByName(toInput.getRowType(), name);
+                        return newIndex == -1
+                                ? inputRef
+                                : new RexInputRef(newIndex, inputRef.getType());
+                    }
+                });
+    }
 
     /**
      * copy input of RelNode with children in result node.

@@ -160,4 +160,38 @@ public class NodeRelProjectTest extends NodeRelTest {
         resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
     }
+
+    @Test
+    public void testProject8() throws SqlParseException {
+        final String sql1 =
+                "select * from(select a, b "
+                        + ",row_number() over (partition by a order by b asc) as row_num"
+                        + ",max(c) over (partition by a)  as max_c "
+                        + "from test_db.test_table) t where t.row_num = 1";
+
+        final String sql2 =
+                "select * from(select a, b "
+                        + ",row_number() over (partition by a order by b asc) as row_num"
+                        + ",max(c) over (partition by a)  as max_c "
+                        + "from test_db.test_table) t where t.row_num <= 2";
+
+        final String expectSql =
+                "SELECT *\n"
+                        + "FROM (SELECT a, b, MAX(c) OVER (PARTITION BY a RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) max_c, ROW_NUMBER() OVER (PARTITION BY a ORDER BY b NULLS LAST) row_num\n"
+                        + "FROM test_db.test_table) t\n"
+                        + "WHERE row_num = 1 OR row_num <= 2";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        ResultNodeList<RelNode> similar =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        ResultNode<RelNode> resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql, resultNode);
+
+        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = oneResultCheck(similar);
+        assertResultNode(expectSql, resultNode);
+    }
 }

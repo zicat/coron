@@ -9,9 +9,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexShuttle;
 
 import java.util.*;
 
@@ -75,29 +73,6 @@ public class ProjectMergeRule extends MergeRule {
     }
 
     /**
-     * create new RexNode that inputRef replace from fromInput to newInput.
-     *
-     * @param rexNode rexNode
-     * @param fromInput fromInput
-     * @param toInput toInput
-     * @return RexNode
-     */
-    private RexNode createNewInputRexNode(RexNode rexNode, RelNode fromInput, RelNode toInput) {
-        return rexNode.accept(
-                new RexShuttle() {
-                    @Override
-                    public RexNode visitInputRef(RexInputRef inputRef) {
-                        int index = inputRef.getIndex();
-                        String name = fromInput.getRowType().getFieldNames().get(index);
-                        int newIndex = findIndexByName(toInput.getRowType(), name);
-                        return newIndex == -1
-                                ? inputRef
-                                : new RexInputRef(newIndex, inputRef.getType());
-                    }
-                });
-    }
-
-    /**
      * found RexNode by name.
      *
      * @param project projects
@@ -108,8 +83,7 @@ public class ProjectMergeRule extends MergeRule {
         for (Map.Entry<RelDataTypeField, RexNode> entry : project.entrySet()) {
             final RelDataTypeField oneField = entry.getKey();
             final RexNode value = entry.getValue();
-            if (oneField.getName().equals(field.getName())
-                    && oneField.getType().equals(field.getType())) {
+            if (oneField.getName().equals(field.getName())) {
                 return value;
             }
         }

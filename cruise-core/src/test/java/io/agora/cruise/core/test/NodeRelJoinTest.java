@@ -23,11 +23,11 @@ public class NodeRelJoinTest extends NodeRelTest {
         final String sql1 =
                 "select t1.a from test_db.test_table t1 "
                         + "inner join test_db.test_table t2 "
-                        + "on t1.a = t2.a and t1.b=t2.b ";
+                        + "on t1.a = t2.a and t1.b=t2.a ";
         final String sql2 =
                 "select t1.a from test_db.test_table t1 "
                         + "left join test_db.test_table t2 "
-                        + "on t1.a = t2.a and t1.b=t2.b ";
+                        + "on t1.a = t2.a and t1.b=t2.a ";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
@@ -73,15 +73,15 @@ public class NodeRelJoinTest extends NodeRelTest {
         final String sql1 =
                 "select t1.a from test_db.test_table t1 "
                         + "inner join test_db.test_table t2 "
-                        + "on t1.a = t2.a and t1.b=t2.b ";
+                        + "on t1.a = t2.a and t1.b=t2.a ";
         final String sql2 =
                 "select t1.a from test_db.test_table t1 "
                         + "inner join test_db.test_table t2 "
-                        + "on t1.a = t2.a and t1.b=t2.b ";
+                        + "on t1.a = t2.a and t1.b=t2.a ";
         final String expectSql =
                 "SELECT test_table.a\n"
                         + "FROM test_db.test_table\n"
-                        + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
+                        + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.a";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);

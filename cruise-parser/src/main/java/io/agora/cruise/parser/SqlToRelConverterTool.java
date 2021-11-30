@@ -10,6 +10,7 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -31,6 +32,7 @@ public class SqlToRelConverterTool {
      * @param planner planner
      * @param factory factory
      * @param calciteCatalogReader calcite catalog reader
+     * @param sqlOperatorTable sqlOperatorTable
      * @param schemaPlus schema plus
      * @param parserConfig parser config
      * @return SqlToRelConverter
@@ -39,6 +41,7 @@ public class SqlToRelConverterTool {
             HepPlanner planner,
             SqlTypeFactoryImpl factory,
             CalciteCatalogReader calciteCatalogReader,
+            SqlOperatorTable sqlOperatorTable,
             SchemaPlus schemaPlus,
             SqlValidator validator,
             @Nullable SqlParser.Config parserConfig) {
@@ -48,6 +51,7 @@ public class SqlToRelConverterTool {
                         .parserConfig(
                                 parserConfig == null ? DEFAULT_QUERY_PARSER_CONFIG : parserConfig)
                         .defaultSchema(schemaPlus)
+                        .operatorTable(sqlOperatorTable)
                         .traitDefs(ConventionTraitDef.INSTANCE, RelDistributionTraitDef.INSTANCE)
                         .build();
 

@@ -15,7 +15,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 /** FilterMergeable. */
 public class FilterMergeRule extends MergeRule {
 
-    final RexBuilder rexBuilder = new RexBuilder(CalciteContext.sqlTypeFactory());
+    final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
 
     public FilterMergeRule(Config mergeConfig) {
         super(mergeConfig);

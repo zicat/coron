@@ -13,6 +13,6 @@ public class TestBase extends CalciteContext {
 
     public TestBase() throws SqlParseException {
         super();
-        addTable(ddl1, ddl2);
+        addTables(ddl1, ddl2);
     }
 }

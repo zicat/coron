@@ -29,28 +29,67 @@ public class SqlNodeTool {
                     .withConformance(SqlConformanceEnum.DEFAULT)
                     .withParserFactory(AgoraSqlParserImpl.FACTORY);
 
+    /**
+     * Sql to query SqlNode.
+     *
+     * @param sql sql
+     * @return SqlNode
+     * @throws SqlParseException SqlParseException
+     */
     public static SqlNode toQuerySqlNode(String sql) throws SqlParseException {
         SqlParser sqlParser = fromQuerySql(sql);
         return sqlParser.parseStmt();
     }
 
+    /**
+     * Sql to ddl SqlNode.
+     *
+     * @param sql sql
+     * @return SqlNode
+     * @throws SqlParseException SqlParseException
+     */
     public static SqlNode toDDLSqlNode(String sql) throws SqlParseException {
         SqlParser sqlParser = fromDDLSql(sql);
         return sqlParser.parseStmt();
     }
 
+    /**
+     * Sql to query SqlParser.
+     *
+     * @param sql sql
+     * @return SqlParser
+     */
     private static SqlParser fromQuerySql(String sql) {
         return SqlParser.create(sql, DEFAULT_QUERY_PARSER_CONFIG);
     }
 
+    /**
+     * Sql to ddl SqlParser.
+     *
+     * @param sql sql
+     * @return SqlParser
+     */
     private static SqlParser fromDDLSql(String sql) {
         return SqlParser.create(sql, DEFAULT_DDL_PARSER_CONFIG);
     }
 
+    /**
+     * SqlNode to sql, default spark dialect.
+     *
+     * @param sqlNode SqlNode
+     * @return sql
+     */
     public static String toSql(SqlNode sqlNode) {
         return toSql(sqlNode, SparkSqlDialect.DEFAULT);
     }
 
+    /**
+     * SqlNode to sql.
+     *
+     * @param sqlNode SqlNode
+     * @param dialect dialect
+     * @return sql
+     */
     public static String toSql(SqlNode sqlNode, SqlDialect dialect) {
         return sqlNode.toSqlString(dialect).getSql();
     }

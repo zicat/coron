@@ -1,6 +1,5 @@
 package io.agora.cruise.parser.sql.validate;
 
-import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -15,7 +14,7 @@ import org.apache.calcite.sql.validate.SqlValidatorWithHints;
 /** ClickHouseSqlValidatorImpl. */
 public class CruiseSqlValidatorImpl extends SqlValidatorImpl {
 
-    SqlTypeFactoryImpl sqlTypeFactory = CalciteContext.sqlTypeFactory();
+    protected SqlTypeFactoryImpl sqlTypeFactory;
 
     @Override
     public RelDataType getValidatedNodeType(SqlNode node) {
@@ -48,11 +47,13 @@ public class CruiseSqlValidatorImpl extends SqlValidatorImpl {
      * @param config Config
      */
     protected CruiseSqlValidatorImpl(
+            SqlTypeFactoryImpl sqlTypeFactory,
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory,
             Config config) {
         super(opTab, catalogReader, typeFactory, config);
+        this.sqlTypeFactory = sqlTypeFactory;
     }
 
     @Override
@@ -61,10 +62,12 @@ public class CruiseSqlValidatorImpl extends SqlValidatorImpl {
     }
 
     public static SqlValidatorWithHints newValidator(
+            SqlTypeFactoryImpl sqlTypeFactory,
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory,
             Config config) {
-        return new CruiseSqlValidatorImpl(opTab, catalogReader, typeFactory, config);
+        return new CruiseSqlValidatorImpl(
+                sqlTypeFactory, opTab, catalogReader, typeFactory, config);
     }
 }

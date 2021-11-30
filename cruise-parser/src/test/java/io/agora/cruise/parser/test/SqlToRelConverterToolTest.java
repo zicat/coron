@@ -14,14 +14,24 @@ public class SqlToRelConverterToolTest extends TestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlToRelConverterToolTest.class);
 
-    String querySql = "SELECT a, b, sum(c) from test_db.test_table where a > '10' group by a, b";
-
     public SqlToRelConverterToolTest() throws SqlParseException {}
 
     @Test
     public void test() throws SqlParseException {
-        SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
-        RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        final String querySql =
+                "SELECT a, b, sum(c) from test_db.test_table where a > '10' group by a, b";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        Assert.assertNotNull(relRoot.rel);
+        LOG.info(relRoot.rel.explain());
+    }
+
+    @Test
+    public void testUdf() throws SqlParseException {
+        final String querySql =
+                "SELECT a, my_udf(b), collection_distinct(c) from test_db.test_table where a > '10' group by a, b";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
         Assert.assertNotNull(relRoot.rel);
         LOG.info(relRoot.rel.explain());
     }

@@ -10,8 +10,9 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.rules.PruneEmptyRules;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
+import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
@@ -21,20 +22,19 @@ import org.apache.calcite.tools.Frameworks;
 
 import java.util.Properties;
 
+import static io.agora.cruise.parser.sql.function.FunctionUtils.sqlOperatorTable;
+
 /** CalciteContext. */
 public class CalciteContext {
 
-    private static final Properties properties = new Properties();
-
-    public static SqlTypeFactoryImpl sqlTypeFactory() {
-        return new UTF16SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
-    }
+    public static final Properties PROPERTIES = new Properties();
+    public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY =
+            new UTF16SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
 
     static {
-        properties.put("caseSensitive", "false");
+        PROPERTIES.put("caseSensitive", "false");
     }
 
-    protected SqlTypeFactoryImpl factory = sqlTypeFactory();
     protected SchemaPlus rootSchema;
 
     public CalciteContext() {
@@ -48,21 +48,48 @@ public class CalciteContext {
      * @return this
      * @throws SqlParseException exception.
      */
-    public CalciteContext addTable(String... ddlList) throws SqlParseException {
+    public CalciteContext addTables(String... ddlList) throws SqlParseException {
         SqlValidator validator = createValidator();
         SchemaTool.addTableByDDL(rootSchema, validator, ddlList);
         return this;
     }
 
+    /**
+     * add function.
+     *
+     * @param name name
+     * @param function function
+     * @return CalciteContext
+     */
+    public CalciteContext addFunction(String name, Function function) {
+        rootSchema.add(name, function);
+        return this;
+    }
+
+    /**
+     * create validator.
+     *
+     * @return SqlValidator
+     */
     protected SqlValidator createValidator() {
         return CruiseSqlValidatorImpl.newValidator(
-                SqlStdOperatorTable.instance(),
+                sqlTypeFactory(),
+                createSqlOperatorTable(),
                 createCatalogReader(),
-                factory,
+                sqlTypeFactory(),
                 SqlValidator.Config.DEFAULT
                         .withLenientOperatorLookup(true)
                         .withColumnReferenceExpansion(true)
                         .withSqlConformance(SqlConformanceEnum.LENIENT));
+    }
+
+    /**
+     * Create SqlOperatorTable.
+     *
+     * @return SqlOperatorTable
+     */
+    protected SqlOperatorTable createSqlOperatorTable() {
+        return sqlOperatorTable;
     }
 
     /**
@@ -75,18 +102,43 @@ public class CalciteContext {
         final HepPlanner hepPlanner = createPlanner();
         final SqlValidator validator = createValidator();
         return SqlToRelConverterTool.createSqlToRelConverter(
-                hepPlanner, factory, calciteCatalogReader, rootSchema, validator, null);
+                hepPlanner,
+                sqlTypeFactory(),
+                calciteCatalogReader,
+                createSqlOperatorTable(),
+                rootSchema,
+                validator,
+                null);
     }
 
+    /**
+     * Create CalciteCatalogReader.
+     *
+     * @return CalciteCatalogReader
+     */
     protected CalciteCatalogReader createCatalogReader() {
         CalciteSchema calciteSchema = CalciteSchema.from(rootSchema);
         return new CalciteCatalogReader(
                 calciteSchema,
                 calciteSchema.path(null),
-                factory,
-                new CalciteConnectionConfigImpl(properties));
+                sqlTypeFactory(),
+                new CalciteConnectionConfigImpl(PROPERTIES));
     }
 
+    /**
+     * Create SqlTypeFactoryImpl.
+     *
+     * @return SqlTypeFactoryImpl
+     */
+    public SqlTypeFactoryImpl sqlTypeFactory() {
+        return DEFAULT_SQL_TYPE_FACTORY;
+    }
+
+    /**
+     * create planner.
+     *
+     * @return
+     */
     protected HepPlanner createPlanner() {
         HepProgramBuilder builder = new HepProgramBuilder();
         builder.addRuleInstance(PruneEmptyRules.PROJECT_INSTANCE);

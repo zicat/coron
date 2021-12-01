@@ -2633,7 +2633,22 @@ List<SqlNode> GroupingElementList() :
         <COMMA>
         e = GroupingElement() { list.add(e); }
     )*
+    [ e = GroupingSetElement() { list.add(e); }]
     { return list; }
+}
+
+SqlNode GroupingSetElement() :
+{
+    List<SqlNode> list;
+    final SqlNodeList nodes;
+    final SqlNode e;
+    final Span s;
+}
+{
+    <GROUPING> { s = span(); }
+    <SETS> <LPAREN> list = GroupingElementList() <RPAREN> {
+        return SqlStdOperatorTable.GROUPING_SETS.createCall(s.end(this), list);
+    }
 }
 
 SqlNode GroupingElement() :
@@ -2649,7 +2664,8 @@ SqlNode GroupingElement() :
     <SETS> <LPAREN> list = GroupingElementList() <RPAREN> {
         return SqlStdOperatorTable.GROUPING_SETS.createCall(s.end(this), list);
     }
-|   <ROLLUP> { s = span(); }
+|
+    <ROLLUP> { s = span(); }
     <LPAREN> nodes = ExpressionCommaList(s, ExprContext.ACCEPT_SUB_QUERY)
     <RPAREN> {
         return SqlStdOperatorTable.ROLLUP.createCall(s.end(this),

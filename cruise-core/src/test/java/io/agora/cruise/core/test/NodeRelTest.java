@@ -22,8 +22,10 @@ public class NodeRelTest extends TestBase {
     }
 
     protected String toSql(ResultNode<RelNode> resultNode) {
-        return relNode2SqlNode(resultNode.getPayload())
-                .toSqlString(SparkSqlDialect.DEFAULT)
-                .getSql();
+        return toSql(resultNode.getPayload());
+    }
+
+    protected String toSql(RelNode relNode) {
+        return relNode2SqlNode(relNode).toSqlString(SparkSqlDialect.DEFAULT).getSql();
     }
 }

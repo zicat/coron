@@ -58,4 +58,14 @@ public class SqlToRelConverterToolTest extends TestBase {
         Assert.assertNotNull(relRoot.rel);
         LOG.info(relRoot.rel.explain());
     }
+
+    @Test
+    public void testGroupSet() throws SqlParseException {
+        final String querySql =
+                "select a, b, c, count(distinct if(c > 0, b, a)) as c1 from test_db.test_table group by  b,c grouping sets((),(a,b),(a,c))";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        Assert.assertNotNull(relRoot.rel);
+        LOG.info(relRoot.rel.explain());
+    }
 }

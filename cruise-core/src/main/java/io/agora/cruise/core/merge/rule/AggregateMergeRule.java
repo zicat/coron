@@ -5,6 +5,8 @@ import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.Operand;
+import io.agora.cruise.core.util.ListComparator;
+import io.agora.cruise.core.util.Tuple2;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
@@ -12,10 +14,8 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.util.ImmutableBitSet;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /** AggregateMergeRule. */
 public class AggregateMergeRule extends MergeRule {
@@ -37,22 +37,27 @@ public class AggregateMergeRule extends MergeRule {
 
         final Aggregate fromAggregate = (Aggregate) fromNode.getPayload();
         final Aggregate toAggregate = (Aggregate) toNode.getPayload();
-
-        // create new group set
         final RelNode newInput = childrenResultNode.get(0).getPayload();
-        final ImmutableBitSet newGroupSet = createNewGroupSet(fromAggregate, toAggregate, newInput);
-        if (newGroupSet == null) {
+
+        if (callOutputNameEqual(fromAggregate, toAggregate, newInput)) {
+            return null;
+        }
+
+        final Tuple2<ImmutableBitSet, ImmutableList<ImmutableBitSet>> newGroupSetTuple =
+                createNewGroupSet(fromAggregate, toAggregate, newInput);
+        if (newGroupSetTuple == null) {
             return null;
         }
 
         final List<AggregateCall> newAggCalls =
                 createNewAggregateCalls(fromAggregate, toAggregate, newInput);
+        if (newAggCalls == null) {
+            return null;
+        }
         final RelTraitSet newRelTraitSet =
                 fromAggregate.getTraitSet().merge(toAggregate.getTraitSet());
-
-        return copy(
-                fromAggregate.copy(newRelTraitSet, newInput, newGroupSet, null, newAggCalls),
-                childrenResultNode);
+        return fromAggregate.copy(
+                newRelTraitSet, newInput, newGroupSetTuple.f0, newGroupSetTuple.f1, newAggCalls);
     }
 
     /**
@@ -190,6 +195,7 @@ public class AggregateMergeRule extends MergeRule {
             }
             newGroupSet.add(offset);
         }
+        newGroupSet.sort(Integer::compareTo);
         return newGroupSet;
     }
 
@@ -201,16 +207,69 @@ public class AggregateMergeRule extends MergeRule {
      * @param input same input
      * @return null if create fail else ImmutableBitSet
      */
-    private static ImmutableBitSet createNewGroupSet(
+    private static Tuple2<ImmutableBitSet, ImmutableList<ImmutableBitSet>> createNewGroupSet(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode input) {
 
-        if (differImmutableList(
-                        fromAggregate.getGroupSets(), ImmutableList.of(fromAggregate.getGroupSet()))
-                || differImmutableList(
-                        toAggregate.getGroupSets(), ImmutableList.of(toAggregate.getGroupSet()))) {
+        if (fromAggregate.getGroupSets().size() != toAggregate.getGroupSets().size()) {
             return null;
         }
 
+        final List<Integer> newGroupSet =
+                sameIndexMapping(
+                        groupSetNames(fromAggregate),
+                        groupSetNames(toAggregate),
+                        input.getRowType());
+        if (newGroupSet == null) {
+            return null;
+        }
+
+        final List<List<String>> fromField =
+                fromAggregate.getGroupSets().stream()
+                        .map(
+                                bitSet ->
+                                        createNameByBitSetType(
+                                                bitSet, fromAggregate.getInput().getRowType()))
+                        .collect(Collectors.toList());
+        if (fromField.stream().anyMatch(Objects::isNull)) {
+            return null;
+        }
+        fromField.sort(new ListComparator<>());
+        final List<List<String>> toField =
+                toAggregate.getGroupSets().stream()
+                        .map(
+                                bitSet ->
+                                        createNameByBitSetType(
+                                                bitSet, toAggregate.getInput().getRowType()))
+                        .collect(Collectors.toList());
+        if (toField.stream().anyMatch(Objects::isNull)) {
+            return null;
+        }
+        toField.sort(new ListComparator<>());
+
+        List<ImmutableBitSet> newGroupSets = new ArrayList<>();
+        for (int i = 0; i < fromField.size(); i++) {
+            List<String> groupValueFieldFrom = fromField.get(i);
+            List<String> groupValueFieldTo = toField.get(i);
+            if (!groupValueFieldFrom.equals(groupValueFieldTo)) {
+                return null;
+            }
+            List<Integer> newGroupValue =
+                    sameIndexMapping(groupValueFieldFrom, groupValueFieldTo, input.getRowType());
+            newGroupSets.add(ImmutableBitSet.of(newGroupValue));
+        }
+        return Tuple2.of(ImmutableBitSet.of(newGroupSet), ImmutableList.copyOf(newGroupSets));
+    }
+
+    /**
+     * check function output name is same in from agg and to agg.
+     *
+     * @param fromAggregate fromAggregate
+     * @param toAggregate toAggregate
+     * @param input newInput
+     * @return boolean contains equal
+     */
+    private boolean callOutputNameEqual(
+            Aggregate fromAggregate, Aggregate toAggregate, RelNode input) {
         final Map<String, AggregateCall> fromNameCallMapping =
                 createAllAggregateCalls(fromAggregate, input);
 
@@ -218,7 +277,7 @@ public class AggregateMergeRule extends MergeRule {
                 createAllAggregateCalls(toAggregate, input);
 
         if (fromNameCallMapping == null || toNameCallMapping == null) {
-            return null;
+            return true;
         }
 
         for (Map.Entry<String, AggregateCall> entry : fromNameCallMapping.entrySet()) {
@@ -234,16 +293,10 @@ public class AggregateMergeRule extends MergeRule {
             // try to found the index in merge input by name, but merge input has multi
             // RexNode(sump(p),max(p)), and fail to select which is actually need
             if (!fromCall.equals(toCall)) {
-                return null;
+                return true;
             }
         }
-
-        final List<Integer> newGroupSet =
-                sameIndexMapping(
-                        groupSetNames(fromAggregate),
-                        groupSetNames(toAggregate),
-                        input.getRowType());
-        return newGroupSet == null ? null : ImmutableBitSet.of(newGroupSet);
+        return false;
     }
 
     /**
@@ -290,29 +343,8 @@ public class AggregateMergeRule extends MergeRule {
                 return null;
             }
         }
+        result.sort(String::compareTo);
         return result;
-    }
-
-    /**
-     * check two bit set list is same.
-     *
-     * @param list1 list1
-     * @param list2 list2
-     * @return boolean
-     */
-    private static boolean differImmutableList(
-            ImmutableList<ImmutableBitSet> list1, ImmutableList<ImmutableBitSet> list2) {
-        if (list1.size() != list2.size()) {
-            return true;
-        }
-        for (int i = 0; i < list1.size(); i++) {
-            ImmutableBitSet bs1 = list1.get(i);
-            ImmutableBitSet bs2 = list2.get(i);
-            if (!bs1.equals(bs2)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -340,6 +372,7 @@ public class AggregateMergeRule extends MergeRule {
             }
             result.add(index);
         }
+        result.sort(Integer::compareTo);
         return ImmutableBitSet.of(result);
     }
 

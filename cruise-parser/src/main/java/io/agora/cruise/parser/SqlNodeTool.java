@@ -7,6 +7,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
 /** SqlParserConfigTool. */
@@ -37,8 +38,27 @@ public class SqlNodeTool {
      * @throws SqlParseException SqlParseException
      */
     public static SqlNode toQuerySqlNode(String sql) throws SqlParseException {
+        return toQuerySqlNode(sql, new SqlShuttle[] {});
+    }
+
+    /**
+     * Sql to query SqlNode.
+     *
+     * @param sql sql
+     * @param sqlShuttles sql shuttle
+     * @return SqlNode
+     * @throws SqlParseException SqlParseException
+     */
+    public static SqlNode toQuerySqlNode(String sql, SqlShuttle... sqlShuttles)
+            throws SqlParseException {
         SqlParser sqlParser = fromQuerySql(sql);
-        return sqlParser.parseStmt();
+        SqlNode sqlNode = sqlParser.parseStmt();
+        if (sqlShuttles != null && sqlShuttles.length > 0) {
+            for (SqlShuttle sqlShuttle : sqlShuttles) {
+                sqlNode = sqlNode.accept(sqlShuttle);
+            }
+        }
+        return sqlNode;
     }
 
     /**

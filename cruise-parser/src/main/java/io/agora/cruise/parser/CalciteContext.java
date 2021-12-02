@@ -1,7 +1,6 @@
 package io.agora.cruise.parser;
 
 import io.agora.cruise.parser.sql.type.UTF16SqlTypeFactoryImpl;
-import io.agora.cruise.parser.sql.validate.CruiseSqlValidatorImpl;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.hep.HepPlanner;
@@ -15,6 +14,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
+import org.apache.calcite.sql.validate.CruiseSqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;

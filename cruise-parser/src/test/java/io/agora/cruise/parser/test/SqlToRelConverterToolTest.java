@@ -68,4 +68,14 @@ public class SqlToRelConverterToolTest extends TestBase {
         Assert.assertNotNull(relRoot.rel);
         LOG.info(relRoot.rel.explain());
     }
+
+    @Test
+    public void testGroupAlias() throws SqlParseException {
+        final String querySql =
+                "select case when b = '1' then 't' else x end as x from test_db.test_table group by case when b = '1' then 't' else x end";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        Assert.assertNotNull(relRoot.rel);
+        LOG.info(relRoot.rel.explain());
+    }
 }

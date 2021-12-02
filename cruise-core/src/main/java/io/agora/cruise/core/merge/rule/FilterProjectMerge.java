@@ -13,7 +13,7 @@ import static io.agora.cruise.core.merge.Operand.ENY_NODE_TYPE;
 /** FilterProjectMerge. */
 public class FilterProjectMerge extends MergeRule {
 
-    final ProjectMergeRule projectMergeRule = new ProjectMergeRule(ProjectMergeRule.Config.DEFAULT);
+    final ProjectMergeRule projectMergeRule = ProjectMergeRule.Config.DEFAULT.toMergeRule();
 
     public FilterProjectMerge(Config mergeConfig) {
         super(mergeConfig);

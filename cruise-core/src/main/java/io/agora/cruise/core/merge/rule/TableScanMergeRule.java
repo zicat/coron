@@ -22,9 +22,14 @@ public class TableScanMergeRule extends MergeRule {
 
         final TableScan fromScan = (TableScan) fromNode.getPayload();
         final TableScan toScan = (TableScan) toNode.getPayload();
-
-        final TableScan newScan = fromScan.deepEquals(toScan) ? fromScan : null;
+        final TableScan newScan = merge(fromScan, toScan);
         return copy(newScan, childrenResultNode);
+    }
+
+    protected TableScan merge(RelNode fromNode, RelNode toNode) {
+        final TableScan fromScan = (TableScan) fromNode;
+        final TableScan toScan = (TableScan) toNode;
+        return fromScan.deepEquals(toScan) ? fromScan : null;
     }
 
     /** table scan config. */

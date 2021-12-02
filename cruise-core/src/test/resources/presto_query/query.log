@@ -1,0 +1,2027 @@
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  t2.country AS ""客户注册地国家"",
+  t2.companyname,
+  t2.companyid AS cid,
+  t2.projectname,
+  is_explore,
+  t1.vid,
+  t1.app_type,
+  t1.os,
+  t1.ver,
+  t1.audio,
+  t1.video,
+  t1.total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+ORDER BY date,
+  total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'c#'
+GROUP BY date,
+  app_type"
+"SELECT t2.companyname,
+  t2.companyid AS cid,
+  t2.country AS vendor_country,
+  t2.area,
+  is_explore,
+  t1.app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore,
+      area
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY 1,
+  2,
+  3,
+  4,
+  5,
+  6
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'electron'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'c#'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'python'
+GROUP BY date,
+  app_type"
+"SELECT app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY app_type
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'c#'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'react_native'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date
+ORDER BY date"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'unity'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'cocos_creator'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'electron'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY app_type
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  t2.country AS ""客户注册地国家"",
+  t2.companyname,
+  t2.companyid AS cid,
+  t2.projectname,
+  is_explore,
+  t1.vid,
+  t1.app_type,
+  t1.os,
+  t1.ver,
+  t1.audio,
+  t1.video,
+  t1.total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+ORDER BY date,
+  total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'unity'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'uniapp'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  t2.country AS ""客户注册地国家"",
+  t2.companyname,
+  t2.companyid AS cid,
+  t2.projectname,
+  is_explore,
+  t1.vid,
+  t1.app_type,
+  t1.os,
+  t1.ver,
+  t1.audio,
+  t1.video,
+  t1.total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+ORDER BY date,
+  total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'python'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY date
+ORDER BY date"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'unity'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'react_native'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'cocos_creator'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'c#'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'c#'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'electron'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'unity'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'electron'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY date
+ORDER BY date"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'uniapp'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY date
+ORDER BY date"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'cocos_creator'
+GROUP BY date,
+  app_type"
+"SELECT app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY app_type
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY date
+ORDER BY date"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'react_native'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'uniapp'
+GROUP BY date,
+  app_type"
+"SELECT app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY app_type
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'python'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'electron'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'python'
+GROUP BY date,
+  app_type"
+"SELECT app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY app_type
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  t2.country AS ""客户注册地国家"",
+  t2.companyname,
+  t2.companyid AS cid,
+  t2.projectname,
+  is_explore,
+  t1.vid,
+  t1.app_type,
+  t1.os,
+  t1.ver,
+  t1.audio,
+  t1.video,
+  t1.total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+ORDER BY date,
+  total_usage DESC"
+"explain analyze SELECT app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY app_type
+ORDER BY total_usage DESC"
+"select query from system.runtime.queries where query like '%report_datahub.agora_vid_usage_cube_di%' and state = 'FINISHED' limit 10"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND ""agora_vid_usage_cube_di"".""os"" IN ('MAC', 'Windows')
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'uniapp'
+GROUP BY date,
+  app_type"
+"SELECT t2.companyname,
+  t2.companyid AS cid,
+  t2.country AS vendor_country,
+  t2.area,
+  is_explore,
+  t1.app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore,
+      area
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY 1,
+  2,
+  3,
+  4,
+  5,
+  6
+ORDER BY total_usage DESC"
+"SELECT t2.companyname,
+  t2.companyid AS cid,
+  t2.country AS vendor_country,
+  t2.area,
+  is_explore,
+  t1.app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore,
+      area
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY 1,
+  2,
+  3,
+  4,
+  5,
+  6
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'unity'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'cocos_creator'
+GROUP BY date,
+  app_type"
+"SELECT t2.companyname,
+  t2.companyid AS cid,
+  t2.country AS vendor_country,
+  t2.area,
+  is_explore,
+  t1.app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY vid,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore,
+      area
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+GROUP BY 1,
+  2,
+  3,
+  4,
+  5,
+  6
+ORDER BY total_usage DESC"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'python'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'python'
+GROUP BY date,
+  app_type"
+"select query from system.runtime.queries where query like '%report_datahub.agora_vid_usage_cube_di%' and state = 'FINISHED' limit 10"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'uniapp'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN'
+GROUP BY date
+ORDER BY date"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'react_native'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  app_type,
+  SUM(t1.audio) AS audio,
+  SUM(t1.video) AS video,
+  SUM(t1.total_usage) AS total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyname,
+      projectname,
+      country
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'electron'
+GROUP BY date,
+  app_type"
+"SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,
+  t2.country AS ""客户注册地国家"",
+  t2.companyname,
+  t2.companyid AS cid,
+  t2.projectname,
+  is_explore,
+  t1.vid,
+  t1.app_type,
+  t1.os,
+  t1.ver,
+  t1.audio,
+  t1.video,
+  t1.total_usage
+FROM (SELECT
+    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */
+    date,
+      company_id AS cid,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,
+      ROUND(SUM(audio), 0) AS audio,
+      ROUND(SUM(video), 0) AS video,
+      ROUND(SUM(audio + video), 0) AS total_usage
+    FROM report_datahub.agora_vid_usage_cube_di
+    WHERE date_parse(cast( ""agora_vid_usage_cube_di"".""date"" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-10-01 00:00:00' AND TIMESTAMP '2021-12-31 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)' AND CAST(""agora_vid_usage_cube_di"".""os"" AS VARCHAR) = 'MAC'
+    GROUP BY date,
+      company_id,
+      vid,
+      ver,
+      os,
+        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1
+  INNER JOIN (SELECT vid,
+      companyid,
+      companyname,
+      projectname,
+      country,
+      is_explore
+    FROM report_datahub.new_vendor_dimension
+    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)
+WHERE 1 = 1 AND CAST(app_type AS VARCHAR) <> 'UNKNOWN' AND CAST(app_type AS VARCHAR) = 'flutter'
+ORDER BY date,
+  total_usage DESC"

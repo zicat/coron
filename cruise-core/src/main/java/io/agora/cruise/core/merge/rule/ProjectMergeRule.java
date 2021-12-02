@@ -1,6 +1,7 @@
 package io.agora.cruise.core.merge.rule;
 
 import io.agora.cruise.core.Node;
+import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.Operand;
@@ -31,10 +32,23 @@ public class ProjectMergeRule extends MergeRule {
             return null;
         }
 
-        final Project fromProject = (Project) fromNode.getPayload();
-        final Project toProject = (Project) toNode.getPayload();
-        final RelNode newInput = childrenResultNode.get(0).getPayload();
+        return merge(fromNode.getPayload(), toNode.getPayload(), childrenResultNode);
+    }
 
+    /**
+     * merge from node and to node by new input.
+     *
+     * @param fromNode from nde
+     * @param toNode to node
+     * @param childrenResultNode child
+     * @return new rel node
+     */
+    protected RelNode merge(
+            RelNode fromNode, RelNode toNode, List<ResultNode<RelNode>> childrenResultNode) {
+
+        final RelNode newInput = childrenResultNode.get(0).getPayload();
+        final Project fromProject = (Project) fromNode;
+        final Project toProject = (Project) toNode;
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
         final Map<RelDataTypeField, RexNode> projectRexMapping = new HashMap<>();

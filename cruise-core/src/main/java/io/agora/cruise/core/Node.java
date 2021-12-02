@@ -119,7 +119,7 @@ public class Node<T> {
         if (isRoot()) {
             return -1;
         }
-        return parent.children.size() - getIndexInParent();
+        return parent.children.size() - getIndexInParent() - 1;
     }
 
     /**

@@ -81,7 +81,8 @@ public class NodeUtils {
                             break;
                         }
                     }
-                    if (resultOffset.size() != size) {
+                    // size mean all brother equals, 1 mean me equal
+                    if (resultOffset.size() != size + 1) {
                         break;
                     }
                     ResultNode<T> parentResultNode = fromOffset.parentMerge(toOffset, resultOffset);

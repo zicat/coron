@@ -39,6 +39,10 @@ public class ResultNode<T> {
         return new ResultNode<>(null, children);
     }
 
+    public static <T> ResultNode<T> empty() {
+        return new ResultNode<>(null, null);
+    }
+
     public final T getPayload() {
         return payload;
     }

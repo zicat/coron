@@ -134,6 +134,11 @@ public class Node<T> {
         return indexInParent;
     }
 
+    /**
+     * get parent.
+     *
+     * @return parent node
+     */
     public final Node<T> getParent() {
         return parent;
     }
@@ -150,28 +155,5 @@ public class Node<T> {
             return null;
         }
         return parent.children.get(offset);
-    }
-
-    /**
-     * merge one right brother.
-     *
-     * @param otherNode other node
-     * @param i i from this
-     * @return result node
-     */
-    protected ResultNode<T> rightBrotherMerge(Node<T> otherNode, int i) {
-
-        if (otherNode.isRoot() || this.isRoot()) {
-            return ResultNode.of(null);
-        }
-        Node<T> brother = rightBrother(i);
-        Node<T> otherBrother = otherNode.rightBrother(i);
-        if (brother == null
-                || !brother.isLeaf()
-                || otherBrother == null
-                || !otherBrother.isLeaf()) {
-            return ResultNode.of(null);
-        }
-        return brother.merge(otherBrother);
     }
 }

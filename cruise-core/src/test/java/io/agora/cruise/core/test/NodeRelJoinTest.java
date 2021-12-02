@@ -1,7 +1,6 @@
 package io.agora.cruise.core.test;
 
 import io.agora.cruise.core.ResultNode;
-import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.parser.SqlNodeTool;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -34,12 +33,12 @@ public class NodeRelJoinTest extends NodeRelTest {
         final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
-        ResultNodeList<RelNode> similar =
+        ResultNode<RelNode> resultNode =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-        Assert.assertEquals(similar.size(), 0);
+        Assert.assertTrue(resultNode.isEmpty());
 
-        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
-        Assert.assertEquals(similar.size(), 0);
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        Assert.assertTrue(resultNode.isEmpty());
     }
 
     @Test
@@ -59,12 +58,12 @@ public class NodeRelJoinTest extends NodeRelTest {
         final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
-        ResultNodeList<RelNode> similar =
+        ResultNode<RelNode> resultNode =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-        Assert.assertEquals(similar.size(), 0);
+        Assert.assertTrue(resultNode.isEmpty());
 
-        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
-        Assert.assertEquals(similar.size(), 0);
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        Assert.assertTrue(resultNode.isEmpty());
     }
 
     @Test
@@ -88,13 +87,11 @@ public class NodeRelJoinTest extends NodeRelTest {
         final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
-        ResultNodeList<RelNode> similar =
+        ResultNode<RelNode> resultNode =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-        ResultNode<RelNode> resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
 
-        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
-        resultNode = oneResultCheck(similar);
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -119,13 +116,11 @@ public class NodeRelJoinTest extends NodeRelTest {
         final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
-        ResultNodeList<RelNode> similar =
+        ResultNode<RelNode> resultNode =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-        ResultNode<RelNode> resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
 
-        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
-        resultNode = oneResultCheck(similar);
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -150,13 +145,11 @@ public class NodeRelJoinTest extends NodeRelTest {
         final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
-        ResultNodeList<RelNode> similar =
+        ResultNode<RelNode> resultNode =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-        ResultNode<RelNode> resultNode = oneResultCheck(similar);
         assertResultNode(expectSql, resultNode);
 
-        similar = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
-        resultNode = oneResultCheck(similar);
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 }

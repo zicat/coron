@@ -57,45 +57,95 @@ public class NodeUtils {
      * @param rootFrom rootFrom
      * @param rootTo rootTo
      * @param <T> payload type
-     * @return list
+     * @return result node
      */
-    public static <T> ResultNodeList<T> findSubNode(Node<T> rootFrom, Node<T> rootTo) {
+    public static <T> ResultNode<T> findSubNode(Node<T> rootFrom, Node<T> rootTo) {
 
         final List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
         final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);
 
-        final ResultNodeList<T> result = new ResultNodeList<>();
         for (Node<T> fromNode : nodeToLeaves) {
-            for (Node<T> toLeaf : nodeFromLeaves) {
-                ResultNodeList<T> resultOffset = new ResultNodeList<>(fromNode.merge(toLeaf));
-                if (resultOffset.isEmpty()) {
-                    continue;
+            for (Node<T> toNode : nodeFromLeaves) {
+                ResultNode<T> resultNode = merge(rootFrom, fromNode, toNode, false);
+                if (!resultNode.isEmpty()) {
+                    return resultNode;
                 }
-                Node<T> toOffset = lookAhead(toLeaf, 0);
-                Node<T> fromOffset = lookAhead(fromNode, 0);
-                ResultNode<T> maxResultNode = null;
-                while (!fromOffset.isRoot()) {
-                    int size = sameSize(toOffset.rightBrotherSize(), fromOffset.rightBrotherSize());
-                    for (int i = 0; i < size; i++) {
-                        if (!resultOffset.add(fromOffset.rightBrotherMerge(toOffset, i))) {
-                            break;
-                        }
-                    }
-                    // size mean all brother equals, 1 mean me equal
-                    if (resultOffset.size() != size + 1) {
-                        break;
-                    }
-                    ResultNode<T> parentResultNode = fromOffset.parentMerge(toOffset, resultOffset);
-                    if (parentResultNode.isEmpty()) {
-                        break;
-                    }
-                    resultOffset = new ResultNodeList<>(parentResultNode);
-                    toOffset = lookAhead(toOffset, parentResultNode.toLookAhead);
-                    fromOffset = lookAhead(fromOffset, parentResultNode.fromLookAhead);
-                    maxResultNode = parentResultNode;
-                }
-                result.add(maxResultNode);
             }
+        }
+        return ResultNode.empty();
+    }
+
+    /**
+     * merge start from fromLeaf and to toLeaf, end to fromRoot.
+     *
+     * @param fromRoot the root of from.
+     * @param fromLeaf the leaf of the fromRoot
+     * @param toLeaf the to leaf
+     * @param allMatch is all match
+     * @param <T> type
+     * @return merge result if all match return from fromLeaf toLeaf to fromRoot mergeable, else
+     *     return max partial merge result
+     */
+    private static <T> ResultNode<T> merge(
+            Node<T> fromRoot, Node<T> fromLeaf, Node<T> toLeaf, boolean allMatch) {
+
+        if (fromLeaf == null || toLeaf == null) {
+            return ResultNode.empty();
+        }
+
+        ResultNodeList<T> resultOffset = new ResultNodeList<>(fromLeaf.merge(toLeaf));
+        if (resultOffset.isEmpty()) {
+            return ResultNode.empty();
+        }
+
+        Node<T> fromOffset = fromLeaf;
+        Node<T> toOffset = toLeaf;
+        ResultNode<T> maxResultNode = allMatch ? resultOffset.get(0) : ResultNode.empty();
+
+        while (fromOffset != fromRoot && toOffset != null) {
+            final int size = sameSize(toOffset.rightBrotherSize(), fromOffset.rightBrotherSize());
+            for (int i = 0; i < size; i++) {
+                ResultNode<T> brotherMergeResult =
+                        merge(
+                                fromOffset.rightBrother(i),
+                                foundLeftLeaf(fromOffset.rightBrother(i)),
+                                foundLeftLeaf(toOffset.rightBrother(i)),
+                                true);
+                if (brotherMergeResult.isEmpty()) {
+                    break;
+                }
+                resultOffset.add(brotherMergeResult);
+            }
+            // size mean all brother equals, 1 mean me equal
+            if (resultOffset.size() != size + 1) {
+                break;
+            }
+            final ResultNode<T> parentResultNode = fromOffset.parentMerge(toOffset, resultOffset);
+            if (parentResultNode.isEmpty()) {
+                break;
+            }
+            resultOffset = new ResultNodeList<>(parentResultNode);
+            fromOffset = lookAhead(fromOffset, parentResultNode.fromLookAhead, fromRoot);
+            toOffset = lookAhead(toOffset, parentResultNode.toLookAhead, null);
+            maxResultNode = parentResultNode;
+        }
+        return allMatch && (fromOffset != fromRoot) ? ResultNode.empty() : maxResultNode;
+    }
+
+    /**
+     * found left leaf.
+     *
+     * @param node node
+     * @param <T> type
+     * @return node
+     */
+    public static <T> Node<T> foundLeftLeaf(Node<T> node) {
+        if (node == null) {
+            return null;
+        }
+        Node<T> result = node;
+        while (!result.isLeaf()) {
+            result = result.children.get(0);
         }
         return result;
     }
@@ -105,17 +155,18 @@ public class NodeUtils {
      *
      * @param node node
      * @param ahead ahead
+     * @param root root
      * @param <T> payload type
      * @return node
      */
-    private static <T> Node<T> lookAhead(Node<T> node, int ahead) {
+    private static <T> Node<T> lookAhead(Node<T> node, int ahead, Node<T> root) {
 
         if (ahead < 0) {
             throw new RuntimeException("ahead must >= 0");
         }
         int offset = ahead;
         Node<T> result = node;
-        while (offset > 0) {
+        while (offset > 0 && result != root) {
             result = result.parent;
             offset--;
         }

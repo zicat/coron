@@ -1,6 +1,5 @@
 package io.agora.cruise.core.merge.rule;
 
-import com.google.common.collect.ImmutableList;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
@@ -10,7 +9,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.rex.RexUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,8 +44,7 @@ public class FilterMergeRule extends MergeRule {
         orList.sort((o1, o2) -> o2.toString().compareTo(o1.toString()));
 
         // sort condition to make output result uniqueness
-        final RexNode newCondition =
-                rexBuilder.makeCall(SqlStdOperatorTable.OR, ImmutableList.copyOf(orList));
+        final RexNode newCondition = RexUtil.composeDisjunction(rexBuilder, orList);
         return fromFilter.copy(fromFilter.getTraitSet(), newInput, newCondition);
     }
 

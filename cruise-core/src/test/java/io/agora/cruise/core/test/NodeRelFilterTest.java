@@ -16,6 +16,23 @@ public class NodeRelFilterTest extends NodeRelTest {
     public NodeRelFilterTest() throws SqlParseException {}
 
     @Test
+    public void test2() throws SqlParseException {
+        final String sql1 =
+                "SELECT a as s, b AS aaa FROM test_db.test_table WHERE c < 5000 UNION ALL SELECT g, h FROM test_db.test_table2";
+        final String sql2 = "SELECT a, b, c  FROM test_db.test_table WHERE c < 5000";
+        final String expectSql =
+                "SELECT a, b aaa, b, c, a s\nFROM test_db.test_table\nWHERE c < 5000";
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+    }
+
+    @Test
     public void testFilterProject() throws SqlParseException {
 
         final String sql1 =

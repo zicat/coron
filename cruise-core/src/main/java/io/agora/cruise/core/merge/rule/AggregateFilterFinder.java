@@ -5,11 +5,21 @@ import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
-/** AggregateFilterFinder. */
+/**
+ * AggregateFilterFinder.
+ *
+ * <p>Find the first filter in input RelNode.
+ */
 public class AggregateFilterFinder extends RelShuttleImpl {
 
     private Filter filter;
 
+    /**
+     * Find the first filter from input rel node.
+     *
+     * @param relNode rel node
+     * @return filter
+     */
     public static Filter find(RelNode relNode) {
         AggregateFilterFinder finder = new AggregateFilterFinder();
         relNode.accept(finder);

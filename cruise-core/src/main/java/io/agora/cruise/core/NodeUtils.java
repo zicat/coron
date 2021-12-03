@@ -37,7 +37,7 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot) {
-        List<MergeConfig> mergeRuleConfigs =
+        final List<MergeConfig> mergeRuleConfigs =
                 Arrays.asList(
                         TableScanMergeRule.Config.DEFAULT,
                         ProjectMergeRule.Config.DEFAULT,
@@ -46,9 +46,7 @@ public class NodeUtils {
                         JoinMergeRule.Config.DEFAULT,
                         FilterProjectMerge.Config.DEFAULT,
                         ProjectFilterMerge.Config.DEFAULT);
-
-        RelNodeMergePlanner mergePlanner = new RelNodeMergePlanner(mergeRuleConfigs);
-        return createNodeRelRoot(relRoot, mergePlanner);
+        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
     }
 
     /**
@@ -103,7 +101,7 @@ public class NodeUtils {
         ResultNode<T> maxResultNode = allMatch ? resultOffset.get(0) : ResultNode.empty();
 
         while (fromOffset != fromRoot && toOffset != null) {
-            final int size = sameSize(toOffset.rightBrotherSize(), fromOffset.rightBrotherSize());
+            final int size = sameSize(fromOffset.rightBrotherSize(), toOffset.rightBrotherSize());
             for (int i = 0; i < size; i++) {
                 ResultNode<T> brotherMergeResult =
                         merge(

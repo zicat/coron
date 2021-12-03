@@ -23,34 +23,80 @@ public class ResultNode<T> {
         }
     }
 
+    /**
+     * set from node look ahead size.
+     *
+     * @param fromLookAhead fromLookAhead
+     */
     public void setFromLookAhead(int fromLookAhead) {
         this.fromLookAhead = fromLookAhead;
     }
 
+    /**
+     * set to node look ahead size.
+     *
+     * @param toLookAhead toLookAhead
+     */
     public void setToLookAhead(int toLookAhead) {
         this.toLookAhead = toLookAhead;
     }
 
+    /**
+     * Create result node.
+     *
+     * @param payload payload
+     * @param children children
+     * @param <T> type
+     * @return result node.
+     */
     public static <T> ResultNode<T> of(T payload, List<ResultNode<T>> children) {
         return new ResultNode<>(payload, children);
     }
 
+    /**
+     * Create result node with null payload.
+     *
+     * @param children children
+     * @param <T> type
+     * @return result node.
+     */
     public static <T> ResultNode<T> of(List<ResultNode<T>> children) {
         return new ResultNode<>(null, children);
     }
 
+    /**
+     * create empty result node.
+     *
+     * @param <T> type
+     * @return result node
+     */
     public static <T> ResultNode<T> empty() {
         return new ResultNode<>(null, null);
     }
 
+    /**
+     * get payload.
+     *
+     * @return payload
+     */
     public final T getPayload() {
         return payload;
     }
 
+    /**
+     * get children result node.
+     *
+     * @return list result node
+     */
     public final List<ResultNode<T>> getChildren() {
         return children;
     }
 
+    /**
+     * is empty.
+     *
+     * @return true if payload is null
+     */
     public final boolean isEmpty() {
         return payload == null;
     }
@@ -76,6 +122,11 @@ public class ResultNode<T> {
         return sb.toString();
     }
 
+    /**
+     * set new parent.
+     *
+     * @param parent parent
+     */
     private void setParent(ResultNode<T> parent) {
         this.parent = parent;
     }

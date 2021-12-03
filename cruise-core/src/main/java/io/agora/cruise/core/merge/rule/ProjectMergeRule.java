@@ -31,7 +31,6 @@ public class ProjectMergeRule extends MergeRule {
         if (childrenResultNode.size() != 1) {
             return null;
         }
-
         return merge(fromNode.getPayload(), toNode.getPayload(), childrenResultNode);
     }
 

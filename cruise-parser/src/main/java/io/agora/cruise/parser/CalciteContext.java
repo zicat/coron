@@ -50,7 +50,7 @@ public class CalciteContext {
      */
     public CalciteContext addTables(String... ddlList) throws SqlParseException {
         SqlValidator validator = createValidator();
-        SchemaTool.addTableByDDL(rootSchema, validator, ddlList);
+        rootSchema = SchemaTool.addTableByDDL(rootSchema, validator, ddlList);
         return this;
     }
 
@@ -137,7 +137,7 @@ public class CalciteContext {
     /**
      * create planner.
      *
-     * @return
+     * @return HepPlanner
      */
     protected HepPlanner createPlanner() {
         HepProgramBuilder builder = new HepProgramBuilder();

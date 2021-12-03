@@ -82,7 +82,7 @@ public class Node<T> {
         if (otherNode == null) {
             return ResultNode.of(null, childrenResultNode);
         }
-        T newPayload = payload.equals(otherNode.getPayload()) ? payload : null;
+        final T newPayload = payload.equals(otherNode.getPayload()) ? payload : null;
         return ResultNode.of(newPayload, childrenResultNode);
     }
 

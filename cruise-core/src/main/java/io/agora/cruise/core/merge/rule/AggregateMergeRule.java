@@ -16,8 +16,10 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /** AggregateMergeRule. */
 public class AggregateMergeRule extends MergeRule {
@@ -89,8 +91,8 @@ public class AggregateMergeRule extends MergeRule {
                 return true;
             }
         }
-        return AggregateMergeableCheck.contains(fromAggregate)
-                && AggregateMergeableCheck.contains(toAggregate);
+        return AggregateMergeableCheck.mergeable(fromAggregate)
+                && AggregateMergeableCheck.mergeable(toAggregate);
     }
 
     /**
@@ -256,41 +258,44 @@ public class AggregateMergeRule extends MergeRule {
             return null;
         }
 
-        final List<List<String>> fromField =
-                fromAggregate.getGroupSets().stream()
-                        .map(
-                                bitSet ->
-                                        createNameByBitSetType(
-                                                bitSet, fromAggregate.getInput().getRowType()))
-                        .collect(Collectors.toList());
-        if (fromField.stream().anyMatch(Objects::isNull)) {
+        final List<List<String>> fromField = getNewSortedGroupField(fromAggregate);
+        final List<List<String>> toField = getNewSortedGroupField(toAggregate);
+        if (fromField == null || toField == null) {
             return null;
         }
-        fromField.sort(new ListComparator<>());
-        final List<List<String>> toField =
-                toAggregate.getGroupSets().stream()
-                        .map(
-                                bitSet ->
-                                        createNameByBitSetType(
-                                                bitSet, toAggregate.getInput().getRowType()))
-                        .collect(Collectors.toList());
-        if (toField.stream().anyMatch(Objects::isNull)) {
-            return null;
-        }
-        toField.sort(new ListComparator<>());
 
-        List<ImmutableBitSet> newGroupSets = new ArrayList<>();
+        final List<ImmutableBitSet> newGroupSets = new ArrayList<>();
         for (int i = 0; i < fromField.size(); i++) {
-            List<String> groupValueFieldFrom = fromField.get(i);
-            List<String> groupValueFieldTo = toField.get(i);
+            final List<String> groupValueFieldFrom = fromField.get(i);
+            final List<String> groupValueFieldTo = toField.get(i);
             if (!groupValueFieldFrom.equals(groupValueFieldTo)) {
                 return null;
             }
-            List<Integer> newGroupValue =
+            final List<Integer> newGroupValue =
                     sameIndexMapping(groupValueFieldFrom, groupValueFieldTo, input.getRowType());
             newGroupSets.add(ImmutableBitSet.of(newGroupValue));
         }
         return Tuple2.of(ImmutableBitSet.of(newGroupSet), ImmutableList.copyOf(newGroupSets));
+    }
+
+    /**
+     * get aggregate fields.
+     *
+     * @param aggregate aggregate
+     * @return list list field
+     */
+    private static List<List<String>> getNewSortedGroupField(Aggregate aggregate) {
+        final List<List<String>> toField = new ArrayList<>();
+        for (ImmutableBitSet bitSet : aggregate.getGroupSets()) {
+            final List<String> fields =
+                    createNameByBitSetType(bitSet, aggregate.getInput().getRowType());
+            if (fields == null) {
+                return null;
+            }
+            toField.add(fields);
+        }
+        toField.sort(new ListComparator<>());
+        return toField;
     }
 
     /**
@@ -316,7 +321,7 @@ public class AggregateMergeRule extends MergeRule {
         for (Map.Entry<String, AggregateCall> entry : fromNameCallMapping.entrySet()) {
             final String groupName = entry.getKey();
             final AggregateCall fromCall = entry.getValue();
-            AggregateCall toCall = toNameCallMapping.get(groupName);
+            final AggregateCall toCall = toNameCallMapping.get(groupName);
             if (toCall == null) {
                 continue;
             }
@@ -365,7 +370,7 @@ public class AggregateMergeRule extends MergeRule {
      */
     private static List<String> createNameByBitSetType(
             ImmutableBitSet bitSet, RelDataType relDataType) {
-        List<String> result = new ArrayList<>();
+        final List<String> result = new ArrayList<>();
         for (int i = 0; i < bitSet.size(); i++) {
             if (!bitSet.get(i)) {
                 continue;

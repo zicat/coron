@@ -234,4 +234,103 @@ public class NodeRelGroupTest extends NodeRelTest {
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
+
+    @Test
+    public void testGroupBy10() throws SqlParseException {
+
+        final String sql1 =
+                "select a as aa, b as bb, sum(c) s_c from test_db.test_table WHERE c < 5000 group by a, b";
+        final String sql2 =
+                "select a as cc, b as dd, max(c) m_c from test_db.test_table WHERE c < 5000 group by a, b";
+        final String expectSql =
+                "SELECT a aa, b bb, a cc, b dd, MAX(c) m_c, SUM(c) s_c\n"
+                        + "FROM test_db.test_table\n"
+                        + "WHERE c < 5000\n"
+                        + "GROUP BY a, b";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        assertResultNode(expectSql, resultNode);
+    }
+
+    @Test
+    public void testGroupBy11() throws SqlParseException {
+
+        final String sql1 =
+                "select a as aa, b as bb, sum(c) s_c from test_db.test_table WHERE a < 5000 group by a, b";
+        final String sql2 =
+                "select a as cc, b as dd, max(c) m_c from test_db.test_table group by a, b";
+        final String expectSql =
+                "SELECT a aa, b bb, a cc, b dd, MAX(c) m_c, SUM(c) s_c\n"
+                        + "FROM test_db.test_table\n"
+                        + "GROUP BY a, b";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        assertResultNode(expectSql, resultNode);
+    }
+
+    @Test
+    public void testGroupBy12() throws SqlParseException {
+
+        final String sql1 =
+                "select a as aa, b as bb, sum(c) s_c from test_db.test_table WHERE c < 5000 group by a, b";
+        final String sql2 =
+                "select a as cc, b as dd, max(c) m_c from test_db.test_table group by a, b";
+        final String expectSql = "SELECT a, b, c\nFROM test_db.test_table";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        assertResultNode(expectSql, resultNode);
+    }
+
+    @Test
+    public void testGroupBy13() throws SqlParseException {
+
+        final String sql1 =
+                "select a as aa, b as bb, sum(c) s_c from test_db.test_table WHERE c < 5000 and a > 1000 group by a, b";
+        final String sql2 =
+                "select a as cc, b as dd, max(c) m_c from test_db.test_table WHERE a > 1000 and c < 5000 group by a, b";
+        final String expectSql =
+                "SELECT a aa, b bb, a cc, b dd, MAX(c) m_c, SUM(c) s_c\n"
+                        + "FROM test_db.test_table\n"
+                        + "WHERE a > 1000 AND c < 5000\n"
+                        + "GROUP BY a, b";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        assertResultNode(expectSql, resultNode);
+    }
 }

@@ -11,7 +11,9 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.*;
@@ -38,10 +40,7 @@ public class AggregateMergeRule extends MergeRule {
         final Aggregate fromAggregate = (Aggregate) fromNode.getPayload();
         final Aggregate toAggregate = (Aggregate) toNode.getPayload();
         final RelNode newInput = childrenResultNode.get(0).getPayload();
-        if (!checkAggregateMergeable(fromAggregate)) {
-            return null;
-        }
-        if (!checkAggregateMergeable(toAggregate)) {
+        if (!checkAggregateMergeable(fromAggregate, toAggregate, newInput)) {
             return null;
         }
 
@@ -71,11 +70,27 @@ public class AggregateMergeRule extends MergeRule {
      *
      * <p>check all identifies in filter condition must also in group set and select list.
      *
-     * @param aggregate aggregate
+     * @param fromAggregate aggregate
+     * @param toAggregate toAggregate
+     * @param newInput newInput
      * @return boolean mergeable
      */
-    private boolean checkAggregateMergeable(Aggregate aggregate) {
-        return AggregateMergeableCheck.contains(aggregate);
+    private boolean checkAggregateMergeable(
+            Aggregate fromAggregate, Aggregate toAggregate, RelNode newInput) {
+        final Filter fromFilter = AggregateFilterFinder.find(fromAggregate);
+        final Filter toFilter = AggregateFilterFinder.find(toAggregate);
+        if (fromFilter != null && toFilter != null) {
+            final RexNode newFromCondition =
+                    createNewInputRexNode(
+                            fromFilter.getCondition(), fromFilter.getInput(), newInput);
+            final RexNode newToCondition =
+                    createNewInputRexNode(toFilter.getCondition(), toFilter.getInput(), newInput);
+            if (newFromCondition.equals(newToCondition)) {
+                return true;
+            }
+        }
+        return AggregateMergeableCheck.contains(fromAggregate)
+                && AggregateMergeableCheck.contains(toAggregate);
     }
 
     /**

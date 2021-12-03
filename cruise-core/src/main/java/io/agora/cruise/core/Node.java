@@ -73,10 +73,11 @@ public class Node<T> {
     }
 
     /**
-     * boolean is similar.
+     * check node mergeable subClass can override merge logic.
      *
      * @param otherNode other node
-     * @return boolean
+     * @param childrenResultNode childrenResultNode
+     * @return ResultNode
      */
     public ResultNode<T> merge(Node<T> otherNode, ResultNodeList<T> childrenResultNode) {
         if (otherNode == null) {

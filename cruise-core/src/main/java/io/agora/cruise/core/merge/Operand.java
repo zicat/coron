@@ -19,6 +19,13 @@ public class Operand {
         return this;
     }
 
+    /**
+     * create Operand by fromRelNodeType and toRelNodeType.
+     *
+     * @param fromRelNodeType fromRelNodeType
+     * @param toRelNodeType toRelNodeType
+     * @return Operand
+     */
     public static Operand of(Class<?> fromRelNodeType, Class<?> toRelNodeType) {
         return new Operand(fromRelNodeType, toRelNodeType);
     }

@@ -39,18 +39,19 @@ public abstract class MergeRule {
      * create new RexNode that inputRef replace from fromInput to newInput.
      *
      * @param rexNode rexNode
-     * @param fromInput fromInput
-     * @param toInput toInput
+     * @param originalInput originalInput
+     * @param newInput newInput
      * @return RexNode
      */
-    protected RexNode createNewInputRexNode(RexNode rexNode, RelNode fromInput, RelNode toInput) {
+    protected RexNode createNewInputRexNode(
+            RexNode rexNode, RelNode originalInput, RelNode newInput) {
         return rexNode.accept(
                 new RexShuttle() {
                     @Override
                     public RexNode visitInputRef(RexInputRef inputRef) {
                         int index = inputRef.getIndex();
-                        String name = fromInput.getRowType().getFieldNames().get(index);
-                        int newIndex = findIndexByName(toInput.getRowType(), name);
+                        String name = originalInput.getRowType().getFieldNames().get(index);
+                        int newIndex = findIndexByName(newInput.getRowType(), name);
                         return newIndex == -1
                                 ? inputRef
                                 : new RexInputRef(newIndex, inputRef.getType());

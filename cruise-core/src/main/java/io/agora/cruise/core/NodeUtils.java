@@ -44,8 +44,8 @@ public class NodeUtils {
                         FilterMergeRule.Config.DEFAULT,
                         AggregateMergeRule.Config.DEFAULT,
                         JoinMergeRule.Config.DEFAULT,
-                        FilterProjectMerge.Config.DEFAULT,
-                        ProjectFilterMerge.Config.DEFAULT);
+                        FilterProjectMergeRule.Config.DEFAULT,
+                        ProjectFilterMergeRule.Config.DEFAULT);
         return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
     }
 

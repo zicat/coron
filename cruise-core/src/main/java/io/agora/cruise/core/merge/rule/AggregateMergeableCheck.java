@@ -25,6 +25,12 @@ public class AggregateMergeableCheck extends RelShuttleImpl {
     private Set<String> projectFields = null;
     private final AtomicBoolean mergeable = new AtomicBoolean(true);
 
+    /**
+     * check rel node mergeable.
+     *
+     * @param relNode relNode
+     * @return boolean mergeable
+     */
     public static boolean mergeable(RelNode relNode) {
         AggregateMergeableCheck check = new AggregateMergeableCheck();
         relNode.accept(check);
@@ -89,7 +95,7 @@ public class AggregateMergeableCheck extends RelShuttleImpl {
         return super.visit(aggregate);
     }
 
-    /** ConditionRexShuttleCheck. */
+    /** RexShuttleCheck. */
     private class RexShuttleCheck extends RexShuttle {
 
         private final RelDataType relDataType;

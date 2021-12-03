@@ -10,12 +10,12 @@ import org.apache.calcite.rel.core.Project;
 
 import static io.agora.cruise.core.merge.Operand.ENY_NODE_TYPE;
 
-/** FilterProjectMerge. */
-public class FilterProjectMerge extends MergeRule {
+/** ProjectFilterMergeRule. */
+public class ProjectFilterMergeRule extends MergeRule {
 
     final ProjectMergeRule projectMergeRule = ProjectMergeRule.Config.DEFAULT.toMergeRule();
 
-    public FilterProjectMerge(Config mergeConfig) {
+    public ProjectFilterMergeRule(Config mergeConfig) {
         super(mergeConfig);
     }
 
@@ -24,22 +24,22 @@ public class FilterProjectMerge extends MergeRule {
             Node<RelNode> fromNode,
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode) {
-        return projectMergeRule.merge(fromNode.getParent(), toNode, childrenResultNode);
+        return projectMergeRule.merge(fromNode, toNode.getParent(), childrenResultNode);
     }
 
-    /** FilterProjectMerge Config. */
+    /** ProjectFilterMergeRule Config. */
     public static class Config extends MergeConfig {
 
         public static final Config DEFAULT =
                 new Config()
                         .withOperandSupplier(
-                                Operand.of(Filter.class, Project.class)
-                                        .operand(Operand.of(Project.class, ENY_NODE_TYPE)))
+                                Operand.of(Project.class, Filter.class)
+                                        .operand(Operand.of(ENY_NODE_TYPE, Project.class)))
                         .as(Config.class);
 
         @Override
-        public FilterProjectMerge toMergeRule() {
-            return new FilterProjectMerge(this);
+        public ProjectFilterMergeRule toMergeRule() {
+            return new ProjectFilterMergeRule(this);
         }
     }
 }

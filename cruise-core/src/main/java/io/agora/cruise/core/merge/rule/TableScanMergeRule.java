@@ -7,7 +7,7 @@ import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 
-/** TableScanMergeable. */
+/** TableScanMergeRule. */
 public class TableScanMergeRule extends MergeRule {
 
     public TableScanMergeRule(Config mergeConfig) {
@@ -26,13 +26,20 @@ public class TableScanMergeRule extends MergeRule {
         return copy(newScan, childrenResultNode);
     }
 
+    /**
+     * merge fromNode to toNode.
+     *
+     * @param fromNode fromNode
+     * @param toNode toNode
+     * @return TableScan
+     */
     protected TableScan merge(RelNode fromNode, RelNode toNode) {
         final TableScan fromScan = (TableScan) fromNode;
         final TableScan toScan = (TableScan) toNode;
         return fromScan.deepEquals(toScan) ? fromScan : null;
     }
 
-    /** table scan config. */
+    /** TableScanMergeRule config. */
     public static class Config extends MergeConfig {
 
         public static final Config DEFAULT =

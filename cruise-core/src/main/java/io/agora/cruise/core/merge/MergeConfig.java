@@ -7,6 +7,12 @@ public abstract class MergeConfig {
 
     protected Operand operand;
 
+    /**
+     * configure operands.
+     *
+     * @param operand operand
+     * @return this of MergeConfig
+     */
     public final MergeConfig withOperandSupplier(Operand operand) {
         this.operand = operand;
         return this;

@@ -14,7 +14,7 @@ import org.apache.calcite.rex.RexUtil;
 import java.util.Arrays;
 import java.util.List;
 
-/** FilterMergeable. */
+/** FilterMergeRule. */
 public class FilterMergeRule extends MergeRule {
 
     final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);

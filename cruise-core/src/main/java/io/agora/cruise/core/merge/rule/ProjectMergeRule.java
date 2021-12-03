@@ -14,7 +14,7 @@ import org.apache.calcite.rex.RexNode;
 
 import java.util.*;
 
-/** ProjectMergeable. */
+/** ProjectMergeRule. */
 public class ProjectMergeRule extends MergeRule {
 
     public ProjectMergeRule(Config mergeConfig) {

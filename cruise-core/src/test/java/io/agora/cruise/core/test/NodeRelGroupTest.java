@@ -64,13 +64,13 @@ public class NodeRelGroupTest extends NodeRelTest {
     public void testGroupBy3() throws SqlParseException {
 
         final String sql1 =
-                "select a as aa, b as bb, sum(c) as p from test_db.test_table WHERE c < 5000 group by a, b";
+                "select a as aa, b as bb, sum(c) as p from test_db.test_table WHERE a < 5000 group by a, b";
         final String sql2 =
-                "select a as cc, b as dd, max(c) as t from test_db.test_table WHERE c < 1000 group by a, b";
+                "select a as cc, b as dd, max(c) as t from test_db.test_table WHERE a < 1000 group by a, b";
         final String expectSql =
                 "SELECT a aa, b bb, a cc, b dd, SUM(c) p, MAX(c) t\n"
                         + "FROM test_db.test_table\n"
-                        + "WHERE c < 5000 OR c < 1000\n"
+                        + "WHERE a < 5000 OR a < 1000\n"
                         + "GROUP BY a, b";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
@@ -90,13 +90,13 @@ public class NodeRelGroupTest extends NodeRelTest {
     public void testGroupBy4() throws SqlParseException {
 
         final String sql1 =
-                "select a as aa, b as bb, sum(c) from test_db.test_table WHERE c < 5000 group by a, b";
+                "select a as aa, b as bb, sum(c) from test_db.test_table WHERE a < 5000 group by a, b";
         final String sql2 =
-                "select a as cc, b as dd, sum(c) from test_db.test_table WHERE c < 1000 group by a, b";
+                "select a as cc, b as dd, sum(c) from test_db.test_table WHERE a < 1000 group by a, b";
         final String expectSql =
                 "SELECT SUM(c), a aa, b bb, a cc, b dd\n"
                         + "FROM test_db.test_table\n"
-                        + "WHERE c < 5000 OR c < 1000\n"
+                        + "WHERE a < 5000 OR a < 1000\n"
                         + "GROUP BY a, b";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
@@ -116,13 +116,13 @@ public class NodeRelGroupTest extends NodeRelTest {
     public void testGroupBy5() throws SqlParseException {
 
         final String sql1 =
-                "select a as aa, b as bb, sum(c) as p from test_db.test_table WHERE c < 5000 group by a, b";
+                "select a as aa, b as bb, sum(c) as p from test_db.test_table WHERE b < 5000 group by a, b";
         final String sql2 =
-                "select a as cc, b as dd, sum(c) as t from test_db.test_table WHERE c < 1000 group by a, b";
+                "select a as cc, b as dd, sum(c) as t from test_db.test_table WHERE b < 1000 group by a, b";
         final String expectSql =
                 "SELECT a aa, b bb, a cc, b dd, SUM(c) p, SUM(c) t\n"
                         + "FROM test_db.test_table\n"
-                        + "WHERE c < 5000 OR c < 1000\n"
+                        + "WHERE b < 5000 OR b < 1000\n"
                         + "GROUP BY a, b";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
@@ -142,13 +142,13 @@ public class NodeRelGroupTest extends NodeRelTest {
     public void testGroupBy6() throws SqlParseException {
 
         final String sql1 =
-                "select a as aa, sum(c) as p from test_db.test_table WHERE c < 5000 group by a, b";
+                "select a as aa, sum(c) as p from test_db.test_table WHERE a < 5000 group by a, b";
         final String sql2 =
-                "select a as cc, b, sum(c) as t from test_db.test_table WHERE c < 1000 group by a, b";
+                "select a as cc, b, sum(c) as t from test_db.test_table WHERE a > 1000 group by a, b";
         final String expectSql =
                 "SELECT a aa, b, a cc, SUM(c) p, SUM(c) t\n"
                         + "FROM test_db.test_table\n"
-                        + "WHERE c < 5000 OR c < 1000\n"
+                        + "WHERE a > 1000 OR a < 5000\n"
                         + "GROUP BY a, b";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
@@ -198,6 +198,29 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "SELECT a, b, c, COUNT(DISTINCT if(c > 0, b, a)) c1, SUM(d) sd\n"
                         + "FROM test_db.test_table\n"
                         + "GROUP BY GROUPING SETS((a, b, c), (b, c))";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+
+        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        assertResultNode(expectSql, resultNode);
+    }
+
+    @Test
+    public void testGroupBy9() throws SqlParseException {
+
+        final String sql1 =
+                "select a as aa, b as bb, sum(c) from test_db.test_table WHERE c < 5000 group by a, b";
+        final String sql2 =
+                "select a as cc, b as dd, sum(c) from test_db.test_table WHERE c < 1000 group by a, b";
+        final String expectSql =
+                "SELECT a, b, c\nFROM test_db.test_table\nWHERE c < 5000 OR c < 1000";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);

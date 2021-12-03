@@ -38,6 +38,12 @@ public class AggregateMergeRule extends MergeRule {
         final Aggregate fromAggregate = (Aggregate) fromNode.getPayload();
         final Aggregate toAggregate = (Aggregate) toNode.getPayload();
         final RelNode newInput = childrenResultNode.get(0).getPayload();
+        if (!checkAggregateMergeable(fromAggregate)) {
+            return null;
+        }
+        if (!checkAggregateMergeable(toAggregate)) {
+            return null;
+        }
 
         if (callOutputNameEqual(fromAggregate, toAggregate, newInput)) {
             return null;
@@ -58,6 +64,18 @@ public class AggregateMergeRule extends MergeRule {
                 fromAggregate.getTraitSet().merge(toAggregate.getTraitSet());
         return fromAggregate.copy(
                 newRelTraitSet, newInput, newGroupSetTuple.f0, newGroupSetTuple.f1, newAggCalls);
+    }
+
+    /**
+     * check aggregate mergeable.
+     *
+     * <p>check all identifies in filter condition must also in group set and select list.
+     *
+     * @param aggregate aggregate
+     * @return boolean mergeable
+     */
+    private boolean checkAggregateMergeable(Aggregate aggregate) {
+        return AggregateMergeableCheck.contains(aggregate);
     }
 
     /**

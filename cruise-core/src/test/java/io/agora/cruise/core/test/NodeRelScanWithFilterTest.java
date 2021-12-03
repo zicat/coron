@@ -39,7 +39,7 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
     public void test2() throws SqlParseException {
 
         final String sql1 =
-                "select a as aa, b as bb, sum(c) as t from test_db.test_table WHERE c < 5000 group by a, b";
+                "select a as aa, b as bb, sum(c) as t from test_db.test_table WHERE a < 5000 group by a, b";
         final String sql2 = "select a as cc, b as dd, sum(d) from test_db.test_table group by a, b";
         final String expectSql =
                 "SELECT SUM(d), a aa, b bb, a cc, b dd, SUM(c) t\n"

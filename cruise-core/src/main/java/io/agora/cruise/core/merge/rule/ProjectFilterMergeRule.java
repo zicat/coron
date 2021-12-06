@@ -8,8 +8,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 
-import static io.agora.cruise.core.merge.Operand.ENY_NODE_TYPE;
-
 /** ProjectFilterMergeRule. */
 public class ProjectFilterMergeRule extends MergeRule {
 
@@ -34,7 +32,7 @@ public class ProjectFilterMergeRule extends MergeRule {
                 new Config()
                         .withOperandSupplier(
                                 Operand.of(Project.class, Filter.class)
-                                        .operand(Operand.of(ENY_NODE_TYPE, Project.class)))
+                                        .operand(Operand.ofTo(Project.class)))
                         .as(Config.class);
 
         @Override

@@ -113,7 +113,7 @@ public class ResultNode<T> {
      * @return string
      */
     protected String toString(String prefix) {
-        StringBuilder sb = new StringBuilder(prefix);
+        final StringBuilder sb = new StringBuilder(prefix);
         sb.append(payload);
         sb.append(System.lineSeparator());
         if (children != null) {

@@ -21,8 +21,8 @@ public class NodeUtils {
         final NodeRel nodeRoot = new NodeRel(mergePlanner, relRoot);
         queue.offer(nodeRoot);
         while (!queue.isEmpty()) {
-            Node<RelNode> node = queue.poll();
-            RelNode relNode = node.getPayload();
+            final Node<RelNode> node = queue.poll();
+            final RelNode relNode = node.getPayload();
             for (int i = 0; i < relNode.getInputs().size(); i++) {
                 queue.offer(new NodeRel(mergePlanner, node, relNode.getInput(i)));
             }
@@ -64,7 +64,7 @@ public class NodeUtils {
 
         for (Node<T> fromNode : nodeToLeaves) {
             for (Node<T> toNode : nodeFromLeaves) {
-                ResultNode<T> resultNode = merge(rootFrom, fromNode, toNode, false);
+                final ResultNode<T> resultNode = merge(rootFrom, fromNode, toNode, false);
                 if (!resultNode.isEmpty()) {
                     return resultNode;
                 }

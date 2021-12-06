@@ -10,8 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import static io.agora.cruise.core.merge.Operand.ENY_NODE_TYPE;
-
 /** RelNodeMergePlanner. */
 public class RelNodeMergePlanner {
 
@@ -38,10 +36,10 @@ public class RelNodeMergePlanner {
             if (match(config.operand(), fromNode, toNode)) {
                 final MergeRule rule = config.toMergeRule();
                 final RelNode relNode = rule.merge(fromNode, toNode, childrenResultNode);
-                final ResultNode<RelNode> resultNode = ResultNode.of(relNode, childrenResultNode);
-                resultNode.setFromLookAhead(lookAhead(config.operand(), Operand::fromRelNodeType));
-                resultNode.setToLookAhead(lookAhead(config.operand(), Operand::toRelNodeType));
-                return resultNode;
+                final ResultNode<RelNode> rn = ResultNode.of(relNode, childrenResultNode);
+                rn.setFromLookAhead(lookAhead(config.operand(), Operand::isAnyFromNodeType));
+                rn.setToLookAhead(lookAhead(config.operand(), Operand::isAnyToNodeType));
+                return rn;
             }
         }
         return ResultNode.of(null, childrenResultNode);
@@ -63,7 +61,7 @@ public class RelNodeMergePlanner {
             if (operand.parent() != null) {
                 queue.offer(operand.parent());
             }
-            if (handler.getType(operand) != ENY_NODE_TYPE) {
+            if (!handler.isAnyNodeType(operand)) {
                 ahead++;
             }
         }
@@ -82,12 +80,12 @@ public class RelNodeMergePlanner {
 
         if (operand.parent() == null
                 || match(operand.parent(), fromNode.getParent(), toNode.getParent())) {
-            boolean fromTrue =
-                    (operand.fromRelNodeType() == ENY_NODE_TYPE)
+            final boolean fromTrue =
+                    (operand.isAnyFromNodeType())
                             || (fromNode != null
                                     && operand.fromRelNodeType().isInstance(fromNode.getPayload()));
-            boolean toTrue =
-                    (operand.toRelNodeType() == ENY_NODE_TYPE)
+            final boolean toTrue =
+                    (operand.isAnyToNodeType())
                             || (toNode != null
                                     && operand.toRelNodeType().isInstance(toNode.getPayload()));
             return fromTrue && toTrue;
@@ -99,11 +97,11 @@ public class RelNodeMergePlanner {
     private interface ConfigRelNodeTypeHandler {
 
         /**
-         * get one type of TowMergeType.
+         * is any node type of config.
          *
-         * @param config TwoMergeType
-         * @return Class
+         * @param operand operand
+         * @return true if is any node type
          */
-        Class<?> getType(Operand config);
+        boolean isAnyNodeType(Operand operand);
     }
 }

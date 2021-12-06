@@ -30,11 +30,11 @@ public class ListComparator<T extends Comparable<T>> implements Comparator<List<
         if (o2 == null) {
             return -1;
         }
-        ListIterator<T> e1 = o1.listIterator();
-        ListIterator<T> e2 = o2.listIterator();
+        final ListIterator<T> e1 = o1.listIterator();
+        final ListIterator<T> e2 = o2.listIterator();
         while (e1.hasNext() && e2.hasNext()) {
-            T n1 = e1.next();
-            T n2 = e2.next();
+            final T n1 = e1.next();
+            final T n2 = e2.next();
             if (n1 == null) {
                 return 1;
             }

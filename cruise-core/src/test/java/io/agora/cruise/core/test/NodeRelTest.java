@@ -11,15 +11,15 @@ public class NodeRelTest extends TestBase {
 
     public NodeRelTest() throws SqlParseException {}
 
-    protected void assertResultNode(String expectSql, ResultNode<RelNode> resultNode) {
+    public void assertResultNode(String expectSql, ResultNode<RelNode> resultNode) {
         Assert.assertEquals(expectSql, toSql(resultNode));
     }
 
-    protected String toSql(ResultNode<RelNode> resultNode) {
+    public String toSql(ResultNode<RelNode> resultNode) {
         return toSql(resultNode.getPayload());
     }
 
-    protected String toSql(RelNode relNode) {
+    public String toSql(RelNode relNode) {
         return relNode2SqlNode(relNode).toSqlString(SparkSqlDialect.DEFAULT).getSql();
     }
 }

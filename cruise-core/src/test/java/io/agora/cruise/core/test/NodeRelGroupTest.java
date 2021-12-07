@@ -333,4 +333,22 @@ public class NodeRelGroupTest extends NodeRelTest {
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
+
+    @Test
+    public void testGroupBy14() throws SqlParseException {
+
+        final String sql1 = "select a, sum(b), sum(c) from test_db.test_table  group by a ";
+        final String sql2 = "select a, sum(c)  from test_db.test_table  group by a ";
+        final String expectSql =
+                "SELECT a, SUM(c), SUM(b), SUM(c)\nFROM test_db.test_table\nGROUP BY a";
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        assertResultNode(expectSql, resultNode);
+    }
 }

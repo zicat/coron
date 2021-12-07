@@ -36,19 +36,6 @@ public abstract class MergeRule {
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode);
 
-    //    /**
-    //     * create new RexNode that inputRef replace from fromInput to newInput.
-    //     *
-    //     * @param rexNode rexNode
-    //     * @param originalInput originalInput
-    //     * @param newInput newInput
-    //     * @return RexNode
-    //     */
-    //    protected RexNode createNewInputRexNode(
-    //            RexNode rexNode, RelNode originalInput, RelNode newInput) {
-    //        return createNewInputRexNode(rexNode, originalInput, newInput, 0);
-    //    }
-
     /**
      * create new RexNode that inputRef replace from fromInput to newInput.
      *
@@ -74,10 +61,12 @@ public abstract class MergeRule {
                         if (newIndex == -1) {
                             newIndex = findIndexByName(newInput.getRowType(), name);
                         }
-
-                        return newIndex == -1
-                                ? inputRef
-                                : new RexInputRef(newIndex, inputRef.getType());
+                        if (newIndex == -1) {
+                            throw new RuntimeException(
+                                    "create new input RexNode fail, node detail: "
+                                            + rexNode.toString());
+                        }
+                        return new RexInputRef(newIndex, inputRef.getType());
                     }
                 });
     }

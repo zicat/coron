@@ -21,7 +21,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** AggregateMergeRule. */
+/**
+ * AggregateMergeRule.
+ *
+ * <p>AggregateMergeCondition:
+ *
+ * <p>1. the groupSet of two Aggregations mapping to the same field of newInput
+ *
+ * <p>2. all aggregation functions of two Aggregation return the differName or defaultName or
+ * (sameName and sameFunction)
+ *
+ * <p>3. The preInput of two Aggregations is equal OR the inputRef in the filter of preInput must in
+ * group set.
+ *
+ * <p>OutputRowTypeFields: from GroupSet + from Aggregation Function Name + to Aggregation Function
+ * Name.
+ */
 public class AggregateMergeRule extends MergeRule {
 
     public AggregateMergeRule(Config mergeConfig) {
@@ -42,11 +57,8 @@ public class AggregateMergeRule extends MergeRule {
         final Aggregate fromAggregate = (Aggregate) fromNode.getPayload();
         final Aggregate toAggregate = (Aggregate) toNode.getPayload();
         final RelNode newInput = childrenResultNode.get(0).getPayload();
-        if (!checkAggregateMergeable(fromAggregate, toAggregate, newInput)) {
-            return null;
-        }
-
-        if (callOutputNameEqual(fromAggregate, toAggregate, newInput)) {
+        if (!checkAggregateMergeable(fromAggregate, toAggregate, newInput)
+                || callOutputNameEqual(fromAggregate, toAggregate, newInput)) {
             return null;
         }
 
@@ -176,13 +188,23 @@ public class AggregateMergeRule extends MergeRule {
         for (Map.Entry<String, AggregateCall> entry : newToAggCall.entrySet()) {
             String name = entry.getKey();
             AggregateCall call = entry.getValue();
-            if (!newFromAggCall.containsKey(name)) {
+            if (defaultAggregateFunctionName(name) || !newFromAggCall.containsKey(name)) {
                 newAggCalls.add(call);
             } else if (!newAggCalls.contains(call)) {
                 return null;
             }
         }
         return newAggCalls;
+    }
+
+    /**
+     * check function name is default.
+     *
+     * @param name name
+     * @return true if default
+     */
+    private static boolean defaultAggregateFunctionName(String name) {
+        return name.startsWith("EXPR$");
     }
 
     /**
@@ -331,6 +353,9 @@ public class AggregateMergeRule extends MergeRule {
 
         for (Map.Entry<String, AggregateCall> entry : fromNameCallMapping.entrySet()) {
             final String groupName = entry.getKey();
+            if (defaultAggregateFunctionName(groupName)) {
+                continue;
+            }
             final AggregateCall fromCall = entry.getValue();
             final AggregateCall toCall = toNameCallMapping.get(groupName);
             if (toCall == null) {

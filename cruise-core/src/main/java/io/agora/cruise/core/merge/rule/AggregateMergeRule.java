@@ -79,14 +79,22 @@ public class AggregateMergeRule extends MergeRule {
      */
     private boolean checkAggregateMergeable(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode newInput) {
-        final Filter fromFilter = AggregateFilterFinder.find(fromAggregate);
-        final Filter toFilter = AggregateFilterFinder.find(toAggregate);
-        if (fromFilter != null && toFilter != null) {
+        final Filter fromFilter = TopFilterFinder.find(fromAggregate);
+        final Filter toFilter = TopFilterFinder.find(toAggregate);
+        final Filter newFilter = TopFilterFinder.find(newInput);
+        if (fromFilter != null && toFilter != null && newFilter != null) {
             final RexNode newFromCondition =
                     createNewInputRexNode(
-                            fromFilter.getCondition(), fromFilter.getInput(), newInput);
+                            fromFilter.getCondition(),
+                            fromFilter.getInput(),
+                            newFilter.getInput(),
+                            0);
             final RexNode newToCondition =
-                    createNewInputRexNode(toFilter.getCondition(), toFilter.getInput(), newInput);
+                    createNewInputRexNode(
+                            toFilter.getCondition(),
+                            toFilter.getInput(),
+                            newFilter.getInput(),
+                            fromFilter.getInput().getRowType().getFieldCount());
             if (newFromCondition.equals(newToCondition)) {
                 return true;
             }
@@ -165,12 +173,15 @@ public class AggregateMergeRule extends MergeRule {
 
         final List<AggregateCall> newAggCalls = new ArrayList<>();
         newFromAggCall.forEach((k, v) -> newAggCalls.add(v));
-        newToAggCall.forEach(
-                (k, v) -> {
-                    if (!newAggCalls.contains(v)) {
-                        newAggCalls.add(v);
-                    }
-                });
+        for (Map.Entry<String, AggregateCall> entry : newToAggCall.entrySet()) {
+            String name = entry.getKey();
+            AggregateCall call = entry.getValue();
+            if (!newFromAggCall.containsKey(name)) {
+                newAggCalls.add(call);
+            } else if (!newAggCalls.contains(call)) {
+                return null;
+            }
+        }
         return newAggCalls;
     }
 

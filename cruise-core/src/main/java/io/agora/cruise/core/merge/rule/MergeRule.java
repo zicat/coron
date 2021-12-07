@@ -5,6 +5,7 @@ import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -35,6 +36,19 @@ public abstract class MergeRule {
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode);
 
+    //    /**
+    //     * create new RexNode that inputRef replace from fromInput to newInput.
+    //     *
+    //     * @param rexNode rexNode
+    //     * @param originalInput originalInput
+    //     * @param newInput newInput
+    //     * @return RexNode
+    //     */
+    //    protected RexNode createNewInputRexNode(
+    //            RexNode rexNode, RelNode originalInput, RelNode newInput) {
+    //        return createNewInputRexNode(rexNode, originalInput, newInput, 0);
+    //    }
+
     /**
      * create new RexNode that inputRef replace from fromInput to newInput.
      *
@@ -44,14 +58,23 @@ public abstract class MergeRule {
      * @return RexNode
      */
     protected RexNode createNewInputRexNode(
-            RexNode rexNode, RelNode originalInput, RelNode newInput) {
+            RexNode rexNode, RelNode originalInput, RelNode newInput, int offset) {
         return rexNode.accept(
                 new RexShuttle() {
                     @Override
                     public RexNode visitInputRef(RexInputRef inputRef) {
                         int index = inputRef.getIndex();
                         String name = originalInput.getRowType().getFieldNames().get(index);
-                        int newIndex = findIndexByName(newInput.getRowType(), name);
+                        int newIndex = -1;
+                        if (offset > 0 && newInput instanceof Aggregate && name.startsWith("$f")) {
+                            String newName =
+                                    "$f" + (offset + Integer.parseInt(name.replace("$f", "")));
+                            newIndex = findIndexByName(newInput.getRowType(), newName);
+                        }
+                        if (newIndex == -1) {
+                            newIndex = findIndexByName(newInput.getRowType(), name);
+                        }
+
                         return newIndex == -1
                                 ? inputRef
                                 : new RexInputRef(newIndex, inputRef.getType());

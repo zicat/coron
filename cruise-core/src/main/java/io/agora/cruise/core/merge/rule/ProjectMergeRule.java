@@ -53,13 +53,19 @@ public class ProjectMergeRule extends MergeRule {
         final Map<RelDataTypeField, RexNode> projectRexMapping = new HashMap<>();
         for (int i = 0; i < fromProject.getProjects().size(); i++) {
             RexNode rexNode = fromProject.getProjects().get(i);
-            RexNode newRexNode = createNewInputRexNode(rexNode, fromProject.getInput(), newInput);
+            RexNode newRexNode =
+                    createNewInputRexNode(rexNode, fromProject.getInput(), newInput, 0);
             projectRexMapping.put(fromProject.getRowType().getFieldList().get(i), newRexNode);
         }
 
         for (int i = 0; i < toProject.getProjects().size(); i++) {
             RexNode rexNode = toProject.getProjects().get(i);
-            RexNode newRexNode = createNewInputRexNode(rexNode, toProject.getInput(), newInput);
+            RexNode newRexNode =
+                    createNewInputRexNode(
+                            rexNode,
+                            toProject.getInput(),
+                            newInput,
+                            fromProject.getInput().getRowType().getFieldCount());
             RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
             RexNode fromRexNode = findRexNode(projectRexMapping, field);
             if (fromRexNode == null) {

@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractTable;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
@@ -25,17 +26,20 @@ import static org.apache.calcite.sql.SqlKind.CREATE_TABLE;
 /** SchemaTool. */
 public class SchemaTool {
 
-    private static final String DEFAULT_DB_NAME = "default";
+    public static final String DEFAULT_DB_NAME = "default";
 
     /**
      * create schema plus from ddl list.
      *
-     * @param ddlList ddl list
-     * @return schema plus
-     * @throws SqlParseException exception
+     * @param rootSchema rootSchema
+     * @param validator validator
+     * @param defaultDBName defaultDBName
+     * @param ddlList dbList
+     * @return rootSchema
+     * @throws SqlParseException SqlParseException
      */
     public static SchemaPlus addTableByDDL(
-            SchemaPlus rootSchema, SqlValidator validator, String... ddlList)
+            SchemaPlus rootSchema, SqlValidator validator, String defaultDBName, String... ddlList)
             throws SqlParseException {
         if (ddlList == null || ddlList.length == 0) {
             throw new IllegalArgumentException("not support create schema from empty ddl list");
@@ -57,7 +61,11 @@ public class SchemaTool {
                 schemaPlus = Frameworks.createRootSchema(false);
                 rootSchema.add(dbName, schemaPlus);
             }
-            schemaPlus.add(tableName, createColumnTable(createTable.columnList, validator));
+            Table table = createColumnTable(createTable.columnList, validator);
+            schemaPlus.add(tableName, table);
+            if (defaultDBName.equals(dbName)) {
+                rootSchema.add(tableName, table);
+            }
         }
         return rootSchema;
     }

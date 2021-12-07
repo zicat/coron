@@ -36,9 +36,15 @@ public class CalciteContext {
     }
 
     protected SchemaPlus rootSchema;
+    protected final String defaultDatabase;
+
+    public CalciteContext(String defaultDatabase) {
+        rootSchema = Frameworks.createRootSchema(true);
+        this.defaultDatabase = defaultDatabase;
+    }
 
     public CalciteContext() {
-        rootSchema = Frameworks.createRootSchema(true);
+        this(SchemaTool.DEFAULT_DB_NAME);
     }
 
     /**
@@ -50,7 +56,7 @@ public class CalciteContext {
      */
     public CalciteContext addTables(String... ddlList) throws SqlParseException {
         SqlValidator validator = createValidator();
-        rootSchema = SchemaTool.addTableByDDL(rootSchema, validator, ddlList);
+        rootSchema = SchemaTool.addTableByDDL(rootSchema, validator, defaultDatabase, ddlList);
         return this;
     }
 

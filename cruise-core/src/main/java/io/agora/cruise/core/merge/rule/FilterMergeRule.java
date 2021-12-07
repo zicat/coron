@@ -37,9 +37,14 @@ public class FilterMergeRule extends MergeRule {
         final Filter toFilter = (Filter) toNode.getPayload();
         final RelNode newInput = childrenResultNode.get(0).getPayload();
         final RexNode newFromCondition =
-                createNewInputRexNode(fromFilter.getCondition(), fromFilter.getInput(), newInput);
+                createNewInputRexNode(
+                        fromFilter.getCondition(), fromFilter.getInput(), newInput, 0);
         final RexNode newToCondition =
-                createNewInputRexNode(toFilter.getCondition(), toFilter.getInput(), newInput);
+                createNewInputRexNode(
+                        toFilter.getCondition(),
+                        toFilter.getInput(),
+                        newInput,
+                        fromFilter.getInput().getRowType().getFieldCount());
         final List<RexNode> orList = Arrays.asList(newFromCondition, newToCondition);
         orList.sort((o1, o2) -> o2.toString().compareTo(o1.toString()));
 

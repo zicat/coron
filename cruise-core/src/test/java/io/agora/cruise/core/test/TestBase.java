@@ -24,6 +24,11 @@ public class TestBase extends CalciteContext {
         addTables(ddl1, ddl2);
     }
 
+    public TestBase(String defaultDBName) throws SqlParseException {
+        super(defaultDBName);
+        addTables(ddl1, ddl2);
+    }
+
     protected SqlNode relNode2SqlNode(RelNode relNode) {
         RelToSqlConverter relToSqlConverter =
                 new JdbcImplementor(SparkSqlDialect.DEFAULT, new UTF16JavaTypeFactoryImp());

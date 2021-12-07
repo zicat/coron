@@ -10,7 +10,7 @@ import org.apache.calcite.rel.logical.LogicalFilter;
  *
  * <p>Find the first filter in input RelNode.
  */
-public class AggregateFilterFinder extends RelShuttleImpl {
+public class TopFilterFinder extends RelShuttleImpl {
 
     private Filter filter;
 
@@ -21,7 +21,7 @@ public class AggregateFilterFinder extends RelShuttleImpl {
      * @return filter
      */
     public static Filter find(RelNode relNode) {
-        AggregateFilterFinder finder = new AggregateFilterFinder();
+        TopFilterFinder finder = new TopFilterFinder();
         relNode.accept(finder);
         return finder.filter;
     }

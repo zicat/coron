@@ -314,6 +314,7 @@ data: {
     "SCALE"
     "SCHEMA"
     "SCHEMA_NAME"
+    "SCOPE"
     "SCOPE_CATALOGS"
     "SCOPE_NAME"
     "SCOPE_SCHEMA"

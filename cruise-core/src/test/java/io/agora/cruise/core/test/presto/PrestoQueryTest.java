@@ -4,6 +4,7 @@ import com.csvreader.CsvReader;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.test.NodeRelTest;
 import io.agora.cruise.parser.SqlNodeTool;
+import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -11,9 +12,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,39 +22,6 @@ import static io.agora.cruise.core.NodeUtils.findSubNode;
 
 /** PrestoQueryTest. */
 public class PrestoQueryTest {
-
-    private static final NodeRelTest nodeRelTest;
-
-    static {
-        try {
-            nodeRelTest = new NodeRelTest();
-            LineIterator it =
-                    IOUtils.lineIterator(
-                            Objects.requireNonNull(
-                                    Thread.currentThread()
-                                            .getContextClassLoader()
-                                            .getResourceAsStream("presto_query/ddl.txt")),
-                            StandardCharsets.UTF_8);
-            while (it.hasNext()) {
-                String ddl = it.next();
-                String[] split = ddl.split("\\s+");
-                String table = split[2];
-                String[] tableSplit = table.split("\\.");
-                String newTable = null;
-                if (tableSplit.length < 2 || tableSplit.length > 3) {
-                    continue;
-                } else if (tableSplit.length == 2) {
-                    newTable = tableSplit[0] + ".\"" + tableSplit[1] + "\"";
-                } else {
-                    newTable = tableSplit[1] + ".\"" + tableSplit[2] + "\"";
-                }
-                ddl = ddl.replace(table, newTable);
-                nodeRelTest.addTables(ddl);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     @Test
     public void testJoin() throws SqlParseException {
@@ -81,33 +47,97 @@ public class PrestoQueryTest {
                 querySql.stream()
                         .filter(v -> !v.startsWith("explain"))
                         .filter(v -> !v.contains("system.runtime"))
+                        .filter(v -> !v.toUpperCase().startsWith("SHOW "))
                         .collect(Collectors.toList());
+        File file = new File(System.getProperty("user.home") + "/Desktop/public-sql.txt");
+        if (file.exists()) {
+            file.delete();
+        }
+        file.createNewFile();
+        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+
+        File file2 = new File(System.getProperty("user.home") + "/Desktop/source-sql.txt");
+        if (file2.exists()) {
+            file2.delete();
+        }
+        file2.createNewFile();
+        BufferedWriter bw2 = new BufferedWriter(new FileWriter(file2));
+        Map<String, Integer> result = new HashMap<>();
         for (int i = 0; i < querySql.size() - 1; i++) {
             for (int j = i + 1; j < querySql.size(); j++) {
                 String fromSql = querySql.get(i);
                 String toSql = querySql.get(j);
-                final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(fromSql);
-                final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(toSql);
-                final RelNode relNode1 =
-                        nodeRelTest
-                                .createSqlToRelConverter()
-                                .convertQuery(sqlNode1, true, true)
-                                .rel;
-                final RelNode relNode2 =
-                        nodeRelTest
-                                .createSqlToRelConverter()
-                                .convertQuery(sqlNode2, true, true)
-                                .rel;
+                try {
+                    final SqlNode sqlNode1 =
+                            SqlNodeTool.toQuerySqlNode(fromSql, new Int2BooleanConditionShuttle());
+                    final SqlNode sqlNode2 =
+                            SqlNodeTool.toQuerySqlNode(toSql, new Int2BooleanConditionShuttle());
+                    final RelNode relNode1 =
+                            nodeRelTest
+                                    .createSqlToRelConverter()
+                                    .convertQuery(sqlNode1, true, true)
+                                    .rel;
+                    final RelNode relNode2 =
+                            nodeRelTest
+                                    .createSqlToRelConverter()
+                                    .convertQuery(sqlNode2, true, true)
+                                    .rel;
 
-                ResultNode<RelNode> resultNode =
-                        findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                    ResultNode<RelNode> resultNode =
+                            findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                    if (resultNode.isEmpty()) {
+                        continue;
+                    }
 
-                if (!resultNode.isEmpty() && nodeRelTest.toSql(resultNode).contains("GROUP BY")) {
-                    System.out.println("==================== similar sql:");
-                    System.out.println(nodeRelTest.toSql(resultNode));
+                    String resultSql = nodeRelTest.toSql(resultNode);
+                    if (!resultSql.contains("GROUP BY")) {
+                        continue;
+                    }
+                    Integer value = result.get(resultSql);
+                    if (value == null) {
+                        value = result.size();
+                        result.put(resultSql, value);
+                        bw.write(
+                                "======================similar sql "
+                                        + value
+                                        + "==================");
+                        bw.newLine();
+                        bw.write(nodeRelTest.toSql(resultNode));
+                        bw.newLine();
+                        bw.flush();
+                    }
+                    bw2.write(
+                            "=========================from sql mapping to ="
+                                    + value
+                                    + "========================");
+                    bw2.newLine();
+                    bw2.write(fromSql);
+                    bw2.newLine();
+                    bw2.write(
+                            "=========================to sql mapping to ="
+                                    + value
+                                    + "========================");
+                    bw2.newLine();
+                    bw2.write(toSql);
+                    bw2.newLine();
+                    bw2.flush();
+
+                } catch (Throwable e) {
+                    if (e.toString().contains("Object 'media' not found")
+                            || e.toString().contains("Object 'queries' not found")
+                            || e.toString().contains("Object 'information_schema' not found")) {
+                        continue;
+                    }
+                    System.out.println("======================");
+                    System.out.println(fromSql);
+                    System.out.println("======================");
+                    System.out.println(toSql);
+                    throw e;
                 }
             }
         }
+        bw.close();
+        bw2.close();
     }
 
     /** Handler. */
@@ -130,85 +160,419 @@ public class PrestoQueryTest {
                         Objects.requireNonNull(
                                 Thread.currentThread()
                                         .getContextClassLoader()
-                                        .getResourceAsStream("presto_query/query.log")),
+                                        .getResourceAsStream("presto_query/query2.log")),
                         StandardCharsets.UTF_8);
         csvReaderHandle(reader, handler);
     }
 
+    private static final NodeRelTest nodeRelTest;
+
+    static {
+        try {
+            nodeRelTest = new NodeRelTest("report_datahub");
+            LineIterator it =
+                    IOUtils.lineIterator(
+                            Objects.requireNonNull(
+                                    Thread.currentThread()
+                                            .getContextClassLoader()
+                                            .getResourceAsStream("presto_query/ddl.txt")),
+                            StandardCharsets.UTF_8);
+            while (it.hasNext()) {
+                String ddl = it.next();
+                String[] split = ddl.split("\\s+");
+                String table = split[2];
+                String[] tableSplit = table.split("\\.");
+                String newTable;
+                if (tableSplit.length < 2 || tableSplit.length > 3) {
+                    continue;
+                } else if (tableSplit.length == 2) {
+                    newTable = tableSplit[0] + ".\"" + tableSplit[1] + "\"";
+                } else {
+                    newTable = tableSplit[1] + ".\"" + tableSplit[2] + "\"";
+                }
+                ddl = ddl.replace(table, newTable);
+                nodeRelTest.addTables(ddl);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     final String sql1 =
-            "SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,\n"
-                    + "  app_type,\n"
-                    + "  SUM(t1.audio) AS audio,\n"
-                    + "  SUM(t1.video) AS video,\n"
-                    + "  SUM(t1.total_usage) AS total_usage\n"
-                    + "FROM (SELECT\n"
-                    + "    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */\n"
-                    + "    date,\n"
+            "SELECT SUM(\"自定义 SQL 查询\".\"audience_low_latency_last1\") AS \"TEMP(Calculation_230316907702542336)(2007846651)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_low_latency\") AS \"TEMP(Calculation_230316907702542336)(2627877912)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"total\") AS \"TEMP(Calculation_5203557528859017219)(2253843611)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"total_last1\") AS \"TEMP(Calculation_5203557528859017219)(3076278274)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audio_last1\") AS \"TEMP(Calculation_5203557528863870981)(2207581090)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audio\") AS \"TEMP(Calculation_5203557528863870981)(4234702922)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"video_last1\") AS \"TEMP(Calculation_5203557528864096263)(1192334319)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"video\") AS \"TEMP(Calculation_5203557528864096263)(3647352276)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience\") AS \"TEMP(Calculation_534802460955746306)(1306364424)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_last1\") AS \"TEMP(Calculation_534802460955746306)(2505681848)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio\") AS \"TEMP(Calculation_534802460956037124)(1868547182)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio_last1\") AS \"TEMP(Calculation_534802460956037124)(2218970377)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_last1\") AS \"TEMP(Calculation_534802460956319750)(188915252)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video\") AS \"TEMP(Calculation_534802460956319750)(2182583436)(0)\",\n"
+                    + "  MAX(\"自定义 SQL 查询\".\"stat_date\") AS \"TEMP(attr_stat_date_nk)(2102638629)(0)\",\n"
+                    + "  MIN(\"自定义 SQL 查询\".\"stat_date\") AS \"TEMP(attr_stat_date_nk)(2790680713)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio_low_latency_last1\") AS \"TEMP(audience_audio_last1_rate (复制)_230316907704033282)(67\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio_low_latency\") AS \"TEMP(audience_audio_last1_rate (复制)_230316907704033282)(83\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_audio_last1\") AS \"TEMP(audience_audio_last1_rate (复制)_534802460956618761)(24\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_audio\") AS \"TEMP(audience_audio_last1_rate (复制)_534802460956618761)(36\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_last1\") AS \"TEMP(audience_last1_rate (复制)_534802460956647435)(15035501\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host\") AS \"TEMP(audience_last1_rate (复制)_534802460956647435)(24867219\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_low_latency_last1\") AS \"TEMP(audience_low_latency_last1_rate (复制)_2303169077218304\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_low_latency\") AS \"TEMP(audience_low_latency_last1_rate (复制)_2303169077218301\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_video\") AS \"TEMP(audience_video_last1_rate (复制)_534802460956696589)(26\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_video_last1\") AS \"TEMP(audience_video_last1_rate (复制)_534802460956696589)(42\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_low_latency\") AS \"sum_audience_video_low_latency_ok\"\n"
+                    + "FROM (SELECT date,\n"
+                    + "      SUBSTR(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) AS date_range_1,\n"
+                    + "      SUBSTR(CAST(end_date AS VARCHAR), 1, 10) AS date_range_2,\n"
+                    + "      stat_period,\n"
+                    + "        CASE WHEN CAST(stat_period AS VARCHAR) = 'day' THEN substr(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) ELSE concat(CAST(date_format(CAST(start_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR), '~', CAST(date_format(CAST(end_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR)) END AS stat_date,\n"
+                    + "      area,\n"
+                    + "      vid,\n"
+                    + "      project,\n"
                     + "      company_id AS cid,\n"
-                    + "      vid,\n"
+                    + "      company_name AS company,\n"
+                    + "      customer_level AS level,\n"
+                    + "      vid_internal_industry_en AS industry,\n"
+                    + "      vid_use_case_cn,\n"
+                    + "      csdc_owner,\n"
+                    + "      os,\n"
                     + "      ver,\n"
-                    + "        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,\n"
-                    + "      ROUND(SUM(audio), 0) AS audio,\n"
-                    + "      ROUND(SUM(video), 0) AS video,\n"
-                    + "      ROUND(SUM(audio + video), 0) AS total_usage\n"
-                    + "    FROM report_datahub.agora_vid_usage_cube_di\n"
-                    + "    WHERE date_parse(cast( \"agora_vid_usage_cube_di\".\"date\" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'\n"
-                    + "    GROUP BY date,\n"
-                    + "      company_id,\n"
-                    + "      vid,\n"
-                    + "      ver,\n"
-                    + "        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1\n"
-                    + "  INNER JOIN (SELECT vid,\n"
-                    + "      companyname,\n"
-                    + "      projectname,\n"
-                    + "      country\n"
-                    + "    FROM report_datahub.new_vendor_dimension\n"
-                    + "    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)\n"
-                    + "WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'react_native'\n"
-                    + "GROUP BY date,\n"
-                    + "  app_type";
+                    + "      ver_type,\n"
+                    + "      product_level1,\n"
+                    + "      product_level2,\n"
+                    + "      product_level3,\n"
+                    + "      total,\n"
+                    + "      audio,\n"
+                    + "      video,\n"
+                    + "      video_sd,\n"
+                    + "      video_hd,\n"
+                    + "      video_hdp,\n"
+                    + "        host_audio + host_video AS host,\n"
+                    + "      host_audio,\n"
+                    + "      host_video,\n"
+                    + "      host_sd,\n"
+                    + "      host_hd,\n"
+                    + "      host_hdp,\n"
+                    + "        audience_audio + audience_video AS audience,\n"
+                    + "        audience_audio_low_latency + audience_video_low_latency AS audience_low_latency,\n"
+                    + "      audience_audio,\n"
+                    + "      audience_audio_low_latency,\n"
+                    + "      audience_video,\n"
+                    + "      audience_video_low_latency,\n"
+                    + "      audience_sd,\n"
+                    + "      audience_sd_low_latency,\n"
+                    + "      audience_hd,\n"
+                    + "      audience_hd_low_latency,\n"
+                    + "      audience_hdp,\n"
+                    + "      audience_hdp_low_latency,\n"
+                    + "      total_last1,\n"
+                    + "      audio_last1,\n"
+                    + "      video_last1,\n"
+                    + "      video_sd_last1,\n"
+                    + "      video_hd_last1,\n"
+                    + "      video_hdp_last1,\n"
+                    + "        host_audio_last1 + host_video_last1 AS host_last1,\n"
+                    + "      host_audio_last1,\n"
+                    + "      host_video_last1,\n"
+                    + "        audience_audio_last1 + audience_video_last1 AS audience_last1,\n"
+                    + "        audience_audio_low_latency_last1 + audience_video_low_latency_last1 AS audience_low_latency_last1,\n"
+                    + "      audience_audio_last1,\n"
+                    + "      audience_audio_low_latency_last1,\n"
+                    + "      audience_video_last1,\n"
+                    + "      audience_video_low_latency_last1,\n"
+                    + "      total_last7,\n"
+                    + "      audio_last7,\n"
+                    + "      video_last7,\n"
+                    + "      video_sd_last7,\n"
+                    + "      video_hd_last7,\n"
+                    + "      video_hdp_last7,\n"
+                    + "        host_audio_last7 + host_video_last7 AS host_last7,\n"
+                    + "      host_audio_last7,\n"
+                    + "      host_video_last7,\n"
+                    + "        audience_audio_last7 + audience_video_last7 AS audience_last7,\n"
+                    + "        audience_audio_low_latency_last7 + audience_video_low_latency_last7 AS audience_low_latency_last7,\n"
+                    + "      audience_audio_last7,\n"
+                    + "      audience_audio_low_latency_last7,\n"
+                    + "      audience_video_last7,\n"
+                    + "      audience_video_low_latency_last7\n"
+                    + "    FROM report_datahub.vendor_vid_usage_di_1\n"
+                    + "    WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-06') AND date_parse(cast( date as VARCHAR), '%Y%m%d') <= DATE('2021-12-06') AND CAST(vid AS VARCHAR) = CAST(428342 AS VARCHAR) AND dim = 1) AS \"自定义 SQL 查询\"\n"
+                    + "  CROSS JOIN (SELECT MAX(date_parse(cast( \"自定义 SQL 查询\".\"date\" as VARCHAR), '%Y%m%d')) AS \"__measure__0\"\n"
+                    + "    FROM (SELECT date,\n"
+                    + "          SUBSTR(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) AS date_range_1,\n"
+                    + "          SUBSTR(CAST(end_date AS VARCHAR), 1, 10) AS date_range_2,\n"
+                    + "          stat_period,\n"
+                    + "            CASE WHEN CAST(stat_period AS VARCHAR) = 'day' THEN substr(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) ELSE concat(CAST(date_format(CAST(start_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR), '~', CAST(date_format(CAST(end_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR)) END AS stat_date,\n"
+                    + "          area,\n"
+                    + "          vid,\n"
+                    + "          project,\n"
+                    + "          company_id AS cid,\n"
+                    + "          company_name AS company,\n"
+                    + "          customer_level AS level,\n"
+                    + "          vid_internal_industry_en AS industry,\n"
+                    + "          vid_use_case_cn,\n"
+                    + "          csdc_owner,\n"
+                    + "          os,\n"
+                    + "          ver,\n"
+                    + "          ver_type,\n"
+                    + "          product_level1,\n"
+                    + "          product_level2,\n"
+                    + "          product_level3,\n"
+                    + "          total,\n"
+                    + "          audio,\n"
+                    + "          video,\n"
+                    + "          video_sd,\n"
+                    + "          video_hd,\n"
+                    + "          video_hdp,\n"
+                    + "            host_audio + host_video AS host,\n"
+                    + "          host_audio,\n"
+                    + "          host_video,\n"
+                    + "          host_sd,\n"
+                    + "          host_hd,\n"
+                    + "          host_hdp,\n"
+                    + "            audience_audio + audience_video AS audience,\n"
+                    + "            audience_audio_low_latency + audience_video_low_latency AS audience_low_latency,\n"
+                    + "          audience_audio,\n"
+                    + "          audience_audio_low_latency,\n"
+                    + "          audience_video,\n"
+                    + "          audience_video_low_latency,\n"
+                    + "          audience_sd,\n"
+                    + "          audience_sd_low_latency,\n"
+                    + "          audience_hd,\n"
+                    + "          audience_hd_low_latency,\n"
+                    + "          audience_hdp,\n"
+                    + "          audience_hdp_low_latency,\n"
+                    + "          total_last1,\n"
+                    + "          audio_last1,\n"
+                    + "          video_last1,\n"
+                    + "          video_sd_last1,\n"
+                    + "          video_hd_last1,\n"
+                    + "          video_hdp_last1,\n"
+                    + "            host_audio_last1 + host_video_last1 AS host_last1,\n"
+                    + "          host_audio_last1,\n"
+                    + "          host_video_last1,\n"
+                    + "            audience_audio_last1 + audience_video_last1 AS audience_last1,\n"
+                    + "            audience_audio_low_latency_last1 + audience_video_low_latency_last1 AS audience_low_latency_last1,\n"
+                    + "          audience_audio_last1,\n"
+                    + "          audience_audio_low_latency_last1,\n"
+                    + "          audience_video_last1,\n"
+                    + "          audience_video_low_latency_last1,\n"
+                    + "          total_last7,\n"
+                    + "          audio_last7,\n"
+                    + "          video_last7,\n"
+                    + "          video_sd_last7,\n"
+                    + "          video_hd_last7,\n"
+                    + "          video_hdp_last7,\n"
+                    + "            host_audio_last7 + host_video_last7 AS host_last7,\n"
+                    + "          host_audio_last7,\n"
+                    + "          host_video_last7,\n"
+                    + "            audience_audio_last7 + audience_video_last7 AS audience_last7,\n"
+                    + "            audience_audio_low_latency_last7 + audience_video_low_latency_last7 AS audience_low_latency_last7,\n"
+                    + "          audience_audio_last7,\n"
+                    + "          audience_audio_low_latency_last7,\n"
+                    + "          audience_video_last7,\n"
+                    + "          audience_video_low_latency_last7\n"
+                    + "        FROM report_datahub.vendor_vid_usage_di_1\n"
+                    + "        WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-06') AND date_parse(cast( date as VARCHAR), '%Y%m%d') <= DATE('2021-12-06') AND CAST(vid AS VARCHAR) = CAST(428342 AS VARCHAR) AND dim = 1) AS \"自定义 SQL 查询\"\n"
+                    + "    HAVING COUNT(1) > 0) AS \"t0\"\n"
+                    + "WHERE date_parse(cast( \"自定义 SQL 查询\".\"date\" as VARCHAR), '%Y%m%d') = \"t0\".\"__measure__0\"\n"
+                    + "HAVING COUNT(1) > 0";
     final String sql2 =
-            "SELECT CASE TYPEOF(t1.date) WHEN 'integer' THEN CAST(DATE_PARSE(CAST(t1.date AS VARCHAR), '%Y%m%d') AS TIMESTAMP) ELSE CAST(CAST(t1.date AS VARCHAR) AS TIMESTAMP) END AS date,\n"
-                    + "  app_type,\n"
-                    + "  SUM(t1.audio) AS audio,\n"
-                    + "  SUM(t1.video) AS video,\n"
-                    + "  SUM(t1.total_usage) AS total_usage\n"
-                    + "FROM (SELECT\n"
-                    + "    /*+ USE_INDEX(agora_vid_usage_cube_di_date_group_mark_index) */\n"
-                    + "    date,\n"
+            "SELECT SUM(\"自定义 SQL 查询\".\"total\") AS \"TEMP(Calculation_5203557528862519300)(2253843611)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"total_last7\") AS \"TEMP(Calculation_5203557528862519300)(431428601)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audio_last7\") AS \"TEMP(Calculation_5203557528863973382)(1745737303)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audio\") AS \"TEMP(Calculation_5203557528863973382)(4234702922)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"video_last7\") AS \"TEMP(Calculation_5203557528864174088)(3553322618)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"video\") AS \"TEMP(Calculation_5203557528864174088)(3647352276)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience\") AS \"TEMP(Calculation_534802460955955203)(1306364424)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_last7\") AS \"TEMP(Calculation_534802460955955203)(2563414513)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio_last7\") AS \"TEMP(Calculation_534802460956184581)(1783975840)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio\") AS \"TEMP(Calculation_534802460956184581)(1868547182)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_last7\") AS \"TEMP(Calculation_534802460956430343)(1897793420)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video\") AS \"TEMP(Calculation_534802460956430343)(2182583436)(0)\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio_low_latency_last7\") AS \"TEMP(audience_audio_last7_rate (复制)_230316907704053763)(29\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_audio_low_latency\") AS \"TEMP(audience_audio_last7_rate (复制)_230316907704053763)(83\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_audio_last7\") AS \"TEMP(audience_audio_last7_rate (复制)_534802460956631050)(15\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_audio\") AS \"TEMP(audience_audio_last7_rate (复制)_534802460956631050)(36\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_last7\") AS \"TEMP(audience_last7_date (复制)_534802460957310992)(24217528\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host\") AS \"TEMP(audience_last7_date (复制)_534802460957310992)(24867219\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_low_latency\") AS \"TEMP(audience_low_latency_last1_rate (复制)_2303169077032468\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_low_latency_last7\") AS \"TEMP(audience_low_latency_last1_rate (复制)_2303169077032461\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_low_latency\") AS \"TEMP(audience_low_latency_last7_rate (复制)_2303169077218181\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"audience_video_low_latency_last7\") AS \"TEMP(audience_low_latency_last7_rate (复制)_2303169077218182\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_video_last7\") AS \"TEMP(audience_video_last7_rate (复制)_534802460956704782)(21\",\n"
+                    + "  SUM(\"自定义 SQL 查询\".\"host_video\") AS \"TEMP(audience_video_last7_rate (复制)_534802460956704782)(26\"\n"
+                    + "FROM (SELECT date,\n"
+                    + "      SUBSTR(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) AS date_range_1,\n"
+                    + "      SUBSTR(CAST(end_date AS VARCHAR), 1, 10) AS date_range_2,\n"
+                    + "      stat_period,\n"
+                    + "        CASE WHEN CAST(stat_period AS VARCHAR) = 'day' THEN substr(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) ELSE concat(CAST(date_format(CAST(start_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR), '~', CAST(date_format(CAST(end_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR)) END AS stat_date,\n"
+                    + "      area,\n"
+                    + "      vid,\n"
+                    + "      project,\n"
                     + "      company_id AS cid,\n"
-                    + "      vid,\n"
+                    + "      company_name AS company,\n"
+                    + "      customer_level AS level,\n"
+                    + "      vid_internal_industry_en AS industry,\n"
+                    + "      vid_use_case_cn,\n"
+                    + "      csdc_owner,\n"
+                    + "      os,\n"
                     + "      ver,\n"
-                    + "        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END AS app_type,\n"
-                    + "      ROUND(SUM(audio), 0) AS audio,\n"
-                    + "      ROUND(SUM(video), 0) AS video,\n"
-                    + "      ROUND(SUM(audio + video), 0) AS total_usage\n"
-                    + "    FROM report_datahub.agora_vid_usage_cube_di\n"
-                    + "    WHERE date_parse(cast( \"agora_vid_usage_cube_di\".\"date\" as VARCHAR), '%Y%m%d') BETWEEN TIMESTAMP '2021-11-24 00:00:00' AND TIMESTAMP '2021-11-30 00:00:00' AND CAST(group_mark AS VARCHAR) = '(product_line,product_type,domain,country,vid,os,ver,app_type)'\n"
-                    + "    GROUP BY date,\n"
-                    + "      company_id,\n"
-                    + "      vid,\n"
-                    + "      ver,\n"
-                    + "        CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND CAST(app_type AS VARCHAR) = 'UNKNOWN' THEN 'unity' ELSE app_type END) AS t1\n"
-                    + "  INNER JOIN (SELECT vid,\n"
-                    + "      companyname,\n"
-                    + "      projectname,\n"
-                    + "      country\n"
-                    + "    FROM report_datahub.new_vendor_dimension\n"
-                    + "    WHERE 1 = 1) AS t2 ON CAST(t1.vid AS VARCHAR) = CAST(t2.vid AS VARCHAR)\n"
-                    + "WHERE 1 = 1 AND CAST(app_type AS VARCHAR) = 'unity'\n"
-                    + "GROUP BY date,\n"
-                    + "  app_type";
+                    + "      ver_type,\n"
+                    + "      product_level1,\n"
+                    + "      product_level2,\n"
+                    + "      product_level3,\n"
+                    + "      total,\n"
+                    + "      audio,\n"
+                    + "      video,\n"
+                    + "      video_sd,\n"
+                    + "      video_hd,\n"
+                    + "      video_hdp,\n"
+                    + "        host_audio + host_video AS host,\n"
+                    + "      host_audio,\n"
+                    + "      host_video,\n"
+                    + "      host_sd,\n"
+                    + "      host_hd,\n"
+                    + "      host_hdp,\n"
+                    + "        audience_audio + audience_video AS audience,\n"
+                    + "        audience_audio_low_latency + audience_video_low_latency AS audience_low_latency,\n"
+                    + "      audience_audio,\n"
+                    + "      audience_audio_low_latency,\n"
+                    + "      audience_video,\n"
+                    + "      audience_video_low_latency,\n"
+                    + "      audience_sd,\n"
+                    + "      audience_sd_low_latency,\n"
+                    + "      audience_hd,\n"
+                    + "      audience_hd_low_latency,\n"
+                    + "      audience_hdp,\n"
+                    + "      audience_hdp_low_latency,\n"
+                    + "      total_last1,\n"
+                    + "      audio_last1,\n"
+                    + "      video_last1,\n"
+                    + "      video_sd_last1,\n"
+                    + "      video_hd_last1,\n"
+                    + "      video_hdp_last1,\n"
+                    + "        host_audio_last1 + host_video_last1 AS host_last1,\n"
+                    + "      host_audio_last1,\n"
+                    + "      host_video_last1,\n"
+                    + "        audience_audio_last1 + audience_video_last1 AS audience_last1,\n"
+                    + "        audience_audio_low_latency_last1 + audience_video_low_latency_last1 AS audience_low_latency_last1,\n"
+                    + "      audience_audio_last1,\n"
+                    + "      audience_audio_low_latency_last1,\n"
+                    + "      audience_video_last1,\n"
+                    + "      audience_video_low_latency_last1,\n"
+                    + "      total_last7,\n"
+                    + "      audio_last7,\n"
+                    + "      video_last7,\n"
+                    + "      video_sd_last7,\n"
+                    + "      video_hd_last7,\n"
+                    + "      video_hdp_last7,\n"
+                    + "        host_audio_last7 + host_video_last7 AS host_last7,\n"
+                    + "      host_audio_last7,\n"
+                    + "      host_video_last7,\n"
+                    + "        audience_audio_last7 + audience_video_last7 AS audience_last7,\n"
+                    + "        audience_audio_low_latency_last7 + audience_video_low_latency_last7 AS audience_low_latency_last7,\n"
+                    + "      audience_audio_last7,\n"
+                    + "      audience_audio_low_latency_last7,\n"
+                    + "      audience_video_last7,\n"
+                    + "      audience_video_low_latency_last7\n"
+                    + "    FROM report_datahub.vendor_vid_usage_di_1\n"
+                    + "    WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-06') AND date_parse(cast( date as VARCHAR), '%Y%m%d') <= DATE('2021-12-06') AND CAST(vid AS VARCHAR) = CAST(428342 AS VARCHAR) AND dim = 1) AS \"自定义 SQL 查询\"\n"
+                    + "  CROSS JOIN (SELECT MAX(date_parse(cast( \"自定义 SQL 查询\".\"date\" as VARCHAR), '%Y%m%d')) AS \"__measure__0\"\n"
+                    + "    FROM (SELECT date,\n"
+                    + "          SUBSTR(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) AS date_range_1,\n"
+                    + "          SUBSTR(CAST(end_date AS VARCHAR), 1, 10) AS date_range_2,\n"
+                    + "          stat_period,\n"
+                    + "            CASE WHEN CAST(stat_period AS VARCHAR) = 'day' THEN substr(CAST(date_parse(cast( date as VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) ELSE concat(CAST(date_format(CAST(start_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR), '~', CAST(date_format(CAST(end_date AS TIMESTAMP), '%Y%m%d') AS VARCHAR)) END AS stat_date,\n"
+                    + "          area,\n"
+                    + "          vid,\n"
+                    + "          project,\n"
+                    + "          company_id AS cid,\n"
+                    + "          company_name AS company,\n"
+                    + "          customer_level AS level,\n"
+                    + "          vid_internal_industry_en AS industry,\n"
+                    + "          vid_use_case_cn,\n"
+                    + "          csdc_owner,\n"
+                    + "          os,\n"
+                    + "          ver,\n"
+                    + "          ver_type,\n"
+                    + "          product_level1,\n"
+                    + "          product_level2,\n"
+                    + "          product_level3,\n"
+                    + "          total,\n"
+                    + "          audio,\n"
+                    + "          video,\n"
+                    + "          video_sd,\n"
+                    + "          video_hd,\n"
+                    + "          video_hdp,\n"
+                    + "            host_audio + host_video AS host,\n"
+                    + "          host_audio,\n"
+                    + "          host_video,\n"
+                    + "          host_sd,\n"
+                    + "          host_hd,\n"
+                    + "          host_hdp,\n"
+                    + "            audience_audio + audience_video AS audience,\n"
+                    + "            audience_audio_low_latency + audience_video_low_latency AS audience_low_latency,\n"
+                    + "          audience_audio,\n"
+                    + "          audience_audio_low_latency,\n"
+                    + "          audience_video,\n"
+                    + "          audience_video_low_latency,\n"
+                    + "          audience_sd,\n"
+                    + "          audience_sd_low_latency,\n"
+                    + "          audience_hd,\n"
+                    + "          audience_hd_low_latency,\n"
+                    + "          audience_hdp,\n"
+                    + "          audience_hdp_low_latency,\n"
+                    + "          total_last1,\n"
+                    + "          audio_last1,\n"
+                    + "          video_last1,\n"
+                    + "          video_sd_last1,\n"
+                    + "          video_hd_last1,\n"
+                    + "          video_hdp_last1,\n"
+                    + "            host_audio_last1 + host_video_last1 AS host_last1,\n"
+                    + "          host_audio_last1,\n"
+                    + "          host_video_last1,\n"
+                    + "            audience_audio_last1 + audience_video_last1 AS audience_last1,\n"
+                    + "            audience_audio_low_latency_last1 + audience_video_low_latency_last1 AS audience_low_latency_last1,\n"
+                    + "          audience_audio_last1,\n"
+                    + "          audience_audio_low_latency_last1,\n"
+                    + "          audience_video_last1,\n"
+                    + "          audience_video_low_latency_last1,\n"
+                    + "          total_last7,\n"
+                    + "          audio_last7,\n"
+                    + "          video_last7,\n"
+                    + "          video_sd_last7,\n"
+                    + "          video_hd_last7,\n"
+                    + "          video_hdp_last7,\n"
+                    + "            host_audio_last7 + host_video_last7 AS host_last7,\n"
+                    + "          host_audio_last7,\n"
+                    + "          host_video_last7,\n"
+                    + "            audience_audio_last7 + audience_video_last7 AS audience_last7,\n"
+                    + "            audience_audio_low_latency_last7 + audience_video_low_latency_last7 AS audience_low_latency_last7,\n"
+                    + "          audience_audio_last7,\n"
+                    + "          audience_audio_low_latency_last7,\n"
+                    + "          audience_video_last7,\n"
+                    + "          audience_video_low_latency_last7\n"
+                    + "        FROM report_datahub.vendor_vid_usage_di_1\n"
+                    + "        WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-06') AND date_parse(cast( date as VARCHAR), '%Y%m%d') <= DATE('2021-12-06') AND CAST(vid AS VARCHAR) = CAST(428342 AS VARCHAR) AND dim = 1) AS \"自定义 SQL 查询\"\n"
+                    + "    HAVING COUNT(1) > 0) AS \"t0\"\n"
+                    + "WHERE date_parse(cast( \"自定义 SQL 查询\".\"date\" as VARCHAR), '%Y%m%d') = \"t0\".\"__measure__0\"\n"
+                    + "HAVING COUNT(1) > 0";
 
     final String expectSql =
-            "SELECT app_type, audio, CASE WHEN TYPEOF(date) = 'integer' THEN CAST(DATE_PARSE(CAST(date AS VARCHAR), '%Y%m%d') AS TIMESTAMP(0)) ELSE CAST(CAST(date AS VARCHAR) AS TIMESTAMP(0)) END date, total_usage, video\n"
-                    + "FROM (SELECT t2.app_type, t2.audio, t2.cid, t4.companyname, t4.country, t2.date, t4.projectname, t2.total_usage, t2.ver, t2.vid, t4.vid vid0, t2.video\n"
-                    + "FROM (SELECT CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND app_type = 'UNKNOWN' THEN 'unity' ELSE app_type END app_type, ROUND(SUM(audio), 0) audio, company_id cid, date, ROUND(SUM(audio + video), 0) total_usage, ver, vid, ROUND(SUM(video), 0) video\n"
-                    + "FROM report_datahub.agora_vid_usage_cube_di\n"
-                    + "WHERE date_parse(CAST(date AS VARCHAR), '%Y%m%d') >= TIMESTAMP '2021-11-24 00:00:00' AND date_parse(CAST(date AS VARCHAR), '%Y%m%d') <= TIMESTAMP '2021-11-30 00:00:00' AND group_mark = '(product_line,product_type,domain,country,vid,os,ver,app_type)'\n"
-                    + "GROUP BY CASE WHEN ver IN ('2.0.8.2', '2.2.0.20', '2.2.0.27', '2.2.0.27.4', '2.2.0.27.5', '2.2.0.2701', '2.2.0.2703', '2.2.0.29', '2.2.0.60', '2.2.0.61', '2.2.0.62', '2.2.3.20', '2.2.3.201', '2.2.3.24', '2.3.3.110', '2.4.1.20', '2.4.1.42', '2.4.1.43', '2.9.1.42', '2.9.1.43', '2.9.1.44', '2.9.1.45', '2.9.1.46', 'AMG_1.0', 'AMG_1.1', 'AMG_2.0', 'AMG_2.1') AND app_type = 'UNKNOWN' THEN 'unity' ELSE app_type END, company_id, date, ver, vid) t2\n"
-                    + "INNER JOIN (SELECT companyname, country, projectname, vid, CAST(vid AS VARCHAR) vid0\n"
-                    + "FROM report_datahub.new_vendor_dimension\n"
-                    + "WHERE 1 = 1) t4 ON t2.cid = t4.vid0) t5\n"
-                    + "WHERE 1 = 1 AND t5.app_type = 'unity' OR 1 = 1 AND t5.app_type = 'react_native'";
+            "SELECT SUM(t0.audience_low_latency_last1) TEMP(Calculation_230316907702542336)(2007846651)(0), SUM(t0.audience_low_latency) TEMP(Calculation_230316907702542336)(2627877912)(0), SUM(t0.total) TEMP(Calculation_5203557528859017219)(2253843611)(0), SUM(t0.total_last1) TEMP(Calculation_5203557528859017219)(3076278274)(0), SUM(t0.total) TEMP(Calculation_5203557528862519300)(2253843611)(0), SUM(t0.total_last7) TEMP(Calculation_5203557528862519300)(431428601)(0), SUM(t0.audio_last1) TEMP(Calculation_5203557528863870981)(2207581090)(0), SUM(t0.audio) TEMP(Calculation_5203557528863870981)(4234702922)(0), SUM(t0.audio_last7) TEMP(Calculation_5203557528863973382)(1745737303)(0), SUM(t0.audio) TEMP(Calculation_5203557528863973382)(4234702922)(0), SUM(t0.video_last1) TEMP(Calculation_5203557528864096263)(1192334319)(0), SUM(t0.video) TEMP(Calculation_5203557528864096263)(3647352276)(0), SUM(t0.video_last7) TEMP(Calculation_5203557528864174088)(3553322618)(0), SUM(t0.video) TEMP(Calculation_5203557528864174088)(3647352276)(0), SUM(t0.audience) TEMP(Calculation_534802460955746306)(1306364424)(0), SUM(t0.audience_last1) TEMP(Calculation_534802460955746306)(2505681848)(0), SUM(t0.audience) TEMP(Calculation_534802460955955203)(1306364424)(0), SUM(t0.audience_last7) TEMP(Calculation_534802460955955203)(2563414513)(0), SUM(t0.audience_audio) TEMP(Calculation_534802460956037124)(1868547182)(0), SUM(t0.audience_audio_last1) TEMP(Calculation_534802460956037124)(2218970377)(0), SUM(t0.audience_audio_last7) TEMP(Calculation_534802460956184581)(1783975840)(0), SUM(t0.audience_audio) TEMP(Calculation_534802460956184581)(1868547182)(0), SUM(t0.audience_video_last1) TEMP(Calculation_534802460956319750)(188915252)(0), SUM(t0.audience_video) TEMP(Calculation_534802460956319750)(2182583436)(0), SUM(t0.audience_video_last7) TEMP(Calculation_534802460956430343)(1897793420)(0), SUM(t0.audience_video) TEMP(Calculation_534802460956430343)(2182583436)(0), MAX(t0.stat_date) TEMP(attr_stat_date_nk)(2102638629)(0), MIN(t0.stat_date) TEMP(attr_stat_date_nk)(2790680713)(0), SUM(t0.audience_audio_low_latency_last1) TEMP(audience_audio_last1_rate (复制)_230316907704033282)(67, SUM(t0.audience_audio_low_latency) TEMP(audience_audio_last1_rate (复制)_230316907704033282)(83, SUM(t0.host_audio_last1) TEMP(audience_audio_last1_rate (复制)_534802460956618761)(24, SUM(t0.host_audio) TEMP(audience_audio_last1_rate (复制)_534802460956618761)(36, SUM(t0.audience_audio_low_latency_last7) TEMP(audience_audio_last7_rate (复制)_230316907704053763)(29, SUM(t0.audience_audio_low_latency) TEMP(audience_audio_last7_rate (复制)_230316907704053763)(83, SUM(t0.host_audio_last7) TEMP(audience_audio_last7_rate (复制)_534802460956631050)(15, SUM(t0.host_audio) TEMP(audience_audio_last7_rate (复制)_534802460956631050)(36, SUM(t0.host_last1) TEMP(audience_last1_rate (复制)_534802460956647435)(15035501, SUM(t0.host) TEMP(audience_last1_rate (复制)_534802460956647435)(24867219, SUM(t0.host_last7) TEMP(audience_last7_date (复制)_534802460957310992)(24217528, SUM(t0.host) TEMP(audience_last7_date (复制)_534802460957310992)(24867219, SUM(t0.audience_low_latency_last7) TEMP(audience_low_latency_last1_rate (复制)_2303169077032461, SUM(t0.audience_low_latency) TEMP(audience_low_latency_last1_rate (复制)_2303169077032468, SUM(t0.audience_video_low_latency) TEMP(audience_low_latency_last1_rate (复制)_2303169077218301, SUM(t0.audience_video_low_latency_last1) TEMP(audience_low_latency_last1_rate (复制)_2303169077218304, SUM(t0.audience_video_low_latency) TEMP(audience_low_latency_last7_rate (复制)_2303169077218181, SUM(t0.audience_video_low_latency_last7) TEMP(audience_low_latency_last7_rate (复制)_2303169077218182, SUM(t0.host_video) TEMP(audience_video_last1_rate (复制)_534802460956696589)(26, SUM(t0.host_video_last1) TEMP(audience_video_last1_rate (复制)_534802460956696589)(42, SUM(t0.host_video_last7) TEMP(audience_video_last7_rate (复制)_534802460956704782)(21, SUM(t0.host_video) TEMP(audience_video_last7_rate (复制)_534802460956704782)(26, SUM(t0.audience_video_low_latency) sum_audience_video_low_latency_ok\n"
+                    + "FROM (SELECT area, audience_audio + audience_video audience, audience_audio, audience_audio_last1, audience_audio_last7, audience_audio_low_latency, audience_audio_low_latency_last1, audience_audio_low_latency_last7, audience_hd, audience_hd_low_latency, audience_hdp, audience_hdp_low_latency, audience_audio_last1 + audience_video_last1 audience_last1, audience_audio_last7 + audience_video_last7 audience_last7, audience_audio_low_latency + audience_video_low_latency audience_low_latency, audience_audio_low_latency_last1 + audience_video_low_latency_last1 audience_low_latency_last1, audience_audio_low_latency_last7 + audience_video_low_latency_last7 audience_low_latency_last7, audience_sd, audience_sd_low_latency, audience_video, audience_video_last1, audience_video_last7, audience_video_low_latency, audience_video_low_latency_last1, audience_video_low_latency_last7, audio, audio_last1, audio_last7, company_id cid, company_name company, csdc_owner, date, SUBSTR(CAST(date_parse(CAST(date AS VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) date_range_1, SUBSTR(CAST(end_date AS VARCHAR), 1, 10) date_range_2, host_audio + host_video host, host_audio, host_audio_last1, host_audio_last7, host_hd, host_hdp, host_audio_last1 + host_video_last1 host_last1, host_audio_last7 + host_video_last7 host_last7, host_sd, host_video, host_video_last1, host_video_last7, vid_internal_industry_en industry, customer_level level, os, product_level1, product_level2, product_level3, project, CASE WHEN stat_period = 'day' THEN substr(CAST(date_parse(CAST(date AS VARCHAR), '%Y%m%d') AS VARCHAR), 1, 10) ELSE concat(CAST(date_format(CAST(start_date AS TIMESTAMP(0)), '%Y%m%d') AS VARCHAR), '~', CAST(date_format(CAST(end_date AS TIMESTAMP(0)), '%Y%m%d') AS VARCHAR)) END stat_date, stat_period, total, total_last1, total_last7, ver, ver_type, vid, vid_use_case_cn, video, video_hd, video_hd_last1, video_hd_last7, video_hdp, video_hdp_last1, video_hdp_last7, video_last1, video_last7, video_sd, video_sd_last1, video_sd_last7\n"
+                    + "FROM report_datahub.vendor_vid_usage_di_1\n"
+                    + "WHERE date_parse(CAST(date AS VARCHAR), '%Y%m%d') >= DATE('2021-11-06') AND date_parse(CAST(date AS VARCHAR), '%Y%m%d') <= DATE('2021-12-06') AND CAST(vid AS VARCHAR) = CAST(428342 AS VARCHAR) AND dim = 1) t0\n"
+                    + "CROSS JOIN (SELECT MAX(date_parse(CAST(date AS VARCHAR), '%Y%m%d')) __measure__0\n"
+                    + "FROM report_datahub.vendor_vid_usage_di_1\n"
+                    + "WHERE date_parse(CAST(date AS VARCHAR), '%Y%m%d') >= DATE('2021-11-06') AND date_parse(CAST(date AS VARCHAR), '%Y%m%d') <= DATE('2021-12-06') AND CAST(vid AS VARCHAR) = CAST(428342 AS VARCHAR) AND dim = 1\n"
+                    + "HAVING COUNT(*) > 0) t5\n"
+                    + "WHERE date_parse(CAST(t0.date AS VARCHAR), '%Y%m%d') = t5.__measure__0\n"
+                    + "HAVING COUNT(*) > 0 OR COUNT(*) > 0";
 }

@@ -11,6 +11,10 @@ public class NodeRelTest extends TestBase {
 
     public NodeRelTest() throws SqlParseException {}
 
+    public NodeRelTest(String defaultDBName) throws SqlParseException {
+        super(defaultDBName);
+    }
+
     public void assertResultNode(String expectSql, ResultNode<RelNode> resultNode) {
         Assert.assertEquals(expectSql, toSql(resultNode));
     }

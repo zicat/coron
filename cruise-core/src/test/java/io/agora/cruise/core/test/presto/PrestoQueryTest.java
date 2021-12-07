@@ -38,8 +38,7 @@ public class PrestoQueryTest {
         nodeRelTest.assertResultNode(expectSql, resultNode);
     }
 
-    @Test
-    public void test() throws IOException, SqlParseException {
+    public static void main(String[] args) throws Exception {
         Set<String> distinctSql = new HashSet<>();
         csvReaderHandler(csvReader -> distinctSql.add(csvReader.get(0)));
         List<String> querySql = new ArrayList<>(distinctSql);

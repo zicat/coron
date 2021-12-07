@@ -2,6 +2,7 @@ package io.agora.cruise.parser;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.SchemaPlus;
@@ -50,22 +51,42 @@ public class SchemaTool {
                 throw new RuntimeException("register table only support ddl statement, sql:" + ddl);
             }
             SqlCreateTable createTable = (SqlCreateTable) node;
-            ImmutableList<String> fullName = createTable.name.names;
-            if (fullName.size() > 2) {
-                throw new RuntimeException("register table name identifier length > 2");
-            }
-            String dbName = fullName.size() == 2 ? fullName.get(0) : DEFAULT_DB_NAME;
-            String tableName = fullName.get(fullName.size() - 1);
-            SchemaPlus schemaPlus = rootSchema.getSubSchema(dbName);
-            if (schemaPlus == null) {
-                schemaPlus = Frameworks.createRootSchema(false);
-                rootSchema.add(dbName, schemaPlus);
-            }
-            Table table = createColumnTable(createTable.columnList, validator);
-            schemaPlus.add(tableName, table);
-            if (defaultDBName.equals(dbName)) {
-                rootSchema.add(tableName, table);
-            }
+            addTable(
+                    createTable.name.names,
+                    defaultDBName,
+                    rootSchema,
+                    createColumnTable(createTable.columnList, validator));
+        }
+        return rootSchema;
+    }
+
+    /**
+     * add table.
+     *
+     * @param fullName fullName
+     * @param defaultDBName defaultDBName
+     * @param rootSchema rootSchema
+     * @param table table
+     * @return schemaPlus
+     */
+    public static SchemaPlus addTable(
+            ImmutableList<String> fullName,
+            String defaultDBName,
+            SchemaPlus rootSchema,
+            Table table) {
+        if (fullName.size() > 2) {
+            throw new RuntimeException("register table name identifier length > 2");
+        }
+        String dbName = fullName.size() == 2 ? fullName.get(0) : defaultDBName;
+        String tableName = fullName.get(fullName.size() - 1);
+        SchemaPlus schemaPlus = rootSchema.getSubSchema(dbName);
+        if (schemaPlus == null) {
+            schemaPlus = Frameworks.createRootSchema(false);
+            rootSchema.add(dbName, schemaPlus);
+        }
+        schemaPlus.add(tableName, table);
+        if (defaultDBName.equals(dbName)) {
+            rootSchema.add(tableName, table);
         }
         return rootSchema;
     }
@@ -104,6 +125,21 @@ public class SchemaTool {
                 fieldList.add(Maps.immutableEntry(declaration.name.getSimple(), relDataType));
             }
             return typeFactory.createStructType(fieldList);
+        }
+    }
+
+    /** RelTable. */
+    static class RelTable extends AbstractTable {
+
+        private final RelNode relNode;
+
+        public RelTable(RelNode relNode) {
+            this.relNode = relNode;
+        }
+
+        @Override
+        public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+            return relNode.getRowType();
         }
     }
 }

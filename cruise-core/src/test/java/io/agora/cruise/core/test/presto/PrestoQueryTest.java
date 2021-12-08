@@ -10,7 +10,6 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.junit.Test;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +22,7 @@ import static io.agora.cruise.core.NodeUtils.findSubNode;
 /** PrestoQueryTest. */
 public class PrestoQueryTest {
 
-    @Test
+    //    @Test
     public void testJoin() throws SqlParseException {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);

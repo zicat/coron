@@ -21,6 +21,20 @@ public class MaterializedViewTest extends TestBase {
     public MaterializedViewTest() throws SqlParseException {}
 
     @Test
+    public void testView2() throws SqlParseException {
+        String viewQuerySql = "select sum(c), count(*) as s_c from test_db.test_table";
+        String viewTableName = "test_db.testView2";
+        addMaterializedView(viewTableName, viewQuerySql);
+        final SqlNode sqlNode =
+                SqlNodeTool.toQuerySqlNode(
+                        "select sum(c) as s_c from test_db.test_table having count(*) > 1");
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        final RelNode optNode = materializedViewOpt(relRoot.rel);
+        final Set<String> queryTables = TableRelShuttleImpl.tables(optNode);
+        Assert.assertTrue(queryTables.contains(viewTableName));
+    }
+
+    @Test
     public void testAddView() throws SqlParseException {
         String viewQuerySql = "select a, sum(c) as s_c from test_db.test_table group by a";
         String viewTableName = "test_db.materialized_view";
@@ -34,7 +48,7 @@ public class MaterializedViewTest extends TestBase {
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(viewQuerySql);
         final RelRoot relRoot2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true);
         final RelNode optRelNode = materializedViewOpt(relRoot2.rel);
-        Set<String> queryTables = TableRelShuttleImpl.tables(optRelNode);
+        final Set<String> queryTables = TableRelShuttleImpl.tables(optRelNode);
         Assert.assertTrue(queryTables.contains(viewTableName));
     }
 }

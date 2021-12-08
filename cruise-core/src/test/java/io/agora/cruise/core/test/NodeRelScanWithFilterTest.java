@@ -33,6 +33,8 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
 
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
+
+        assertMaterialized(dynamicViewName(), resultNode, relNode1);
     }
 
     @Test

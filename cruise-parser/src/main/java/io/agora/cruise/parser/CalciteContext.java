@@ -120,6 +120,7 @@ public class CalciteContext {
      *
      * @param viewName viewName
      * @param viewQueryRel viewQueryRel
+     * @param converter converter
      * @return this
      */
     public CalciteContext addMaterializedView(
@@ -139,6 +140,17 @@ public class CalciteContext {
             viewList.add(materialization);
         }
         return this;
+    }
+
+    /**
+     * add materializedView.
+     *
+     * @param viewName viewName
+     * @param viewQueryRel viewQueryRel
+     * @return this
+     */
+    public CalciteContext addMaterializedView(String viewName, RelNode viewQueryRel) {
+        return addMaterializedView(viewName, viewQueryRel, createSqlToRelConverter());
     }
 
     /**

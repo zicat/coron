@@ -6,6 +6,7 @@ import io.agora.cruise.core.merge.rule.MergeRule;
 public abstract class MergeConfig {
 
     protected Operand operand;
+    protected boolean materialized = true;
 
     /**
      * configure operands.
@@ -16,6 +17,26 @@ public abstract class MergeConfig {
     public final MergeConfig withOperandSupplier(Operand operand) {
         this.operand = operand;
         return this;
+    }
+
+    /**
+     * config materialized.
+     *
+     * @param materialized materialized
+     * @return this
+     */
+    public final MergeConfig materialized(boolean materialized) {
+        this.materialized = materialized;
+        return this;
+    }
+
+    /**
+     * get materialized.
+     *
+     * @return boolean materialized
+     */
+    public boolean canMaterialized() {
+        return materialized;
     }
 
     /**

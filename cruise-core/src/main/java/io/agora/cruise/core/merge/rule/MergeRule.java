@@ -37,6 +37,18 @@ public abstract class MergeRule {
             ResultNodeList<RelNode> childrenResultNode);
 
     /**
+     * check relNode contains aggregation.
+     *
+     * <p>calcite: not support materialized topNode not equal aggregation.
+     *
+     * @param relNode
+     * @return
+     */
+    protected boolean containsAggregate(RelNode relNode) {
+        return TopAggregationFinder.contains(relNode);
+    }
+
+    /**
      * create new RexNode that inputRef replace from fromInput to newInput.
      *
      * @param rexNode rexNode

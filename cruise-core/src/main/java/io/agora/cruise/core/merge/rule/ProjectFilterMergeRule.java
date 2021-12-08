@@ -11,10 +11,14 @@ import org.apache.calcite.rel.core.Project;
 /** ProjectFilterMergeRule. */
 public class ProjectFilterMergeRule extends MergeRule {
 
-    final ProjectMergeRule projectMergeRule = ProjectMergeRule.Config.DEFAULT.toMergeRule();
+    final MergeRule projectMergeRule;
 
     public ProjectFilterMergeRule(Config mergeConfig) {
         super(mergeConfig);
+        this.projectMergeRule =
+                ProjectMergeRule.Config.create()
+                        .materialized(mergeConfig.canMaterialized())
+                        .toMergeRule();
     }
 
     @Override
@@ -22,18 +26,20 @@ public class ProjectFilterMergeRule extends MergeRule {
             Node<RelNode> fromNode,
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode) {
+        projectMergeRule.mergeConfig.materialized(mergeConfig.canMaterialized());
         return projectMergeRule.merge(fromNode, toNode.getParent(), childrenResultNode);
     }
 
     /** ProjectFilterMergeRule Config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(
-                                Operand.of(Project.class, Filter.class)
-                                        .operand(Operand.ofTo(Project.class)))
-                        .as(Config.class);
+        public static Config create() {
+            return new Config()
+                    .withOperandSupplier(
+                            Operand.of(Project.class, Filter.class)
+                                    .operand(Operand.ofTo(Project.class)))
+                    .as(Config.class);
+        }
 
         @Override
         public ProjectFilterMergeRule toMergeRule() {

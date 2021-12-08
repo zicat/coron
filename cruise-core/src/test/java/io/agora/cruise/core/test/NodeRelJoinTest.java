@@ -93,6 +93,9 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
+
+        assertMaterialized(dynamicViewName(), resultNode, relNode1);
+        assertMaterialized(dynamicViewName(), resultNode, relNode2);
     }
 
     @Test
@@ -122,6 +125,9 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
+
+        assertMaterialized(dynamicViewName(), resultNode, relNode1);
+        assertMaterialized(dynamicViewName(), resultNode, relNode2);
     }
 
     @Test
@@ -151,5 +157,8 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
+
+        assertMaterialized(dynamicViewName(), resultNode, relNode1);
+        assertMaterialized(dynamicViewName(), resultNode, relNode2);
     }
 }

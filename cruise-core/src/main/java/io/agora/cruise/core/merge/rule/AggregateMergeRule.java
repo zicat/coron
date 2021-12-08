@@ -275,8 +275,19 @@ public class AggregateMergeRule extends MergeRule {
      * @param input same input
      * @return null if create fail else ImmutableBitSet
      */
-    private static Tuple2<ImmutableBitSet, ImmutableList<ImmutableBitSet>> createNewGroupSet(
+    private Tuple2<ImmutableBitSet, ImmutableList<ImmutableBitSet>> createNewGroupSet(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode input) {
+
+        // calcite not support materialized group sets, so merged group sets is meaningless
+        if (mergeConfig.canMaterialized()
+                && (!fromAggregate
+                                .getGroupSets()
+                                .equals(ImmutableList.of(fromAggregate.getGroupSet()))
+                        || !toAggregate
+                                .getGroupSets()
+                                .equals(ImmutableList.of(toAggregate.getGroupSet())))) {
+            return null;
+        }
 
         if (fromAggregate.getGroupSets().size() != toAggregate.getGroupSets().size()) {
             return null;
@@ -465,10 +476,11 @@ public class AggregateMergeRule extends MergeRule {
     /** aggregate config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(Operand.of(Aggregate.class, Aggregate.class))
-                        .as(Config.class);
+        public static Config create() {
+            return new Config()
+                    .withOperandSupplier(Operand.of(Aggregate.class, Aggregate.class))
+                    .as(Config.class);
+        }
 
         @Override
         public AggregateMergeRule toMergeRule() {

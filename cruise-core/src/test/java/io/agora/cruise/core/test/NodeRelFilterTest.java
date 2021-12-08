@@ -30,6 +30,9 @@ public class NodeRelFilterTest extends NodeRelTest {
         ResultNode<RelNode> resultNode =
                 findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
+
+        assertMaterialized(dynamicViewName(), resultNode, relNode1);
+        assertMaterialized(dynamicViewName(), resultNode, relNode2);
     }
 
     @Test
@@ -54,5 +57,8 @@ public class NodeRelFilterTest extends NodeRelTest {
 
         resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
+
+        assertMaterialized(dynamicViewName(), resultNode, relNode1);
+        assertMaterialized(dynamicViewName(), resultNode, relNode2);
     }
 }

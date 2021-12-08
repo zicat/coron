@@ -23,6 +23,10 @@ public class TableScanMergeRule extends MergeRule {
         final TableScan fromScan = (TableScan) fromNode.getPayload();
         final TableScan toScan = (TableScan) toNode.getPayload();
         final TableScan newScan = merge(fromScan, toScan);
+
+        if (mergeConfig.canMaterialized() && containsAggregate(fromScan)) {
+            return null;
+        }
         return copy(newScan, childrenResultNode);
     }
 
@@ -42,10 +46,11 @@ public class TableScanMergeRule extends MergeRule {
     /** TableScanMergeRule config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(Operand.of(TableScan.class, TableScan.class))
-                        .as(Config.class);
+        public static Config create() {
+            return new Config()
+                    .withOperandSupplier(Operand.of(TableScan.class, TableScan.class))
+                    .as(Config.class);
+        }
 
         @Override
         public TableScanMergeRule toMergeRule() {

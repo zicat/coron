@@ -37,15 +37,26 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot) {
+        return createNodeRelRoot(relRoot, true);
+    }
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @param materialized materialized
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(RelNode relRoot, boolean materialized) {
         final List<MergeConfig> mergeRuleConfigs =
                 Arrays.asList(
-                        TableScanMergeRule.Config.DEFAULT,
-                        ProjectMergeRule.Config.DEFAULT,
-                        FilterMergeRule.Config.DEFAULT,
-                        AggregateMergeRule.Config.DEFAULT,
-                        JoinMergeRule.Config.DEFAULT,
-                        FilterProjectMergeRule.Config.DEFAULT,
-                        ProjectFilterMergeRule.Config.DEFAULT);
+                        TableScanMergeRule.Config.create().materialized(materialized),
+                        ProjectMergeRule.Config.create().materialized(materialized),
+                        FilterMergeRule.Config.create().materialized(materialized),
+                        AggregateMergeRule.Config.create().materialized(materialized),
+                        JoinMergeRule.Config.create().materialized(materialized),
+                        FilterProjectMergeRule.Config.create().materialized(materialized),
+                        ProjectFilterMergeRule.Config.create().materialized(materialized));
         return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
     }
 

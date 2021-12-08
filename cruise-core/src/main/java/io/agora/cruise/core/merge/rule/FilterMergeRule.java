@@ -36,6 +36,10 @@ public class FilterMergeRule extends MergeRule {
         final Filter fromFilter = (Filter) fromNode.getPayload();
         final Filter toFilter = (Filter) toNode.getPayload();
         final RelNode newInput = childrenResultNode.get(0).getPayload();
+        if (mergeConfig.canMaterialized() && containsAggregate(newInput)) {
+            return null;
+        }
+
         final RexNode newFromCondition =
                 createNewInputRexNode(
                         fromFilter.getCondition(), fromFilter.getInput(), newInput, 0);
@@ -56,10 +60,11 @@ public class FilterMergeRule extends MergeRule {
     /** Filter Config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(Operand.of(Filter.class, Filter.class))
-                        .as(Config.class);
+        public static Config create() {
+            return new Config()
+                    .withOperandSupplier(Operand.of(Filter.class, Filter.class))
+                    .as(Config.class);
+        }
 
         @Override
         public FilterMergeRule toMergeRule() {

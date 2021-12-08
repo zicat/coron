@@ -7,6 +7,7 @@ import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.Operand;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
@@ -46,6 +47,12 @@ public class ProjectMergeRule extends MergeRule {
             RelNode fromNode, RelNode toNode, List<ResultNode<RelNode>> childrenResultNode) {
 
         final RelNode newInput = childrenResultNode.get(0).getPayload();
+        if (mergeConfig.canMaterialized()
+                && containsAggregate(newInput)
+                && !(newInput instanceof Aggregate)) {
+            return null;
+        }
+
         final Project fromProject = (Project) fromNode;
         final Project toProject = (Project) toNode;
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
@@ -112,10 +119,11 @@ public class ProjectMergeRule extends MergeRule {
     /** project config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(Operand.of(Project.class, Project.class))
-                        .as(Config.class);
+        public static Config create() {
+            return new Config()
+                    .withOperandSupplier(Operand.of(Project.class, Project.class))
+                    .as(Config.class);
+        }
 
         @Override
         public ProjectMergeRule toMergeRule() {

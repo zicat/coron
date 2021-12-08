@@ -2,9 +2,12 @@ package io.agora.cruise.core.test;
 
 import io.agora.cruise.core.ResultNode;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.TableRelShuttleImpl;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
+
+import java.util.Set;
 
 /** NodeRelTest. */
 public class NodeRelTest extends TestBase {
@@ -25,5 +28,23 @@ public class NodeRelTest extends TestBase {
 
     public String toSql(RelNode relNode) {
         return relNode2SqlNode(relNode).toSqlString(SparkSqlDialect.DEFAULT).getSql();
+    }
+
+    public Set<String> tables(RelNode relNode) {
+        return TableRelShuttleImpl.tables(relNode);
+    }
+
+    public void assertMaterialized(
+            String materializeViewName, ResultNode<RelNode> resultNode, RelNode node2Opt) {
+        addMaterializedView(materializeViewName, resultNode.getPayload());
+        final RelNode optRelNode1 = materializedViewOpt(node2Opt);
+        final Set<String> optTableNames = tables(optRelNode1);
+        Assert.assertTrue(optTableNames.contains(materializeViewName));
+    }
+
+    public String dynamicViewName() {
+        Throwable t = new Throwable();
+        StackTraceElement[] st = t.getStackTrace();
+        return "view_" + st[1].getMethodName();
     }
 }

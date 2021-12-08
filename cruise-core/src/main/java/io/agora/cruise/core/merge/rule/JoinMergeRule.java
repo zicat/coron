@@ -13,11 +13,21 @@ import org.apache.calcite.rel.core.TableScan;
 /** JoinMergeRule. */
 public class JoinMergeRule extends MergeRule {
 
-    final ProjectMergeRule projectMergeRule = ProjectMergeRule.Config.DEFAULT.toMergeRule();
-    final TableScanMergeRule tableScanMergeRule = TableScanMergeRule.Config.DEFAULT.toMergeRule();
+    final ProjectMergeRule projectMergeRule;
+    final TableScanMergeRule tableScanMergeRule;
 
     public JoinMergeRule(Config mergeConfig) {
         super(mergeConfig);
+        this.projectMergeRule =
+                ProjectMergeRule.Config.create()
+                        .materialized(mergeConfig.canMaterialized())
+                        .as(ProjectMergeRule.Config.class)
+                        .toMergeRule();
+        this.tableScanMergeRule =
+                TableScanMergeRule.Config.create()
+                        .materialized(mergeConfig.canMaterialized())
+                        .as(TableScanMergeRule.Config.class)
+                        .toMergeRule();
     }
 
     @Override
@@ -42,6 +52,15 @@ public class JoinMergeRule extends MergeRule {
         if (newRight == null) {
             return null;
         }
+
+        if (mergeConfig.canMaterialized() && containsAggregate(newLeft)) {
+            return null;
+        }
+
+        if (mergeConfig.canMaterialized() && containsAggregate(newRight)) {
+            return null;
+        }
+
         if (fromJoin.isSemiJoin() != toJoin.isSemiJoin()) {
             return null;
         }
@@ -85,10 +104,11 @@ public class JoinMergeRule extends MergeRule {
     /** Join Config. */
     public static class Config extends MergeConfig {
 
-        public static final Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(Operand.of(Join.class, Join.class))
-                        .as(Config.class);
+        public static Config create() {
+            return new Config()
+                    .withOperandSupplier(Operand.of(Join.class, Join.class))
+                    .as(Config.class);
+        }
 
         @Override
         public JoinMergeRule toMergeRule() {

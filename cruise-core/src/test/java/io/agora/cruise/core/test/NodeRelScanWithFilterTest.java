@@ -8,7 +8,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Test;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
-import static io.agora.cruise.core.NodeUtils.findSubNode;
+import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
 
 /** NodeRelScanWithFilterTest. */
 public class NodeRelScanWithFilterTest extends NodeRelTest {
@@ -28,10 +28,10 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -54,10 +54,10 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 }

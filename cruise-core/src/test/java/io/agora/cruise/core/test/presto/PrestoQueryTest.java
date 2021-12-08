@@ -2,65 +2,36 @@ package io.agora.cruise.core.test.presto;
 
 import com.csvreader.CsvReader;
 import io.agora.cruise.core.ResultNode;
+import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.test.NodeRelTest;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.TableRelShuttleImpl;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.junit.Test;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
-import static io.agora.cruise.core.NodeUtils.findSubNode;
+import static io.agora.cruise.core.NodeUtils.*;
 
 /** PrestoQueryTest. */
 public class PrestoQueryTest {
 
-    //    @Test
-    public void testJoin() throws SqlParseException {
-
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        final RelNode relNode1 =
-                nodeRelTest.createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 =
-                nodeRelTest.createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
-
-        ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-        nodeRelTest.assertResultNode(expectSql, resultNode);
-    }
-
     public static void main(String[] args) throws Exception {
-        Set<String> distinctSql = new HashSet<>();
-        csvReaderHandler(csvReader -> distinctSql.add(csvReader.get(0)));
-        List<String> querySql = new ArrayList<>(distinctSql);
-        querySql =
-                querySql.stream()
-                        .filter(v -> !v.startsWith("explain"))
-                        .filter(v -> !v.contains("system.runtime"))
-                        .filter(v -> !v.toUpperCase().startsWith("SHOW "))
-                        .collect(Collectors.toList());
-        File file = new File(System.getProperty("user.home") + "/Desktop/public-sql.txt");
-        if (file.exists()) {
-            file.delete();
-        }
-        file.createNewFile();
-        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-
-        File file2 = new File(System.getProperty("user.home") + "/Desktop/source-sql.txt");
-        if (file2.exists()) {
-            file2.delete();
-        }
-        file2.createNewFile();
-        BufferedWriter bw2 = new BufferedWriter(new FileWriter(file2));
+        List<String> querySql = querySqlList();
+        BufferedWriter bw =
+                createWriter(System.getProperty("user.home") + "/Desktop/public-sql.txt");
+        BufferedWriter bw2 =
+                createWriter(System.getProperty("user.home") + "/Desktop/source-sql.txt");
         Map<String, Integer> result = new HashMap<>();
+
         for (int i = 0; i < querySql.size() - 1; i++) {
             for (int j = i + 1; j < querySql.size(); j++) {
                 String fromSql = querySql.get(i);
@@ -71,39 +42,72 @@ public class PrestoQueryTest {
                     final SqlNode sqlNode2 =
                             SqlNodeTool.toQuerySqlNode(toSql, new Int2BooleanConditionShuttle());
                     final RelNode relNode1 =
-                            nodeRelTest
+                            NODE_REL_TEST
                                     .createSqlToRelConverter()
                                     .convertQuery(sqlNode1, true, true)
                                     .rel;
                     final RelNode relNode2 =
-                            nodeRelTest
+                            NODE_REL_TEST
                                     .createSqlToRelConverter()
                                     .convertQuery(sqlNode2, true, true)
                                     .rel;
 
-                    ResultNode<RelNode> resultNode =
-                            findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
-                    if (resultNode.isEmpty()) {
+                    ResultNodeList<RelNode> resultNodeList =
+                            findAllSubNode(
+                                    createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                    if (resultNodeList.isEmpty()) {
                         continue;
                     }
 
-                    String resultSql = nodeRelTest.toSql(resultNode);
-                    if (!resultSql.contains("GROUP BY")) {
-                        continue;
+                    List<Integer> ids = new ArrayList<>();
+                    Set<String> viewNames = new HashSet<>();
+                    for (ResultNode<RelNode> resultNode : resultNodeList) {
+                        String resultSql = NODE_REL_TEST.toSql(resultNode);
+                        if (!resultSql.contains("GROUP BY")) {
+                            continue;
+                        }
+
+                        Integer value = result.get(resultSql);
+                        if (value == null) {
+                            value = result.size();
+                            result.put(resultSql, value);
+                            bw.write(
+                                    "======================similar sql "
+                                            + value
+                                            + "==================");
+                            bw.newLine();
+                            bw.write(NODE_REL_TEST.toSql(resultNode));
+                            bw.newLine();
+                            bw.flush();
+                            NODE_REL_TEST.addMaterializedView(
+                                    NODE_REL_TEST.dynamicViewName() + "_" + value,
+                                    resultNode.getPayload());
+                        }
+                        viewNames.add(NODE_REL_TEST.dynamicViewName() + "_" + value);
+                        ids.add(value);
                     }
-                    Integer value = result.get(resultSql);
-                    if (value == null) {
-                        value = result.size();
-                        result.put(resultSql, value);
-                        bw.write(
-                                "======================similar sql "
+
+                    String value =
+                            ids.stream()
+                                    .sorted()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining(","));
+
+                    if (!viewNames.isEmpty() && !canMaterialized(relNode1, viewNames)) {
+                        System.out.println(
+                                "===============not match:"
                                         + value
-                                        + "==================");
-                        bw.newLine();
-                        bw.write(nodeRelTest.toSql(resultNode));
-                        bw.newLine();
-                        bw.flush();
+                                        + "============================");
+                        System.out.println(fromSql);
                     }
+                    if (!viewNames.isEmpty() && !canMaterialized(relNode2, viewNames)) {
+                        System.out.println(
+                                "===============not match:"
+                                        + value
+                                        + "============================");
+                        System.out.println(toSql);
+                    }
+
                     bw2.write(
                             "=========================from sql mapping to ="
                                     + value
@@ -138,6 +142,42 @@ public class PrestoQueryTest {
         bw2.close();
     }
 
+    public static boolean canMaterialized(RelNode relNode, Set<String> viewNames) {
+        RelNode optRelNode1 = NODE_REL_TEST.materializedViewOpt(relNode);
+        Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode1);
+
+        for (String opRelNode1Table : opRelNode1Tables) {
+            if (viewNames.contains(opRelNode1Table)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static List<String> querySqlList() throws IOException {
+        Set<String> distinctSql = new HashSet<>();
+        csvReaderHandler(csvReader -> distinctSql.add(csvReader.get(0)));
+        List<String> querySql = new ArrayList<>(distinctSql);
+        querySql =
+                querySql.stream()
+                        .filter(v -> !v.startsWith("explain"))
+                        .filter(v -> !v.contains("system.runtime"))
+                        .filter(v -> !v.toUpperCase().startsWith("SHOW "))
+                        .collect(Collectors.toList());
+        return querySql;
+    }
+
+    private static BufferedWriter createWriter(String fileName) throws IOException {
+        File file = new File(fileName);
+        if (file.exists() && !file.delete()) {
+            throw new IOException("delete fail" + fileName);
+        }
+        if (!file.createNewFile()) {
+            throw new IOException("create fail " + fileName);
+        }
+        return new BufferedWriter(new FileWriter(file));
+    }
+
     /** Handler. */
     public interface Handler {
 
@@ -163,11 +203,11 @@ public class PrestoQueryTest {
         csvReaderHandle(reader, handler);
     }
 
-    private static final NodeRelTest nodeRelTest;
+    protected static final NodeRelTest NODE_REL_TEST;
 
     static {
         try {
-            nodeRelTest = new NodeRelTest("report_datahub");
+            NODE_REL_TEST = new NodeRelTest("report_datahub");
             LineIterator it =
                     IOUtils.lineIterator(
                             Objects.requireNonNull(
@@ -189,11 +229,27 @@ public class PrestoQueryTest {
                     newTable = tableSplit[1] + ".\"" + tableSplit[2] + "\"";
                 }
                 ddl = ddl.replace(table, newTable);
-                nodeRelTest.addTables(ddl);
+                NODE_REL_TEST.addTables(ddl);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void testJoin() throws SqlParseException {
+
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final RelNode relNode1 =
+                NODE_REL_TEST.createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
+        final RelNode relNode2 =
+                NODE_REL_TEST.createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+
+        ResultNode<RelNode> resultNode =
+                findFirstSubNode(
+                        createNodeRelRoot(relNode1, false), createNodeRelRoot(relNode2, false));
+        NODE_REL_TEST.assertResultNode(expectSql, resultNode);
     }
 
     final String sql1 =

@@ -5,7 +5,7 @@ import io.agora.cruise.core.ResultNode;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static io.agora.cruise.core.NodeUtils.findSubNode;
+import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
 
 /** NodeTest. */
 public class NodeTest {
@@ -40,7 +40,7 @@ public class NodeTest {
         new NodeString(pl2b, "l3b");
         new NodeString(pl2c, "l3c");
 
-        ResultNode<String> resultNode = findSubNode(l0, pl1);
+        ResultNode<String> resultNode = findFirstSubNode(l0, pl1);
         Assert.assertEquals("l1", resultNode.getPayload());
     }
 
@@ -68,7 +68,7 @@ public class NodeTest {
         new NodeString(root2, "2c");
         new NodeString(root2, "2d");
 
-        ResultNode<String> resultNode = findSubNode(root, root2);
+        ResultNode<String> resultNode = findFirstSubNode(root, root2);
         Assert.assertFalse(resultNode.isEmpty());
         Assert.assertEquals(resultNode.getPayload(), "1a");
         Assert.assertEquals(resultNode.getChildren().size(), 2);

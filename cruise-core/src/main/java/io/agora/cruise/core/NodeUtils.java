@@ -44,20 +44,43 @@ public class NodeUtils {
      * create node rel root.
      *
      * @param relRoot rel root
-     * @param materialized materialized
+     * @param canMaterialized materialized
      * @return node rel
      */
-    public static NodeRel createNodeRelRoot(RelNode relRoot, boolean materialized) {
+    public static NodeRel createNodeRelRoot(RelNode relRoot, boolean canMaterialized) {
         final List<MergeConfig> mergeRuleConfigs =
                 Arrays.asList(
-                        TableScanMergeRule.Config.create().materialized(materialized),
-                        ProjectMergeRule.Config.create().materialized(materialized),
-                        FilterMergeRule.Config.create().materialized(materialized),
-                        AggregateMergeRule.Config.create().materialized(materialized),
-                        JoinMergeRule.Config.create().materialized(materialized),
-                        FilterProjectMergeRule.Config.create().materialized(materialized),
-                        ProjectFilterMergeRule.Config.create().materialized(materialized));
+                        TableScanMergeRule.Config.create().materialized(canMaterialized),
+                        ProjectMergeRule.Config.create().materialized(canMaterialized),
+                        FilterMergeRule.Config.create().materialized(canMaterialized),
+                        AggregateMergeRule.Config.create().materialized(canMaterialized),
+                        JoinMergeRule.Config.create().materialized(canMaterialized),
+                        FilterProjectMergeRule.Config.create().materialized(canMaterialized),
+                        ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
         return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
+    }
+
+    /**
+     * find all Sub Node list.
+     *
+     * @param rootFrom rootFrom
+     * @param rootTo rootTo
+     * @param <T> payload type
+     * @return ResultNodeList
+     */
+    public static <T> ResultNodeList<T> findAllSubNode(Node<T> rootFrom, Node<T> rootTo) {
+
+        final List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
+        final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);
+        final ResultNodeList<T> resultNodes = new ResultNodeList<>();
+
+        for (Node<T> fromNode : nodeToLeaves) {
+            for (Node<T> toNode : nodeFromLeaves) {
+                final ResultNode<T> resultNode = merge(rootFrom, fromNode, toNode, false);
+                resultNodes.add(resultNode);
+            }
+        }
+        return resultNodes;
     }
 
     /**
@@ -68,7 +91,7 @@ public class NodeUtils {
      * @param <T> payload type
      * @return result node
      */
-    public static <T> ResultNode<T> findSubNode(Node<T> rootFrom, Node<T> rootTo) {
+    public static <T> ResultNode<T> findFirstSubNode(Node<T> rootFrom, Node<T> rootTo) {
 
         final List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
         final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);

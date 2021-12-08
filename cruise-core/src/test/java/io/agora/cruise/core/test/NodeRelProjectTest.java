@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
-import static io.agora.cruise.core.NodeUtils.findSubNode;
+import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
 
 /** NodeRelProjectTest. */
 public class NodeRelProjectTest extends NodeRelTest {
@@ -29,10 +29,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -48,10 +48,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         Assert.assertTrue(resultNode.isEmpty());
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         Assert.assertTrue(resultNode.isEmpty());
     }
 
@@ -67,9 +67,9 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         Assert.assertTrue(resultNode.isEmpty());
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         Assert.assertTrue(resultNode.isEmpty());
     }
 
@@ -86,10 +86,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -106,10 +106,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -125,10 +125,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         Assert.assertTrue(resultNode.isEmpty());
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         Assert.assertTrue(resultNode.isEmpty());
     }
 
@@ -145,10 +145,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -177,10 +177,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 }

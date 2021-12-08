@@ -8,7 +8,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Test;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
-import static io.agora.cruise.core.NodeUtils.findSubNode;
+import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
 
 /** NodeRelGroupTest. */
 public class NodeRelGroupTest extends NodeRelTest {
@@ -31,10 +31,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -56,10 +56,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -85,10 +85,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -114,10 +114,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -143,10 +143,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -172,10 +172,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -199,10 +199,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -225,10 +225,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -250,11 +250,13 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1, false), createNodeRelRoot(relNode2, false));
+                findFirstSubNode(
+                        createNodeRelRoot(relNode1, false), createNodeRelRoot(relNode2, false));
         assertResultNode(expectSql, resultNode);
 
         resultNode =
-                findSubNode(createNodeRelRoot(relNode2, false), createNodeRelRoot(relNode1, false));
+                findFirstSubNode(
+                        createNodeRelRoot(relNode2, false), createNodeRelRoot(relNode1, false));
         assertResultNode(expectSql, resultNode);
     }
 
@@ -274,10 +276,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -303,10 +305,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -331,10 +333,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -356,10 +358,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -384,10 +386,10 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
-        resultNode = findSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
+        resultNode = findFirstSubNode(createNodeRelRoot(relNode2), createNodeRelRoot(relNode1));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);
@@ -408,7 +410,7 @@ public class NodeRelGroupTest extends NodeRelTest {
         final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
 
         ResultNode<RelNode> resultNode =
-                findSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
 
         assertMaterialized(dynamicViewName(), resultNode, relNode1);

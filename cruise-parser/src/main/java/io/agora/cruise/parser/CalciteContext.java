@@ -73,6 +73,15 @@ public class CalciteContext {
     }
 
     /**
+     * get default database.
+     *
+     * @return defaultDatabase
+     */
+    public String getDefaultDatabase() {
+        return defaultDatabase;
+    }
+
+    /**
      * add table.
      *
      * @param ddlList ddl list

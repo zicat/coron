@@ -3,7 +3,7 @@ package io.agora.cruise.core.test;
 import io.agora.cruise.core.ResultNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
-import org.apache.calcite.sql.dialect.SparkSqlDialect;
+import org.apache.calcite.sql.dialect.DefaultSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 
@@ -27,7 +27,7 @@ public class NodeRelTest extends TestBase {
     }
 
     public String toSql(RelNode relNode) {
-        return relNode2SqlNode(relNode).toSqlString(SparkSqlDialect.DEFAULT).getSql();
+        return relNode2SqlNode(relNode).toSqlString(DefaultSqlDialect.DEFAULT).getSql();
     }
 
     public Set<String> tables(RelNode relNode) {

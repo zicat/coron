@@ -2,7 +2,9 @@ package io.agora.cruise.parser;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
 import io.agora.cruise.parser.sql.type.UTF16SqlTypeFactoryImpl;
+import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptMaterialization;
@@ -14,6 +16,8 @@ import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.TableRelShuttleImpl;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.rel.rel2sql.SqlImplementor;
 import org.apache.calcite.rel.rules.PruneEmptyRules;
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyAggregateRule;
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyJoinRule;
@@ -22,8 +26,10 @@ import org.apache.calcite.rel.rules.materialize.MaterializedViewRules;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.dialect.DefaultSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -266,11 +272,17 @@ public class CalciteContext {
      *
      * @return HepPlanner
      */
-    protected HepPlanner createPlanner() {
+    public HepPlanner createPlanner() {
         return createPlanner(null);
     }
 
-    protected HepPlanner createPlanner(List<RelOptRule> relOptRules) {
+    /**
+     * create planner by relOptRules.
+     *
+     * @param relOptRules relOptRules
+     * @return HepPlanner
+     */
+    public HepPlanner createPlanner(List<RelOptRule> relOptRules) {
         final HepProgramBuilder builder = new HepProgramBuilder();
         builder.addRuleInstance(PruneEmptyRules.PROJECT_INSTANCE);
         if (relOptRules != null) {
@@ -278,5 +290,58 @@ public class CalciteContext {
         }
         final HepProgram hepProgram = builder.build();
         return new HepPlanner(hepProgram);
+    }
+
+    /**
+     * relNode to sql.
+     *
+     * @param relNode relNode
+     * @return sql
+     */
+    public String toSql(RelNode relNode) {
+        return toSql(relNode, DefaultSqlDialect.DEFAULT);
+    }
+
+    /**
+     * relNode to sql.
+     *
+     * @param relNode relNode
+     * @param sqlDialect sqlDialect
+     * @return sql
+     */
+    public String toSql(RelNode relNode, SqlDialect sqlDialect) {
+        return relNode2SqlNode(relNode).toSqlString(sqlDialect).getSql();
+    }
+
+    /**
+     * @param relNode relNode
+     * @return set tables
+     */
+    public Set<String> tables(RelNode relNode) {
+        return TableRelShuttleImpl.tables(relNode);
+    }
+
+    /**
+     * relNode toSqlNode.
+     *
+     * @param relNode relNode.
+     * @return SqlNode
+     */
+    public SqlNode relNode2SqlNode(RelNode relNode) {
+        return relNode2SqlNode(relNode, DefaultSqlDialect.DEFAULT);
+    }
+
+    /**
+     * relNode toSqlNode.
+     *
+     * @param relNode relNode
+     * @param sqlDialect sqlDialect
+     * @return SqlNode
+     */
+    public SqlNode relNode2SqlNode(RelNode relNode, SqlDialect sqlDialect) {
+        RelToSqlConverter relToSqlConverter =
+                new JdbcImplementor(sqlDialect, new UTF16JavaTypeFactoryImp());
+        SqlImplementor.Result result = relToSqlConverter.visitRoot(relNode);
+        return result.asQueryOrValues();
     }
 }

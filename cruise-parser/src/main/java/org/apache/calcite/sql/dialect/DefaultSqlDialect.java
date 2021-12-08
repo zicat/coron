@@ -33,4 +33,9 @@ public class DefaultSqlDialect extends SparkSqlDialect {
         }
         super.quoteStringLiteral(buf, charsetName, val);
     }
+
+    @Override
+    protected boolean allowsAs() {
+        return true;
+    }
 }

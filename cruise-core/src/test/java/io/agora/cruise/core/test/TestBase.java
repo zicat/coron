@@ -1,13 +1,6 @@
 package io.agora.cruise.core.test;
 
 import io.agora.cruise.parser.CalciteContext;
-import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
-import org.apache.calcite.adapter.jdbc.JdbcImplementor;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.rel.rel2sql.SqlImplementor;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 
 /** TestBase. */
@@ -22,17 +15,5 @@ public class TestBase extends CalciteContext {
     public TestBase() throws SqlParseException {
         super();
         addTables(ddl1, ddl2);
-    }
-
-    public TestBase(String defaultDBName) throws SqlParseException {
-        super(defaultDBName);
-        addTables(ddl1, ddl2);
-    }
-
-    protected SqlNode relNode2SqlNode(RelNode relNode) {
-        RelToSqlConverter relToSqlConverter =
-                new JdbcImplementor(SparkSqlDialect.DEFAULT, new UTF16JavaTypeFactoryImp());
-        SqlImplementor.Result result = relToSqlConverter.visitRoot(relNode);
-        return result.asQueryOrValues();
     }
 }

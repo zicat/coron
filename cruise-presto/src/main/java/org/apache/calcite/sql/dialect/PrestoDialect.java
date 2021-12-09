@@ -17,9 +17,14 @@ public class PrestoDialect extends DefaultSqlDialect {
     /**
      * Creates a SparkSqlDialect.
      *
-     * @param context
+     * @param context context
      */
     public PrestoDialect(Context context) {
         super(context);
+    }
+
+    @Override
+    protected boolean allowsAs() {
+        return true;
     }
 }

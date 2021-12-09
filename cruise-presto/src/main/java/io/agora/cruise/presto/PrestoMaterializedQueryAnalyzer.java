@@ -1,6 +1,5 @@
 package io.agora.cruise.presto;
 
-import io.agora.cruise.parser.CalciteContext;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
@@ -13,11 +12,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static io.agora.cruise.presto.PrestoContext.querySqlList;
+
 /** PrestoMaterializedQueryAnalyzer. */
-public class PrestoMaterializedQueryAnalyzer extends PrestoQueryTest {
+public class PrestoMaterializedQueryAnalyzer {
 
     public static void main(String[] args) throws IOException, SqlParseException {
-        CalciteContext context = context();
+        PrestoContext context = new PrestoContext();
         List<String> viewQueryList = getViewQuery();
         Set<String> viewNameSet = new HashSet<>();
         for (int i = 0; i < viewQueryList.size(); i++) {
@@ -35,7 +36,7 @@ public class PrestoMaterializedQueryAnalyzer extends PrestoQueryTest {
                         SqlNodeTool.toQuerySqlNode(querySql, new Int2BooleanConditionShuttle());
                 final RelNode relNode =
                         context.createSqlToRelConverter().convertQuery(sqlNode, true, true).rel;
-                if (canMaterialized(relNode, viewNameSet, context)) {
+                if (context.canMaterialized(relNode, viewNameSet)) {
                     matched++;
                     System.out.println("=====================================================");
                     System.out.println(querySql);

@@ -5,6 +5,9 @@ import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * AggregateFilterFinder.
  *
@@ -12,7 +15,7 @@ import org.apache.calcite.rel.logical.LogicalFilter;
  */
 public class TopFilterFinder extends RelShuttleImpl {
 
-    private Filter filter;
+    private List<Filter> filters = new ArrayList<>();
 
     /**
      * Find the first filter from input rel node.
@@ -20,15 +23,15 @@ public class TopFilterFinder extends RelShuttleImpl {
      * @param relNode rel node
      * @return filter
      */
-    public static Filter find(RelNode relNode) {
+    public static List<Filter> find(RelNode relNode) {
         TopFilterFinder finder = new TopFilterFinder();
         relNode.accept(finder);
-        return finder.filter;
+        return finder.filters;
     }
 
     @Override
     public RelNode visit(LogicalFilter filter) {
-        this.filter = filter;
-        return filter;
+        filters.add(filter);
+        return super.visit(filter);
     }
 }

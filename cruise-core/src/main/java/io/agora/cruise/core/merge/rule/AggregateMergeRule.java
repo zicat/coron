@@ -91,10 +91,17 @@ public class AggregateMergeRule extends MergeRule {
      */
     private boolean checkAggregateMergeable(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode newInput) {
-        final Filter fromFilter = TopFilterFinder.find(fromAggregate);
-        final Filter toFilter = TopFilterFinder.find(toAggregate);
-        final Filter newFilter = TopFilterFinder.find(newInput);
-        if (fromFilter != null && toFilter != null && newFilter != null) {
+        final List<Filter> fromFilters = TopFilterFinder.find(fromAggregate);
+        final List<Filter> toFilters = TopFilterFinder.find(toAggregate);
+        final List<Filter> newFilters = TopFilterFinder.find(newInput);
+        if (fromFilters.size() != toFilters.size() || fromFilters.size() != newFilters.size()) {
+            return AggregateMergeableCheck.mergeable(fromAggregate)
+                    && AggregateMergeableCheck.mergeable(toAggregate);
+        }
+        for (int i = 0; i < fromFilters.size(); i++) {
+            Filter fromFilter = fromFilters.get(i);
+            Filter toFilter = toFilters.get(i);
+            Filter newFilter = newFilters.get(i);
             final RexNode newFromCondition =
                     createNewInputRexNode(
                             fromFilter.getCondition(),
@@ -107,12 +114,12 @@ public class AggregateMergeRule extends MergeRule {
                             toFilter.getInput(),
                             newFilter.getInput(),
                             fromFilter.getInput().getRowType().getFieldCount());
-            if (newFromCondition.equals(newToCondition)) {
-                return true;
+            if (!newFromCondition.equals(newToCondition)) {
+                return AggregateMergeableCheck.mergeable(fromAggregate)
+                        && AggregateMergeableCheck.mergeable(toAggregate);
             }
         }
-        return AggregateMergeableCheck.mergeable(fromAggregate)
-                && AggregateMergeableCheck.mergeable(toAggregate);
+        return true;
     }
 
     /**

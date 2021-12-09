@@ -51,4 +51,17 @@ public class MaterializedViewTest extends TestBase {
         final Set<String> queryTables = TableRelShuttleImpl.tables(optRelNode);
         Assert.assertTrue(queryTables.contains(viewTableName));
     }
+
+    @Test
+    public void testView3() throws SqlParseException {
+        String viewQuerySql = "select a,b,sum(c) from test_db.test_table group by a,b";
+        String viewTableName = "test_db.testView2";
+        addMaterializedView(viewTableName, viewQuerySql);
+        final SqlNode sqlNode =
+                SqlNodeTool.toQuerySqlNode("select a,sum(c) from test_db.test_table group by a");
+        final RelRoot relRoot = createSqlToRelConverter().convertQuery(sqlNode, true, true);
+        final RelNode optNode = materializedViewOpt(relRoot.rel);
+        final Set<String> queryTables = TableRelShuttleImpl.tables(optNode);
+        Assert.assertTrue(queryTables.contains(viewTableName));
+    }
 }

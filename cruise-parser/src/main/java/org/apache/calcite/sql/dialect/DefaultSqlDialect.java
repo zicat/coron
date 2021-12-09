@@ -17,7 +17,7 @@ public class DefaultSqlDialect extends SparkSqlDialect {
     /**
      * Creates a SparkSqlDialect.
      *
-     * @param context
+     * @param context context
      */
     public DefaultSqlDialect(Context context) {
         super(context);
@@ -32,10 +32,5 @@ public class DefaultSqlDialect extends SparkSqlDialect {
             return;
         }
         super.quoteStringLiteral(buf, charsetName, val);
-    }
-
-    @Override
-    protected boolean allowsAs() {
-        return true;
     }
 }

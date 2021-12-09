@@ -19,10 +19,9 @@ public class MergeResultTest {
                 SqlNodeTool.toQuerySqlNode(sql1, new Int2BooleanConditionShuttle());
         final SqlNode sqlNode2 =
                 SqlNodeTool.toQuerySqlNode(sql2, new Int2BooleanConditionShuttle());
-        final RelNode relNode1 =
-                context.createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 =
-                context.createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
+        System.out.println(context.toSql(relNode1));
+        final RelNode relNode2 = context.sqlNode2RelNode(sqlNode2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));

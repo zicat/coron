@@ -34,8 +34,7 @@ public class PrestoMaterializedQueryAnalyzer {
             try {
                 final SqlNode sqlNode =
                         SqlNodeTool.toQuerySqlNode(querySql, new Int2BooleanConditionShuttle());
-                final RelNode relNode =
-                        context.createSqlToRelConverter().convertQuery(sqlNode, true, true).rel;
+                final RelNode relNode = context.sqlNode2RelNode(sqlNode);
                 if (context.canMaterialized(relNode, viewNameSet)) {
                     matched++;
                     System.out.println("=====================================================");

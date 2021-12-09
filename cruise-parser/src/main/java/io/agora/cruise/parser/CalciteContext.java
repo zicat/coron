@@ -18,7 +18,7 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.TableRelShuttleImpl;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.rel2sql.SqlImplementor;
-import org.apache.calcite.rel.rules.PruneEmptyRules;
+import org.apache.calcite.rel.rules.*;
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyAggregateRule;
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyJoinRule;
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewProjectAggregateRule;
@@ -50,6 +50,13 @@ public class CalciteContext {
     public static final Properties PROPERTIES = new Properties();
     public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY =
             new UTF16SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
+    public static final HepProgramBuilder DEFAULT_HEP_PROGRAM_BUILDER =
+            new HepProgramBuilder()
+                    .addRuleInstance(FilterProjectTransposeRule.Config.DEFAULT.toRule())
+                    .addRuleInstance(FilterAggregateTransposeRule.Config.DEFAULT.toRule())
+                    .addRuleInstance(AggregateProjectPullUpConstantsRule.Config.DEFAULT.toRule())
+                    .addRuleInstance(ProjectMergeRule.Config.DEFAULT.toRule())
+                    .addRuleInstance(FilterMergeRule.Config.DEFAULT.toRule());
 
     public static final List<RelOptRule> MATERIALIZATION_RULES =
             ImmutableList.of(
@@ -125,9 +132,8 @@ public class CalciteContext {
     public CalciteContext addMaterializedView(
             String viewName, String querySql, SqlShuttle... sqlShuttles) throws SqlParseException {
         final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql, sqlShuttles);
-        final SqlToRelConverter converter = createSqlToRelConverter();
-        final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
-        return addMaterializedView(viewName, viewQueryRoot.rel, converter);
+        final RelNode viewQueryRoot = sqlNode2RelNode(sqlNode);
+        return addMaterializedView(viewName, viewQueryRoot);
     }
 
     /**
@@ -176,7 +182,11 @@ public class CalciteContext {
      */
     public RelNode materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
-        final HepPlanner hepPlanner = createPlanner(MATERIALIZATION_RULES);
+        final HepProgramBuilder builder = new HepProgramBuilder();
+        builder.addRuleInstance(PruneEmptyRules.PROJECT_INSTANCE);
+        MATERIALIZATION_RULES.forEach(builder::addRuleInstance);
+        final HepProgram hepProgram = builder.build();
+        final HepPlanner hepPlanner = new HepPlanner(hepProgram);
         for (String table : tables) {
             final List<RelOptMaterialization> matchResult = materializationMap.get(table);
             if (matchResult != null) {
@@ -230,9 +240,9 @@ public class CalciteContext {
      *
      * @return SqlToRelConverter
      */
-    public SqlToRelConverter createSqlToRelConverter() {
+    private SqlToRelConverter createSqlToRelConverter() {
         final CalciteCatalogReader calciteCatalogReader = createCatalogReader();
-        final HepPlanner hepPlanner = createPlanner();
+        final HepPlanner hepPlanner = new HepPlanner(new HepProgramBuilder().build());
         final SqlValidator validator = createValidator();
         return SqlToRelConverterTool.createSqlToRelConverter(
                 hepPlanner,
@@ -242,6 +252,20 @@ public class CalciteContext {
                 rootSchema,
                 validator,
                 null);
+    }
+
+    /**
+     * sqlNode to relNode.
+     *
+     * @param sqlNode sqlNode
+     * @return relNode
+     */
+    public RelNode sqlNode2RelNode(SqlNode sqlNode) {
+        final SqlToRelConverter converter = createSqlToRelConverter();
+        final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
+        final HepPlanner hepPlanner = new HepPlanner(DEFAULT_HEP_PROGRAM_BUILDER.build());
+        hepPlanner.setRoot(viewQueryRoot.rel);
+        return hepPlanner.findBestExp();
     }
 
     /**
@@ -265,31 +289,6 @@ public class CalciteContext {
      */
     public SqlTypeFactoryImpl sqlTypeFactory() {
         return DEFAULT_SQL_TYPE_FACTORY;
-    }
-
-    /**
-     * create planner.
-     *
-     * @return HepPlanner
-     */
-    public HepPlanner createPlanner() {
-        return createPlanner(null);
-    }
-
-    /**
-     * create planner by relOptRules.
-     *
-     * @param relOptRules relOptRules
-     * @return HepPlanner
-     */
-    public HepPlanner createPlanner(List<RelOptRule> relOptRules) {
-        final HepProgramBuilder builder = new HepProgramBuilder();
-        builder.addRuleInstance(PruneEmptyRules.PROJECT_INSTANCE);
-        if (relOptRules != null) {
-            relOptRules.forEach(builder::addRuleInstance);
-        }
-        final HepProgram hepProgram = builder.build();
-        return new HepPlanner(hepProgram);
     }
 
     /**
@@ -329,6 +328,19 @@ public class CalciteContext {
      */
     public SqlNode relNode2SqlNode(RelNode relNode) {
         return relNode2SqlNode(relNode, DefaultSqlDialect.DEFAULT);
+    }
+
+    /**
+     * create relNode by sql.
+     *
+     * @param sql sql
+     * @param sqlShuttles sqlShuttles
+     * @return relNode
+     * @throws SqlParseException SqlParseException
+     */
+    public RelNode querySql2Rel(String sql, SqlShuttle... sqlShuttles) throws SqlParseException {
+        SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(sql, sqlShuttles);
+        return sqlNode2RelNode(sqlNode);
     }
 
     /**

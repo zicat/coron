@@ -30,8 +30,8 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
+        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -55,8 +55,8 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
+        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -84,8 +84,8 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
+        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -116,8 +116,8 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
+        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -148,8 +148,8 @@ public class NodeRelJoinTest extends NodeRelTest {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
-        final RelNode relNode1 = createSqlToRelConverter().convertQuery(sqlNode1, true, true).rel;
-        final RelNode relNode2 = createSqlToRelConverter().convertQuery(sqlNode2, true, true).rel;
+        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
+        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));

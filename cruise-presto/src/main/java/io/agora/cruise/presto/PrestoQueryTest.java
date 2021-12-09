@@ -38,14 +38,8 @@ public class PrestoQueryTest {
                             SqlNodeTool.toQuerySqlNode(fromSql, new Int2BooleanConditionShuttle());
                     final SqlNode sqlNode2 =
                             SqlNodeTool.toQuerySqlNode(toSql, new Int2BooleanConditionShuttle());
-                    final RelNode relNode1 =
-                            context.createSqlToRelConverter()
-                                    .convertQuery(sqlNode1, true, true)
-                                    .rel;
-                    final RelNode relNode2 =
-                            context.createSqlToRelConverter()
-                                    .convertQuery(sqlNode2, true, true)
-                                    .rel;
+                    final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
+                    final RelNode relNode2 = context.sqlNode2RelNode(sqlNode2);
                     ResultNodeList<RelNode> resultNodeList =
                             findAllSubNode(
                                     createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));

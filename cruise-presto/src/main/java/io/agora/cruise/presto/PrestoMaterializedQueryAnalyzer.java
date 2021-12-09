@@ -30,17 +30,20 @@ public class PrestoMaterializedQueryAnalyzer {
         List<String> querySqlList = querySqlList();
         int total = 0;
         int matched = 0;
+        Set<String> allMatchedView = new HashSet<>();
         for (String querySql : querySqlList) {
             try {
                 final SqlNode sqlNode =
                         SqlNodeTool.toQuerySqlNode(querySql, new Int2BooleanConditionShuttle());
                 final RelNode relNode = context.sqlNode2RelNode(sqlNode);
-                if (context.canMaterialized(relNode, viewNameSet)) {
+                Set<String> matchedView = context.canMaterialized(relNode, viewNameSet);
+                if (!matchedView.isEmpty()) {
                     matched++;
                     System.out.println("=====================================================");
                     System.out.println(querySql);
                     System.out.println("---------");
                     System.out.println(context.toSql(context.materializedViewOpt(relNode)));
+                    allMatchedView.addAll(matchedView);
                 }
                 total++;
             } catch (Exception e) {
@@ -52,7 +55,21 @@ public class PrestoMaterializedQueryAnalyzer {
                 throw e;
             }
         }
-        System.out.println("total:" + total + ",matched:" + matched);
+        System.out.println(
+                "total:"
+                        + total
+                        + ",matched:"
+                        + matched
+                        + ",useless view:"
+                        + (viewNameSet.size() - allMatchedView.size()));
+
+        System.out.println("====useless view detail======");
+        for (String view : viewNameSet) {
+            if (!allMatchedView.contains(view)) {
+                System.out.println(view);
+                System.out.println("-----------------------------");
+            }
+        }
     }
 
     private static List<String> getViewQuery() throws IOException {

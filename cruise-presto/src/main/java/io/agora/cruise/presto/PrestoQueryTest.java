@@ -1,9 +1,11 @@
 package io.agora.cruise.presto;
 
+import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
+import io.agora.cruise.presto.simplify.PartitionAggregateFilterSimplify;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.dialect.PrestoDialect;
@@ -29,6 +31,8 @@ public class PrestoQueryTest {
                 createWriter(System.getProperty("user.home") + "/Desktop/source-sql.txt");
         Map<String, Integer> result = new HashMap<>();
 
+        NodeRel.Simplify simplify =
+                new PartitionAggregateFilterSimplify(Collections.singletonList("date"));
         for (int i = 0; i < querySql.size() - 1; i++) {
             for (int j = i + 1; j < querySql.size(); j++) {
                 String fromSql = querySql.get(i);
@@ -42,7 +46,8 @@ public class PrestoQueryTest {
                     final RelNode relNode2 = context.sqlNode2RelNode(sqlNode2);
                     ResultNodeList<RelNode> resultNodeList =
                             findAllSubNode(
-                                    createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+                                    createNodeRelRoot(relNode1, simplify),
+                                    createNodeRelRoot(relNode2, simplify));
                     if (resultNodeList.isEmpty()) {
                         continue;
                     }
@@ -74,6 +79,9 @@ public class PrestoQueryTest {
                         viewNames.add("view_" + value);
                         ids.add(value);
                     }
+                    if (ids.isEmpty()) {
+                        continue;
+                    }
 
                     String value =
                             ids.stream()
@@ -81,14 +89,18 @@ public class PrestoQueryTest {
                                     .map(String::valueOf)
                                     .collect(Collectors.joining(","));
 
-                    if (!viewNames.isEmpty() && !context.canMaterialized(relNode1, viewNames)) {
+                    if (!viewNames.isEmpty()
+                            && context.canMaterialized(relNode1, viewNames).isEmpty()
+                            && !fromSql.contains("HAVING")) {
                         System.out.println(
                                 "===============not match:"
                                         + value
                                         + "============================");
                         System.out.println(fromSql);
                     }
-                    if (!viewNames.isEmpty() && !context.canMaterialized(relNode2, viewNames)) {
+                    if (!viewNames.isEmpty()
+                            && context.canMaterialized(relNode2, viewNames).isEmpty()
+                            && !toSql.contains("HAVING")) {
                         System.out.println(
                                 "===============not match:"
                                         + value

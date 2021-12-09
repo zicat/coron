@@ -20,15 +20,16 @@ public class PrestoContext extends CalciteContext {
         init();
     }
 
-    public boolean canMaterialized(RelNode relNode, Set<String> viewNames) {
+    public Set<String> canMaterialized(RelNode relNode, Set<String> viewNames) {
         RelNode optRelNode1 = materializedViewOpt(relNode);
         Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode1);
+        Set<String> matchedView = new HashSet<>();
         for (String opRelNode1Table : opRelNode1Tables) {
             if (viewNames.contains(opRelNode1Table)) {
-                return true;
+                matchedView.add(opRelNode1Table);
             }
         }
-        return false;
+        return matchedView;
     }
 
     public static List<String> querySqlList() throws IOException {

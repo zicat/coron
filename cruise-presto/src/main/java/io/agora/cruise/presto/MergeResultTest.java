@@ -1,11 +1,15 @@
 package io.agora.cruise.presto;
 
+import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
+import io.agora.cruise.presto.simplify.PartitionAggregateFilterSimplify;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
+
+import java.util.Collections;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
@@ -15,16 +19,33 @@ public class MergeResultTest {
 
     public static void main(String[] args) throws SqlParseException {
         PrestoContext context = new PrestoContext();
+        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode("", new Int2BooleanConditionShuttle());
+
+        final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
+
+        NodeRel.Simplify simplify =
+                new PartitionAggregateFilterSimplify(Collections.singletonList("date"));
+
+        NodeRel nodeRel1 = createNodeRelRoot(relNode1, simplify);
+        System.out.println(context.toSql(nodeRel1.getPayload()));
+    }
+
+    private static void test1() throws SqlParseException {
+        PrestoContext context = new PrestoContext();
         final SqlNode sqlNode1 =
                 SqlNodeTool.toQuerySqlNode(sql1, new Int2BooleanConditionShuttle());
         final SqlNode sqlNode2 =
                 SqlNodeTool.toQuerySqlNode(sql2, new Int2BooleanConditionShuttle());
-        final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
-        System.out.println(context.toSql(relNode1));
-        final RelNode relNode2 = context.sqlNode2RelNode(sqlNode2);
 
-        ResultNode<RelNode> resultNode =
-                findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
+        final RelNode relNode2 = context.sqlNode2RelNode(sqlNode2);
+        final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
+
+        NodeRel.Simplify simplify =
+                new PartitionAggregateFilterSimplify(Collections.singletonList("date"));
+
+        NodeRel nodeRel1 = createNodeRelRoot(relNode1, simplify);
+        NodeRel nodeRel2 = createNodeRelRoot(relNode2, simplify);
+        ResultNode<RelNode> resultNode = findFirstSubNode(nodeRel1, nodeRel2);
         System.out.println(context.toSql(resultNode.getPayload()));
     }
 

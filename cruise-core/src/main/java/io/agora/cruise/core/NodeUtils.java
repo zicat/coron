@@ -17,14 +17,26 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot, RelNodeMergePlanner mergePlanner) {
+        return createNodeRelRoot(relRoot, mergePlanner, relNode -> relNode);
+    }
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @param simplify simplify
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(
+            RelNode relRoot, RelNodeMergePlanner mergePlanner, NodeRel.Simplify simplify) {
         final Queue<NodeRel> queue = new LinkedList<>();
-        final NodeRel nodeRoot = new NodeRel(mergePlanner, relRoot);
+        final NodeRel nodeRoot = NodeRel.of(mergePlanner, simplify.apply(relRoot));
         queue.offer(nodeRoot);
         while (!queue.isEmpty()) {
             final Node<RelNode> node = queue.poll();
             final RelNode relNode = node.getPayload();
             for (int i = 0; i < relNode.getInputs().size(); i++) {
-                queue.offer(new NodeRel(mergePlanner, node, relNode.getInput(i)));
+                queue.offer(NodeRel.of(mergePlanner, node, relNode.getInput(i)));
             }
         }
         return nodeRoot;
@@ -38,6 +50,17 @@ public class NodeUtils {
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot) {
         return createNodeRelRoot(relRoot, true);
+    }
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @param simplify simplify
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(RelNode relRoot, NodeRel.Simplify simplify) {
+        return createNodeRelRoot(relRoot, true, simplify);
     }
 
     /**
@@ -58,6 +81,28 @@ public class NodeUtils {
                         FilterProjectMergeRule.Config.create().materialized(canMaterialized),
                         ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
         return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
+    }
+
+    /**
+     * create node rel root.
+     *
+     * @param relRoot rel root
+     * @param canMaterialized materialized
+     * @param simplify simplify
+     * @return node rel
+     */
+    public static NodeRel createNodeRelRoot(
+            RelNode relRoot, boolean canMaterialized, NodeRel.Simplify simplify) {
+        final List<MergeConfig> mergeRuleConfigs =
+                Arrays.asList(
+                        TableScanMergeRule.Config.create().materialized(canMaterialized),
+                        ProjectMergeRule.Config.create().materialized(canMaterialized),
+                        FilterMergeRule.Config.create().materialized(canMaterialized),
+                        AggregateMergeRule.Config.create().materialized(canMaterialized),
+                        JoinMergeRule.Config.create().materialized(canMaterialized),
+                        FilterProjectMergeRule.Config.create().materialized(canMaterialized),
+                        ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
+        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs), simplify);
     }
 
     /**

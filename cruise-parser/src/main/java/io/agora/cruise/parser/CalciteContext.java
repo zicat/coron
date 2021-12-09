@@ -50,13 +50,6 @@ public class CalciteContext {
     public static final Properties PROPERTIES = new Properties();
     public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY =
             new UTF16SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
-    public static final HepProgramBuilder DEFAULT_HEP_PROGRAM_BUILDER =
-            new HepProgramBuilder()
-                    .addRuleInstance(FilterProjectTransposeRule.Config.DEFAULT.toRule())
-                    .addRuleInstance(FilterAggregateTransposeRule.Config.DEFAULT.toRule())
-                    .addRuleInstance(AggregateProjectPullUpConstantsRule.Config.DEFAULT.toRule())
-                    .addRuleInstance(ProjectMergeRule.Config.DEFAULT.toRule())
-                    .addRuleInstance(FilterMergeRule.Config.DEFAULT.toRule());
 
     public static final List<RelOptRule> MATERIALIZATION_RULES =
             ImmutableList.of(
@@ -263,7 +256,15 @@ public class CalciteContext {
     public RelNode sqlNode2RelNode(SqlNode sqlNode) {
         final SqlToRelConverter converter = createSqlToRelConverter();
         final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
-        final HepPlanner hepPlanner = new HepPlanner(DEFAULT_HEP_PROGRAM_BUILDER.build());
+        final HepProgramBuilder builder =
+                new HepProgramBuilder()
+                        .addRuleInstance(FilterProjectTransposeRule.Config.DEFAULT.toRule())
+                        .addRuleInstance(FilterAggregateTransposeRule.Config.DEFAULT.toRule())
+                        .addRuleInstance(
+                                AggregateProjectPullUpConstantsRule.Config.DEFAULT.toRule())
+                        .addRuleInstance(ProjectMergeRule.Config.DEFAULT.toRule())
+                        .addRuleInstance(FilterMergeRule.Config.DEFAULT.toRule());
+        final HepPlanner hepPlanner = new HepPlanner(builder.build());
         hepPlanner.setRoot(viewQueryRoot.rel);
         return hepPlanner.findBestExp();
     }

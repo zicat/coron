@@ -90,8 +90,7 @@ public class PrestoQueryTest {
                                     .collect(Collectors.joining(","));
 
                     if (!viewNames.isEmpty()
-                            && context.canMaterialized(relNode1, viewNames).isEmpty()
-                            && !fromSql.contains("HAVING")) {
+                            && context.canMaterialized(relNode1, viewNames).isEmpty()) {
                         System.out.println(
                                 "===============not match:"
                                         + value
@@ -99,8 +98,7 @@ public class PrestoQueryTest {
                         System.out.println(fromSql);
                     }
                     if (!viewNames.isEmpty()
-                            && context.canMaterialized(relNode2, viewNames).isEmpty()
-                            && !toSql.contains("HAVING")) {
+                            && context.canMaterialized(relNode2, viewNames).isEmpty()) {
                         System.out.println(
                                 "===============not match:"
                                         + value

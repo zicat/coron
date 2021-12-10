@@ -71,7 +71,12 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot, boolean canMaterialized) {
-        final List<MergeConfig> mergeRuleConfigs =
+        final List<MergeConfig> mergeRuleConfigs = new ArrayList<>();
+        if (canMaterialized) {
+            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createFrom());
+            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createTo());
+        }
+        mergeRuleConfigs.addAll(
                 Arrays.asList(
                         TableScanMergeRule.Config.create().materialized(canMaterialized),
                         ProjectMergeRule.Config.create().materialized(canMaterialized),
@@ -79,7 +84,7 @@ public class NodeUtils {
                         AggregateMergeRule.Config.create().materialized(canMaterialized),
                         JoinMergeRule.Config.create().materialized(canMaterialized),
                         FilterProjectMergeRule.Config.create().materialized(canMaterialized),
-                        ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
+                        ProjectFilterMergeRule.Config.create().materialized(canMaterialized)));
         return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
     }
 

@@ -258,8 +258,8 @@ public class CalciteContext {
         final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
         final HepProgramBuilder builder =
                 new HepProgramBuilder()
-                        .addRuleInstance(FilterProjectTransposeRule.Config.DEFAULT.toRule())
                         .addRuleInstance(FilterAggregateTransposeRule.Config.DEFAULT.toRule())
+                        .addRuleInstance(FilterProjectTransposeRule.Config.DEFAULT.toRule())
                         .addRuleInstance(
                                 AggregateProjectPullUpConstantsRule.Config.DEFAULT.toRule())
                         .addRuleInstance(ProjectMergeRule.Config.DEFAULT.toRule())

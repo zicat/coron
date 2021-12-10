@@ -21,4 +21,5 @@ assets/
 release.zip
 build/
 fst/
+output/
 /scorpio-core/dependency-reduced-pom.xml

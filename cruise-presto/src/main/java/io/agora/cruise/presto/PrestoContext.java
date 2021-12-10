@@ -46,7 +46,10 @@ public class PrestoContext extends CalciteContext {
     }
 
     public static BufferedWriter createWriter(String fileName) throws IOException {
-        File file = new File(fileName);
+        File file = new File(fileName).getCanonicalFile();
+        if (!file.getParentFile().exists() && !file.getParentFile().mkdir()) {
+            throw new RuntimeException("parent dir create fail");
+        }
         if (file.exists() && !file.delete()) {
             throw new IOException("delete fail" + fileName);
         }

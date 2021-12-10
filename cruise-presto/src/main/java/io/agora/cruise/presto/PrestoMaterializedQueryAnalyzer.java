@@ -6,11 +6,12 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static io.agora.cruise.presto.PrestoContext.querySqlList;
 
@@ -76,10 +77,7 @@ public class PrestoMaterializedQueryAnalyzer {
         BufferedReader br =
                 new BufferedReader(
                         new InputStreamReader(
-                                Objects.requireNonNull(
-                                        Thread.currentThread()
-                                                .getContextClassLoader()
-                                                .getResourceAsStream("public-sql.txt")),
+                                new FileInputStream(new File("output/public-sql.txt")),
                                 StandardCharsets.UTF_8));
         StringBuilder sb = new StringBuilder();
         String line;

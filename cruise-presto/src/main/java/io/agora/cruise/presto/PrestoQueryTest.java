@@ -25,10 +25,7 @@ public class PrestoQueryTest {
     public static void main(String[] args) throws Exception {
         PrestoContext context = new PrestoContext();
         List<String> querySql = querySqlList();
-        BufferedWriter bw =
-                createWriter(System.getProperty("user.home") + "/Desktop/public-sql.txt");
-        BufferedWriter bw2 =
-                createWriter(System.getProperty("user.home") + "/Desktop/source-sql.txt");
+        BufferedWriter bw = createWriter("output/public-sql.txt");
         Map<String, Integer> result = new HashMap<>();
 
         NodeRel.Simplify simplify =
@@ -59,6 +56,9 @@ public class PrestoQueryTest {
                         String resultSql =
                                 context.toSql(resultNode.getPayload(), PrestoDialect.DEFAULT);
                         if (!resultSql.contains("GROUP BY") && !resultSql.contains("JOIN")) {
+                            continue;
+                        }
+                        if (!resultSql.contains("WHERE")) {
                             continue;
                         }
 
@@ -106,22 +106,6 @@ public class PrestoQueryTest {
                         System.out.println(toSql);
                     }
 
-                    bw2.write(
-                            "=========================from sql mapping to ="
-                                    + value
-                                    + "========================");
-                    bw2.newLine();
-                    bw2.write(fromSql);
-                    bw2.newLine();
-                    bw2.write(
-                            "=========================to sql mapping to ="
-                                    + value
-                                    + "========================");
-                    bw2.newLine();
-                    bw2.write(toSql);
-                    bw2.newLine();
-                    bw2.flush();
-
                 } catch (Throwable e) {
                     if (e.toString().contains("Object 'media' not found")
                             || e.toString().contains("Object 'queries' not found")
@@ -137,6 +121,5 @@ public class PrestoQueryTest {
             }
         }
         bw.close();
-        bw2.close();
     }
 }

@@ -3,7 +3,7 @@ package io.agora.cruise.presto.test.simplify;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
-import io.agora.cruise.presto.PrestoContext;
+import io.agora.cruise.presto.FileContext;
 import io.agora.cruise.presto.simplify.PartitionAggregateFilterSimplify;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -20,13 +20,12 @@ public class PartitionAggregateFilterSimplifyTest {
 
     @Test
     public void test2() throws SqlParseException {
-        PrestoContext context = new PrestoContext();
+        FileContext context = new FileContext("report_datahub");
         String sql =
                 "select date FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
         String expectSql =
                 "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_1\n"
                         + "FROM report_datahub.pub_levels_quality_di_1\n"
-                        + "WHERE '1' = '1'\n"
                         + "GROUP BY date, date_parse(CAST(date AS VARCHAR), '%Y%m%d')";
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql, new Int2BooleanConditionShuttle());
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
@@ -39,7 +38,7 @@ public class PartitionAggregateFilterSimplifyTest {
 
     @Test
     public void test3() throws SqlParseException {
-        PrestoContext context = new PrestoContext();
+        FileContext context = new FileContext("report_datahub");
         String sql =
                 "select date,sum(fiveSecJoinSuccess) from (select date,tag,sum(fiveSecJoinSuccess) as fiveSecJoinSuccess "
                         + "FROM report_datahub.pub_levels_quality_di_1 "
@@ -64,7 +63,7 @@ public class PartitionAggregateFilterSimplifyTest {
 
     @Test
     public void test() throws SqlParseException {
-        PrestoContext context = new PrestoContext();
+        FileContext context = new FileContext("report_datahub");
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql, new Int2BooleanConditionShuttle());
 
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);

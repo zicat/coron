@@ -156,6 +156,11 @@ public class CalciteContext {
         return this;
     }
 
+    /** clean up all view. */
+    public void cleanupView() {
+        materializationMap.clear();
+    }
+
     /**
      * add materializedView.
      *

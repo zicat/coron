@@ -3,7 +3,6 @@ package io.agora.cruise.presto;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
-import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.presto.sql.SqlFilter;
 import io.agora.cruise.presto.sql.SqlIterable;
@@ -14,9 +13,7 @@ import org.apache.calcite.sql.dialect.PrestoDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlShuttle;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
@@ -55,13 +52,12 @@ public class SubSqlTool {
      *
      * @return tuple
      */
-    public Tuple2<Set<String>, Map<String, Set<String>>> start() {
-        Map<String, Set<String>> notMatch = new HashMap<>();
+    public Set<String> start() {
         Set<String> viewQuerySet = new HashSet<>();
         SqlIterator fromIt = source.sqlIterator();
         while (fromIt.hasNext()) {
             String fromSql = fromIt.next();
-            if (fromSql == null || !sqlFilter.filter(fromSql)) {
+            if (fromSql == null || sqlFilter.filter(fromSql)) {
                 continue;
             }
             SqlIterator toIt = target.sqlIterator();
@@ -70,17 +66,19 @@ public class SubSqlTool {
             }
             while (toIt.hasNext()) {
                 String toSql = toIt.next();
-                if (toSql == null || !sqlFilter.filter(toSql) || fromSql.equals(toSql)) {
+                if (toSql == null || sqlFilter.filter(toSql) || fromSql.equals(toSql)) {
                     continue;
                 }
                 try {
-                    calculate(fromSql, toSql, notMatch, viewQuerySet);
+                    if (calculate(fromSql, toSql, viewQuerySet)) {
+                        break;
+                    }
                 } catch (Throwable e) {
                     handler.handle(fromSql, toSql, e);
                 }
             }
         }
-        return Tuple2.of(viewQuerySet, notMatch);
+        return viewQuerySet;
     }
 
     /**
@@ -101,12 +99,10 @@ public class SubSqlTool {
      *
      * @param fromSql fromSql
      * @param toSql toSql
-     * @param notMatch notMath
      * @param allViewSet allViewSet
      * @throws SqlParseException SqlParseException
      */
-    private void calculate(
-            String fromSql, String toSql, Map<String, Set<String>> notMatch, Set<String> allViewSet)
+    private boolean calculate(String fromSql, String toSql, Set<String> allViewSet)
             throws SqlParseException {
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(fromSql, sqlShuttles);
@@ -118,7 +114,7 @@ public class SubSqlTool {
                         createNodeRelRoot(relNode1, simplify),
                         createNodeRelRoot(relNode2, simplify));
         if (resultNodeList.isEmpty()) {
-            return;
+            return false;
         }
 
         Set<String> viewNames = new HashSet<>();
@@ -134,15 +130,8 @@ public class SubSqlTool {
             final String viewName = "view_" + allViewSet.size();
             allViewSet.add(viewQuery);
             viewNames.add(viewName);
-            fileContext.addMaterializedView(viewName, resultNode.getPayload());
         }
-        if (viewNames.isEmpty()) {
-            return;
-        }
-        if (fileContext.canMaterialized(relNode1, viewNames).isEmpty()) {
-            notMatch.put(fromSql, viewNames);
-        }
-        fileContext.cleanupView();
+        return !viewNames.isEmpty();
     }
 
     /** ExceptionHandler. */

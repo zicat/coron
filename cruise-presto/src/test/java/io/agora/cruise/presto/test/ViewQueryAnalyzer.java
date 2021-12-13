@@ -9,7 +9,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static io.agora.cruise.presto.sql.SqlCsvIterator.CsvParser.FIRST_COLUMN;
@@ -22,11 +24,12 @@ public class ViewQueryAnalyzer extends QueryTestBase {
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlIterator it =
                 new SqlTextIterable("output/view_query.sql", StandardCharsets.UTF_8).sqlIterator();
-        Set<String> viewNameSet = new HashSet<>();
+        Map<String, String> viewNameQueryMapping = new HashMap<>();
         while (it.hasNext()) {
             String viewName = "view_" + it.currentOffset();
-            queryTestBase.addMaterializedView(viewName, it.next());
-            viewNameSet.add(viewName);
+            String viewQuery = it.next();
+            queryTestBase.addMaterializedView(viewName, viewQuery);
+            viewNameQueryMapping.put(viewName, viewQuery);
         }
 
         int total = 0;
@@ -37,19 +40,16 @@ public class ViewQueryAnalyzer extends QueryTestBase {
         while (iterator.hasNext()) {
             String querySql = iterator.next();
             try {
-                if (!queryTestBase.sqlFilter.filter(querySql)) {
+                if (queryTestBase.sqlFilter.filter(querySql)) {
                     continue;
                 }
                 final RelNode relNode =
                         queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
                 final Tuple2<Set<String>, RelNode> tuple2 =
-                        queryTestBase.canMaterializedWithRelNode(relNode, viewNameSet);
+                        queryTestBase.canMaterializedWithRelNode(
+                                relNode, viewNameQueryMapping.keySet());
                 if (!tuple2.f0.isEmpty()) {
                     matched++;
-                    System.out.println("=====================================================");
-                    System.out.println(querySql);
-                    System.out.println("---------");
-                    System.out.println(queryTestBase.toSql(tuple2.f1));
                     allMatchedView.addAll(tuple2.f0);
                 }
                 total++;
@@ -57,21 +57,13 @@ public class ViewQueryAnalyzer extends QueryTestBase {
                 queryTestBase.exceptionHandler.handle(null, null, e);
             }
         }
+        System.out.println("===========matched view================");
+        for (String viewName : allMatchedView) {
+            System.out.println(viewNameQueryMapping.get(viewName));
+            System.out.println("----------------------------------------------");
+        }
 
         System.out.println(
-                "total:"
-                        + total
-                        + ",matched:"
-                        + matched
-                        + ",useless view:"
-                        + (viewNameSet.size() - allMatchedView.size()));
-
-        System.out.println("====useless view detail======");
-        for (String view : viewNameSet) {
-            if (!allMatchedView.contains(view)) {
-                System.out.println(view);
-                System.out.println("-----------------------------");
-            }
-        }
+                "total:" + total + ",matched:" + matched + ",view count:" + allMatchedView.size());
     }
 }

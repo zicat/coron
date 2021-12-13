@@ -1,6 +1,7 @@
 package io.agora.cruise.presto.sql;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /** SqlJsonIterable. */
 public class SqlJsonIterable extends SqlIterable {
@@ -8,8 +9,7 @@ public class SqlJsonIterable extends SqlIterable {
     protected SqlJsonIterator.JsonParser parser;
 
     public SqlJsonIterable(String fileName, SqlJsonIterator.JsonParser parser) {
-        super(fileName);
-        this.parser = parser;
+        this(fileName, StandardCharsets.UTF_8, parser);
     }
 
     public SqlJsonIterable(String fileName, Charset charset, SqlJsonIterator.JsonParser parser) {

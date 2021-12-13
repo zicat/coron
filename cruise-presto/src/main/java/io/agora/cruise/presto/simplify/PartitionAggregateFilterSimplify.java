@@ -1,13 +1,9 @@
 package io.agora.cruise.presto.simplify;
 
 import com.google.common.collect.ImmutableList;
-import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.util.Tuple2;
-import io.agora.cruise.parser.CalciteContext;
 import io.agora.cruise.presto.util.Lists;
-import org.apache.calcite.rel.PredictRexShuttle;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
@@ -17,15 +13,11 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rex.*;
-import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -33,24 +25,10 @@ import java.util.stream.Collectors;
  *
  * <p>trans: select sum(x) where f(t) = 1 to select t,sum(x) group by f(t). (t in partitionFields)
  */
-public class PartitionAggregateFilterSimplify extends RelShuttleImpl implements NodeRel.Simplify {
-
-    private static final List<SqlKind> COMPARE_KIND =
-            Arrays.asList(
-                    SqlKind.EQUALS,
-                    SqlKind.BETWEEN,
-                    SqlKind.LESS_THAN,
-                    SqlKind.LESS_THAN_OR_EQUAL,
-                    SqlKind.GREATER_THAN,
-                    SqlKind.GREATER_THAN_OR_EQUAL,
-                    SqlKind.IN);
-    private static final String PREFIX_NAME = "tmp_p_";
-
-    final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
-    private final List<String> partitionFields;
+public class PartitionAggregateFilterSimplify extends PartitionSimplify {
 
     public PartitionAggregateFilterSimplify(List<String> partitionFields) {
-        this.partitionFields = partitionFields;
+        super(partitionFields);
     }
 
     @Override
@@ -122,18 +100,6 @@ public class PartitionAggregateFilterSimplify extends RelShuttleImpl implements 
                 newAggregate, new ArrayList<>(), allProjectNodes, allProjectName);
     }
 
-    @Override
-    public RelNode apply(RelNode relNode) {
-        if (partitionFields == null || partitionFields.isEmpty()) {
-            return relNode;
-        }
-        return relNode.accept(this);
-    }
-
-    protected String getPrefixName() {
-        return PREFIX_NAME;
-    }
-
     /**
      * find name by relDataType.
      *
@@ -183,113 +149,5 @@ public class PartitionAggregateFilterSimplify extends RelShuttleImpl implements 
 
         final Filter filter = (Filter) project.getInput();
         return Tuple2.of(project, filter);
-    }
-
-    /**
-     * get filter rex node.
-     *
-     * @param filter filter
-     * @return tuple2
-     */
-    private Tuple2<RelNode, List<RexNode>> transFilterCondition(Filter filter) {
-
-        final RexNode rexNode = filter.getCondition();
-        final RexNode leftExp = leftExpParser(rexNode, filter);
-        if (leftExp != null) {
-            return new Tuple2<>(filter.getInput(), Collections.singletonList(leftExp));
-        }
-        if (rexNode.getKind() != SqlKind.AND) {
-            return null;
-        }
-        final RexCall andRexCall = (RexCall) rexNode;
-        final List<RexNode> noPartitionRexNode = new ArrayList<>();
-        final List<RexNode> partitionRexNode = new ArrayList<>();
-        for (int i = 0; i < andRexCall.getOperands().size(); i++) {
-            final RexNode childNode = andRexCall.getOperands().get(i);
-            final RexNode childLeftExp = leftExpParser(andRexCall.getOperands().get(i), filter);
-            if (childLeftExp == null) {
-                noPartitionRexNode.add(childNode);
-            } else if (!partitionRexNode.contains(childLeftExp)) {
-                partitionRexNode.add(childLeftExp);
-            }
-        }
-        if (partitionRexNode.isEmpty()) {
-            return null;
-        }
-        if (noPartitionRexNode.isEmpty()) {
-            return new Tuple2<>(filter.getInput(), partitionRexNode);
-        }
-        final RexNode newCondition =
-                noPartitionRexNode.size() == 1
-                        ? noPartitionRexNode.get(0)
-                        : andRexCall.clone(andRexCall.type, noPartitionRexNode);
-        return new Tuple2<>(
-                filter.copy(filter.getTraitSet(), filter.getInput(), newCondition),
-                partitionRexNode);
-    }
-
-    /**
-     * containsPartitionField.
-     *
-     * @param rexNode rexNode
-     * @param filter filter
-     * @return boolean
-     */
-    private RexNode leftExpParser(RexNode rexNode, Filter filter) {
-
-        if (!COMPARE_KIND.contains(rexNode.getKind())) {
-            return null;
-        }
-        final RexNode leftExp = ((RexCall) rexNode).getOperands().get(0);
-        final RelDataType relDataType = filter.getInput().getRowType();
-        boolean rightNotContain = true;
-        for (int i = 1; i < ((RexCall) rexNode).getOperands().size(); i++) {
-            if (!PredictRexShuttle.predicts(((RexCall) rexNode).getOperands().get(i)).isEmpty()) {
-                rightNotContain = false;
-                break;
-            }
-        }
-        return PartitionFieldFounder.contains(leftExp, relDataType, partitionFields)
-                        && rightNotContain
-                ? leftExp
-                : null;
-    }
-
-    /** PartitionFieldFounder. */
-    private static class PartitionFieldFounder extends RexShuttle {
-
-        private final RelDataType relDataType;
-        private final List<String> partitionFields;
-        private final AtomicBoolean contains = new AtomicBoolean(false);
-
-        public PartitionFieldFounder(RelDataType relDataType, List<String> partitionFields) {
-            this.relDataType = relDataType;
-            this.partitionFields = partitionFields;
-        }
-
-        @Override
-        public RexNode visitInputRef(RexInputRef inputRef) {
-            if (partitionFields.contains(relDataType.getFieldNames().get(inputRef.getIndex()))) {
-                contains.set(true);
-            }
-            return inputRef;
-        }
-
-        /**
-         * check rexNode contains partition fields.
-         *
-         * @param rexNode reNode
-         * @param relDataType relDataType
-         * @param partitionFields partitionFields
-         * @return true if contains
-         */
-        public static boolean contains(
-                RexNode rexNode, RelDataType relDataType, List<String> partitionFields) {
-
-            final PartitionFieldFounder fieldFounder =
-                    new PartitionFieldFounder(relDataType, partitionFields);
-            rexNode.accept(fieldFounder);
-            return fieldFounder.contains.get();
-        }
     }
 }

@@ -28,7 +28,8 @@ public class QueryTestBase extends FileContext {
             sql ->
                     sql.startsWith("explain")
                             || sql.contains("system.runtime")
-                            || sql.toUpperCase().startsWith("SHOW ");
+                            || sql.toUpperCase().startsWith("SHOW ")
+                            || sql.contains("levels_usage_dod_di_11");
     protected SqlShuttle[] sqlShuttles = new SqlShuttle[] {new Int2BooleanConditionShuttle()};
     protected SubSqlTool.ExceptionHandler exceptionHandler =
             (sourceSql, targetSql, e) -> {

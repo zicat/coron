@@ -3,12 +3,10 @@ package io.agora.cruise.presto;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
-import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.presto.sql.SqlFilter;
 import io.agora.cruise.presto.sql.SqlIterable;
 import io.agora.cruise.presto.sql.SqlIterator;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.dialect.PrestoDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -105,10 +103,8 @@ public class SubSqlTool {
     private boolean calculate(String fromSql, String toSql, Set<String> allViewSet)
             throws SqlParseException {
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(fromSql, sqlShuttles);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(toSql, sqlShuttles);
-        final RelNode relNode1 = fileContext.sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = fileContext.sqlNode2RelNode(sqlNode2);
+        final RelNode relNode1 = fileContext.querySql2Rel(fromSql, sqlShuttles);
+        final RelNode relNode2 = fileContext.querySql2Rel(toSql, sqlShuttles);
         final ResultNodeList<RelNode> resultNodeList =
                 findAllSubNode(
                         createNodeRelRoot(relNode1, simplify),

@@ -1,6 +1,5 @@
 package io.agora.cruise.presto.simplify;
 
-import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.PredictRexShuttle;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** PartitionSimplify. */
-public class PartitionSimplify extends RelShuttleImpl implements NodeRel.Simplify {
+public class PartitionSimplify extends RelShuttleImpl {
 
     private static final String PREFIX_NAME = "tmp_p_";
     private static final List<SqlKind> COMPARE_KIND =
@@ -36,14 +35,6 @@ public class PartitionSimplify extends RelShuttleImpl implements NodeRel.Simplif
 
     public PartitionSimplify(List<String> partitionFields) {
         this.partitionFields = partitionFields;
-    }
-
-    @Override
-    public RelNode apply(RelNode relNode) {
-        if (partitionFields == null || partitionFields.isEmpty()) {
-            return relNode;
-        }
-        return relNode.accept(this);
     }
 
     protected String getPrefixName() {

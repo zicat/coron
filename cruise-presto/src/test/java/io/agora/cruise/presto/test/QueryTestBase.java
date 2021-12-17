@@ -1,6 +1,6 @@
 package io.agora.cruise.presto.test;
 
-import io.agora.cruise.core.NodeRel;
+import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
 import io.agora.cruise.presto.FileContext;
 import io.agora.cruise.presto.SubSqlTool;
@@ -10,7 +10,6 @@ import io.agora.cruise.presto.sql.SqlFilter;
 import io.agora.cruise.presto.sql.SqlIterable;
 import org.apache.calcite.sql.util.SqlShuttle;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,11 +17,10 @@ import java.util.List;
 public class QueryTestBase extends FileContext {
 
     List<String> partitionFields = Collections.singletonList("date");
-    NodeRel.Simplify simplify =
-            new NodeRel.SimplifyChain(
-                    Arrays.asList(
-                            new PartitionAggregateFilterSimplify(partitionFields),
-                            new PartitionFilterSimplify(partitionFields)));
+    RelShuttleChain shuttleChain =
+            RelShuttleChain.of(
+                    new PartitionAggregateFilterSimplify(partitionFields),
+                    new PartitionFilterSimplify(partitionFields));
 
     protected SqlFilter sqlFilter =
             sql ->
@@ -54,7 +52,7 @@ public class QueryTestBase extends FileContext {
     public SubSqlTool createSubSqlTool(
             SqlIterable source, SqlIterable target, SqlFilter viewFilter) {
         return new SubSqlTool(
-                source, target, simplify, sqlFilter, exceptionHandler, this, sqlShuttles) {
+                source, target, shuttleChain, sqlFilter, exceptionHandler, this, sqlShuttles) {
 
             /**
              * filter some view query.

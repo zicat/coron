@@ -1,8 +1,8 @@
 package io.agora.cruise.presto;
 
-import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
+import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.presto.sql.SqlFilter;
 import io.agora.cruise.presto.sql.SqlIterable;
 import io.agora.cruise.presto.sql.SqlIterator;
@@ -11,7 +11,9 @@ import org.apache.calcite.sql.dialect.PrestoDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlShuttle;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
@@ -22,23 +24,24 @@ public class SubSqlTool {
 
     protected final SqlIterable source;
     protected final SqlIterable target;
-    protected final NodeRel.Simplify simplify;
+    protected final RelShuttleChain shuttleChain;
     protected final SqlFilter sqlFilter;
     protected final FileContext fileContext;
     protected final SqlShuttle[] sqlShuttles;
     protected final ExceptionHandler handler;
+    protected Map<String, RelNode> cache = new HashMap<>();
 
     public SubSqlTool(
             SqlIterable source,
             SqlIterable target,
-            NodeRel.Simplify simplify,
+            RelShuttleChain shuttleChain,
             SqlFilter sqlFilter,
             ExceptionHandler handler,
             FileContext fileContext,
             SqlShuttle... sqlShuttles) {
         this.source = source;
         this.target = target;
-        this.simplify = simplify;
+        this.shuttleChain = shuttleChain;
         this.sqlFilter = sqlFilter;
         this.handler = handler;
         this.fileContext = fileContext;
@@ -103,12 +106,12 @@ public class SubSqlTool {
     private boolean calculate(String fromSql, String toSql, Set<String> allViewSet)
             throws SqlParseException {
 
-        final RelNode relNode1 = fileContext.querySql2Rel(fromSql, sqlShuttles);
-        final RelNode relNode2 = fileContext.querySql2Rel(toSql, sqlShuttles);
+        final RelNode relNode1 = getRelNode(fromSql);
+        final RelNode relNode2 = getRelNode(toSql);
         final ResultNodeList<RelNode> resultNodeList =
                 findAllSubNode(
-                        createNodeRelRoot(relNode1, simplify),
-                        createNodeRelRoot(relNode2, simplify));
+                        createNodeRelRoot(relNode1, shuttleChain),
+                        createNodeRelRoot(relNode2, shuttleChain));
         if (resultNodeList.isEmpty()) {
             return false;
         }
@@ -128,6 +131,22 @@ public class SubSqlTool {
             viewNames.add(viewName);
         }
         return !viewNames.isEmpty();
+    }
+
+    /**
+     * get RelNode.
+     *
+     * @param sql sql
+     * @return RelNode
+     * @throws SqlParseException SqlParseException
+     */
+    private RelNode getRelNode(String sql) throws SqlParseException {
+        RelNode relnode = cache.get(sql);
+        if (relnode == null) {
+            relnode = fileContext.querySql2Rel(sql, sqlShuttles);
+            cache.put(sql, relnode);
+        }
+        return relnode;
     }
 
     /** ExceptionHandler. */

@@ -3,6 +3,7 @@ package io.agora.cruise.core;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.RelNodeMergePlanner;
 import io.agora.cruise.core.merge.rule.*;
+import io.agora.cruise.core.rel.RelShuttleChain;
 import org.apache.calcite.rel.RelNode;
 
 import java.util.*;
@@ -17,20 +18,20 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot, RelNodeMergePlanner mergePlanner) {
-        return createNodeRelRoot(relRoot, mergePlanner, relNode -> relNode);
+        return createNodeRelRoot(relRoot, mergePlanner, RelShuttleChain.empty());
     }
 
     /**
      * create node rel root.
      *
      * @param relRoot rel root
-     * @param simplify simplify
+     * @param shuttleChain shuttleChain
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(
-            RelNode relRoot, RelNodeMergePlanner mergePlanner, NodeRel.Simplify simplify) {
+            RelNode relRoot, RelNodeMergePlanner mergePlanner, RelShuttleChain shuttleChain) {
         final Queue<NodeRel> queue = new LinkedList<>();
-        final NodeRel nodeRoot = NodeRel.of(mergePlanner, simplify.apply(relRoot));
+        final NodeRel nodeRoot = NodeRel.of(mergePlanner, shuttleChain.accept(relRoot));
         queue.offer(nodeRoot);
         while (!queue.isEmpty()) {
             final Node<RelNode> node = queue.poll();
@@ -56,11 +57,11 @@ public class NodeUtils {
      * create node rel root.
      *
      * @param relRoot rel root
-     * @param simplify simplify
+     * @param shuttleChain shuttleChain
      * @return node rel
      */
-    public static NodeRel createNodeRelRoot(RelNode relRoot, NodeRel.Simplify simplify) {
-        return createNodeRelRoot(relRoot, true, simplify);
+    public static NodeRel createNodeRelRoot(RelNode relRoot, RelShuttleChain shuttleChain) {
+        return createNodeRelRoot(relRoot, true, shuttleChain);
     }
 
     /**
@@ -71,21 +72,7 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot, boolean canMaterialized) {
-        final List<MergeConfig> mergeRuleConfigs = new ArrayList<>();
-        if (canMaterialized) {
-            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createFrom());
-            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createTo());
-        }
-        mergeRuleConfigs.addAll(
-                Arrays.asList(
-                        TableScanMergeRule.Config.create().materialized(canMaterialized),
-                        ProjectMergeRule.Config.create().materialized(canMaterialized),
-                        FilterMergeRule.Config.create().materialized(canMaterialized),
-                        AggregateMergeRule.Config.create().materialized(canMaterialized),
-                        JoinMergeRule.Config.create().materialized(canMaterialized),
-                        FilterProjectMergeRule.Config.create().materialized(canMaterialized),
-                        ProjectFilterMergeRule.Config.create().materialized(canMaterialized)));
-        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
+        return createNodeRelRoot(relRoot, canMaterialized, RelShuttleChain.empty());
     }
 
     /**
@@ -93,11 +80,11 @@ public class NodeUtils {
      *
      * @param relRoot rel root
      * @param canMaterialized materialized
-     * @param simplify simplify
+     * @param shuttleChain shuttleChain
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(
-            RelNode relRoot, boolean canMaterialized, NodeRel.Simplify simplify) {
+            RelNode relRoot, boolean canMaterialized, RelShuttleChain shuttleChain) {
         final List<MergeConfig> mergeRuleConfigs =
                 Arrays.asList(
                         TableScanMergeRule.Config.create().materialized(canMaterialized),
@@ -107,7 +94,7 @@ public class NodeUtils {
                         JoinMergeRule.Config.create().materialized(canMaterialized),
                         FilterProjectMergeRule.Config.create().materialized(canMaterialized),
                         ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
-        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs), simplify);
+        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs), shuttleChain);
     }
 
     /**

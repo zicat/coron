@@ -1,6 +1,7 @@
 package io.agora.cruise.presto.test.simplify;
 
 import io.agora.cruise.core.NodeRel;
+import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
 import io.agora.cruise.presto.FileContext;
@@ -12,7 +13,6 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,12 +34,11 @@ public class PartitionAggregateFilterSimplifyTest {
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
 
         List<String> partitionFields = Collections.singletonList("date");
-        NodeRel.Simplify simplify =
-                new NodeRel.SimplifyChain(
-                        Arrays.asList(
-                                new PartitionAggregateFilterSimplify(partitionFields),
-                                new PartitionFilterSimplify(partitionFields)));
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, simplify);
+        RelShuttleChain shuttleChain =
+                RelShuttleChain.of(
+                        new PartitionAggregateFilterSimplify(partitionFields),
+                        new PartitionFilterSimplify(partitionFields));
+        NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
 
@@ -62,12 +61,11 @@ public class PartitionAggregateFilterSimplifyTest {
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
 
         List<String> partitionFields = Collections.singletonList("date");
-        NodeRel.Simplify simplify =
-                new NodeRel.SimplifyChain(
-                        Arrays.asList(
-                                new PartitionAggregateFilterSimplify(partitionFields),
-                                new PartitionFilterSimplify(partitionFields)));
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, simplify);
+        RelShuttleChain shuttleChain =
+                RelShuttleChain.of(
+                        new PartitionAggregateFilterSimplify(partitionFields),
+                        new PartitionFilterSimplify(partitionFields));
+        NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
 
@@ -79,13 +77,12 @@ public class PartitionAggregateFilterSimplifyTest {
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
 
         List<String> partitionFields = Collections.singletonList("date");
-        NodeRel.Simplify simplify =
-                new NodeRel.SimplifyChain(
-                        Arrays.asList(
-                                new PartitionAggregateFilterSimplify(partitionFields),
-                                new PartitionFilterSimplify(partitionFields)));
+        RelShuttleChain shuttleChain =
+                RelShuttleChain.of(
+                        new PartitionAggregateFilterSimplify(partitionFields),
+                        new PartitionFilterSimplify(partitionFields));
 
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, simplify);
+        NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
 

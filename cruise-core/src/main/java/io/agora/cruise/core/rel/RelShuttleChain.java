@@ -43,8 +43,13 @@ public class RelShuttleChain {
         }
         RelNode result = relNode;
         for (RelShuttleImpl relShuttle : shuttles) {
-            result = result.accept(relShuttle);
+            try {
+                result = result.accept(relShuttle);
+            } catch (RelShuttleChainException e) {
+                return relNode;
+            }
         }
         return result;
     }
+
 }

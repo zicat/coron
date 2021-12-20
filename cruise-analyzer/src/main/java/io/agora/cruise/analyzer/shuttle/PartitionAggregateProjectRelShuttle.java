@@ -1,5 +1,6 @@
 package io.agora.cruise.analyzer.shuttle;
 
+import io.agora.cruise.core.rel.RelShuttleChainException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -35,17 +36,20 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
                 || !(((Aggregate) newNode).getInput() instanceof Project)) {
             return super.visit(newNode);
         }
-        // not support grouping set
+
         final Aggregate newAggregate = (Aggregate) newNode;
-        if (newAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
-            return newAggregate;
-        }
+
         // if aggregation function rollup not equal self, return
         for (AggregateCall aggregateCall : newAggregate.getAggCallList()) {
             SqlAggFunction sqlAggFunction = aggregateCall.getAggregation();
             if (sqlAggFunction.getRollup() != sqlAggFunction) {
-                return newAggregate;
+                throw new RelShuttleChainException("function not support rollup");
             }
+        }
+
+        // not support grouping set
+        if (newAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
+            return newAggregate;
         }
 
         for (String name : newNode.getRowType().getFieldNames()) {

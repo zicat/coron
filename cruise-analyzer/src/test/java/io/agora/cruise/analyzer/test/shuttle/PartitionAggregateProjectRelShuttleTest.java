@@ -85,9 +85,11 @@ public class PartitionAggregateProjectRelShuttleTest extends FileContext {
         String sql =
                 "select date,COUNT(*) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
         String expectSql =
-                "SELECT date, COUNT(*)\n"
-                        + "FROM report_datahub.pub_levels_quality_di_1\n"
-                        + "GROUP BY date";
+                "SELECT date, COUNT(*)\n" +
+                        "FROM report_datahub.pub_levels_quality_di_1\n" +
+                        "WHERE date_parse(CAST(date AS VARCHAR), '%Y%m%d') >= DATE('2021-11-21')" +
+                        "\n" +
+                        "GROUP BY date";
 
         final RelNode relNode1 = querySql2Rel(sql, new Int2BooleanConditionShuttle());
         List<String> partitionFields = Collections.singletonList("date");

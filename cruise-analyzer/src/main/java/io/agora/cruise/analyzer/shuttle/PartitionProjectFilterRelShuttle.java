@@ -17,7 +17,7 @@ import java.util.List;
 /** PartitionFilterSimplify. */
 public class PartitionProjectFilterRelShuttle extends PartitionRelShuttle {
 
-    protected PartitionProjectFilterRelShuttle(List<String> partitionFields) {
+    public PartitionProjectFilterRelShuttle(List<String> partitionFields) {
         super(partitionFields);
     }
 

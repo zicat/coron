@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
 
-    protected PartitionAggregateProjectRelShuttle(List<String> partitionFields) {
+    public PartitionAggregateProjectRelShuttle(List<String> partitionFields) {
         super(partitionFields);
     }
 

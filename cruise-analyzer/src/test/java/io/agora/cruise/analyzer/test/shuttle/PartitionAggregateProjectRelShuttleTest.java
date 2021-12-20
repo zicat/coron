@@ -1,6 +1,8 @@
 package io.agora.cruise.analyzer.test.shuttle;
 
 import io.agora.cruise.analyzer.FileContext;
+import io.agora.cruise.analyzer.shuttle.PartitionAggregateProjectRelShuttle;
+import io.agora.cruise.analyzer.shuttle.PartitionProjectFilterRelShuttle;
 import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
@@ -96,6 +98,25 @@ public class PartitionAggregateProjectRelShuttleTest extends FileContext {
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
+        Assert.assertEquals(expectSql, toSql(nodeRel1.getPayload()));
+    }
+
+    @Test
+    public void test5() throws SqlParseException {
+
+        String sql =
+                "select date,COUNT(*) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
+        String expectSql =
+                "SELECT date, COUNT(*)\n" +
+                        "FROM report_datahub.pub_levels_quality_di_1\n" +
+                        "GROUP BY date";
+
+        final RelNode relNode1 = querySql2Rel(sql, new Int2BooleanConditionShuttle());
+        List<String> partitionFields = Collections.singletonList("date");
+        RelShuttleChain rootChain = RelShuttleChain.of(
+                RelShuttleChain.of(new PartitionAggregateProjectRelShuttle(partitionFields))
+                , new PartitionProjectFilterRelShuttle(partitionFields));
+        NodeRel nodeRel1 = createNodeRelRoot(relNode1, rootChain);
         Assert.assertEquals(expectSql, toSql(nodeRel1.getPayload()));
     }
 }

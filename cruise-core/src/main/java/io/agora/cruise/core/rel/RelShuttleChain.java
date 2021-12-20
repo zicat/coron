@@ -7,9 +7,11 @@ import org.apache.calcite.rel.RelShuttleImpl;
 public class RelShuttleChain {
 
     private final RelShuttleImpl[] shuttles;
+    private final RelShuttleChain nextChain;
 
-    public RelShuttleChain(RelShuttleImpl[] shuttles) {
+    public RelShuttleChain(RelShuttleImpl[] shuttles, RelShuttleChain nextChain) {
         this.shuttles = shuttles;
+        this.nextChain = nextChain;
     }
 
     /**
@@ -19,7 +21,17 @@ public class RelShuttleChain {
      * @return RelShuttleChain
      */
     public static RelShuttleChain of(RelShuttleImpl... shuttles) {
-        return new RelShuttleChain(shuttles);
+        return new RelShuttleChain(shuttles, null);
+    }
+
+    /**
+     * create RelShuttleChain.
+     *
+     * @param shuttles shuttles
+     * @return RelShuttleChain
+     */
+    public static RelShuttleChain of(RelShuttleChain nextChain, RelShuttleImpl... shuttles) {
+        return new RelShuttleChain(shuttles, nextChain);
     }
 
     /**
@@ -28,7 +40,7 @@ public class RelShuttleChain {
      * @return RelShuttleChain
      */
     public static RelShuttleChain empty() {
-        return new RelShuttleChain(null);
+        return new RelShuttleChain(null, null);
     }
 
     /**
@@ -38,17 +50,23 @@ public class RelShuttleChain {
      * @return RelNode
      */
     public final RelNode accept(RelNode relNode) {
-        if (shuttles == null || shuttles.length == 0) {
-            return relNode;
-        }
+
+        RelShuttleChain offsetChain = this;
         RelNode result = relNode;
-        for (RelShuttleImpl relShuttle : shuttles) {
-            try {
-                result = result.accept(relShuttle);
-            } catch (RelShuttleChainException e) {
-                return relNode;
+        do {
+            if(offsetChain.shuttles != null && offsetChain.shuttles.length != 0) {
+                RelNode tmp = result;
+                for (RelShuttleImpl relShuttle : offsetChain.shuttles) {
+                    try {
+                        result = result.accept(relShuttle);
+                    } catch (RelShuttleChainException e) {
+                        result = tmp;
+                        break;
+                    }
+                }
             }
-        }
+            offsetChain = offsetChain.nextChain;
+        } while (offsetChain != null);
         return result;
     }
 

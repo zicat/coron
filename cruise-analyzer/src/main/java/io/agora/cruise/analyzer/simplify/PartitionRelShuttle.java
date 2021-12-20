@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** PartitionSimplify. */
-public class PartitionSimplify extends RelShuttleImpl {
+public class PartitionRelShuttle extends RelShuttleImpl {
 
     private static final String PREFIX_NAME = "tmp_p_";
     private static final List<SqlKind> COMPARE_KIND =
@@ -33,7 +33,7 @@ public class PartitionSimplify extends RelShuttleImpl {
     protected final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
     protected final List<String> partitionFields;
 
-    public PartitionSimplify(List<String> partitionFields) {
+    public PartitionRelShuttle(List<String> partitionFields) {
         this.partitionFields = partitionFields;
     }
 
@@ -96,11 +96,13 @@ public class PartitionSimplify extends RelShuttleImpl {
         if (!COMPARE_KIND.contains(rexNode.getKind())) {
             return null;
         }
-        final RexNode leftExp = ((RexCall) rexNode).getOperands().get(0);
+        final RexCall functionCall = (RexCall) rexNode;
+        final RexNode leftExp = functionCall.getOperands().get(0);
         final RelDataType relDataType = filter.getInput().getRowType();
         boolean rightNotContain = true;
-        for (int i = 1; i < ((RexCall) rexNode).getOperands().size(); i++) {
-            if (!PredictRexShuttle.predicts(((RexCall) rexNode).getOperands().get(i)).isEmpty()) {
+        for (int i = 1; i < functionCall.getOperands().size(); i++) {
+            final RexNode rightRexNode = functionCall.getOperands().get(i);
+            if (!PredictRexShuttle.predicts(rightRexNode).isEmpty()) {
                 rightNotContain = false;
                 break;
             }

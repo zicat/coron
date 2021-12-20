@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
  *
  * <p>trans: select sum(x) where f(t) = 1 to select t,sum(x) group by f(t). (t in partitionFields)
  */
-public class PartitionAggregateFilterSimplify extends PartitionSimplify {
+public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
 
-    public PartitionAggregateFilterSimplify(List<String> partitionFields) {
+    public PartitionAggregateProjectRelShuttle(List<String> partitionFields) {
         super(partitionFields);
     }
 

@@ -1,8 +1,8 @@
 package io.agora.cruise.analyzer.test.simplify;
 
 import io.agora.cruise.analyzer.FileContext;
-import io.agora.cruise.analyzer.simplify.PartitionAggregateFilterSimplify;
-import io.agora.cruise.analyzer.simplify.PartitionFilterSimplify;
+import io.agora.cruise.analyzer.simplify.PartitionAggregateProjectRelShuttle;
+import io.agora.cruise.analyzer.simplify.PartitionProjectFilterRelShuttle;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.SqlNodeTool;
@@ -36,8 +36,8 @@ public class PartitionAggregateFilterSimplifyTest {
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(
-                        new PartitionAggregateFilterSimplify(partitionFields),
-                        new PartitionFilterSimplify(partitionFields));
+                        new PartitionAggregateProjectRelShuttle(partitionFields),
+                        new PartitionProjectFilterRelShuttle(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
@@ -63,8 +63,8 @@ public class PartitionAggregateFilterSimplifyTest {
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(
-                        new PartitionAggregateFilterSimplify(partitionFields),
-                        new PartitionFilterSimplify(partitionFields));
+                        new PartitionAggregateProjectRelShuttle(partitionFields),
+                        new PartitionProjectFilterRelShuttle(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
@@ -79,8 +79,8 @@ public class PartitionAggregateFilterSimplifyTest {
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(
-                        new PartitionAggregateFilterSimplify(partitionFields),
-                        new PartitionFilterSimplify(partitionFields));
+                        new PartitionAggregateProjectRelShuttle(partitionFields),
+                        new PartitionProjectFilterRelShuttle(partitionFields));
 
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));

@@ -11,7 +11,7 @@
     <modules>
         <module>cruise-parser</module>
         <module>cruise-core</module>
-        <module>cruise-presto</module>
+        <module>cruise-analyzer</module>
     </modules>
 
     <properties>

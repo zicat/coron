@@ -1,4 +1,4 @@
-package io.agora.cruise.presto.sql;
+package io.agora.cruise.analyzer.sql;
 
 import com.csvreader.CsvReader;
 import org.slf4j.Logger;

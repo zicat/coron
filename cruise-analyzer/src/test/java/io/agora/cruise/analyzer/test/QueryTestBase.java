@@ -1,13 +1,13 @@
-package io.agora.cruise.presto.test;
+package io.agora.cruise.analyzer.test;
 
+import io.agora.cruise.analyzer.FileContext;
+import io.agora.cruise.analyzer.SubSqlTool;
+import io.agora.cruise.analyzer.simplify.PartitionAggregateFilterSimplify;
+import io.agora.cruise.analyzer.simplify.PartitionFilterSimplify;
+import io.agora.cruise.analyzer.sql.SqlFilter;
+import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
-import io.agora.cruise.presto.FileContext;
-import io.agora.cruise.presto.SubSqlTool;
-import io.agora.cruise.presto.simplify.PartitionAggregateFilterSimplify;
-import io.agora.cruise.presto.simplify.PartitionFilterSimplify;
-import io.agora.cruise.presto.sql.SqlFilter;
-import io.agora.cruise.presto.sql.SqlIterable;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import java.util.Collections;

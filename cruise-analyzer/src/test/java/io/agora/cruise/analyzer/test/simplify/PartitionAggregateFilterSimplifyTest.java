@@ -1,12 +1,12 @@
-package io.agora.cruise.presto.test.simplify;
+package io.agora.cruise.analyzer.test.simplify;
 
+import io.agora.cruise.analyzer.FileContext;
+import io.agora.cruise.analyzer.simplify.PartitionAggregateFilterSimplify;
+import io.agora.cruise.analyzer.simplify.PartitionFilterSimplify;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.SqlNodeTool;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
-import io.agora.cruise.presto.FileContext;
-import io.agora.cruise.presto.simplify.PartitionAggregateFilterSimplify;
-import io.agora.cruise.presto.simplify.PartitionFilterSimplify;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;

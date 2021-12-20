@@ -1,8 +1,8 @@
-package io.agora.cruise.presto.simplify;
+package io.agora.cruise.analyzer.simplify;
 
 import com.google.common.collect.ImmutableList;
+import io.agora.cruise.analyzer.util.Lists;
 import io.agora.cruise.core.util.Tuple2;
-import io.agora.cruise.presto.util.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;

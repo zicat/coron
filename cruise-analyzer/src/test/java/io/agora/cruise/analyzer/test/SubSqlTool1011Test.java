@@ -1,9 +1,9 @@
-package io.agora.cruise.presto.test;
+package io.agora.cruise.analyzer.test;
 
-import io.agora.cruise.presto.SubSqlTool;
-import io.agora.cruise.presto.sql.SqlIterable;
-import io.agora.cruise.presto.sql.SqlJsonIterable;
-import io.agora.cruise.presto.sql.SqlJsonIterator;
+import io.agora.cruise.analyzer.SubSqlTool;
+import io.agora.cruise.analyzer.sql.SqlIterable;
+import io.agora.cruise.analyzer.sql.SqlJsonIterable;
+import io.agora.cruise.analyzer.sql.SqlJsonIterator;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

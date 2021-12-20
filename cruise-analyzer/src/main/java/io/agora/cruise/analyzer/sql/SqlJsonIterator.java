@@ -1,4 +1,4 @@
-package io.agora.cruise.presto.sql;
+package io.agora.cruise.analyzer.sql;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

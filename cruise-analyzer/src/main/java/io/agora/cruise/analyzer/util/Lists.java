@@ -1,4 +1,4 @@
-package io.agora.cruise.presto.util;
+package io.agora.cruise.analyzer.util;
 
 import java.util.ArrayList;
 import java.util.List;

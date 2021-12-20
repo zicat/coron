@@ -1,9 +1,9 @@
-package io.agora.cruise.presto;
+package io.agora.cruise.analyzer;
 
+import io.agora.cruise.analyzer.sql.SqlIterator;
+import io.agora.cruise.analyzer.sql.SqlTextIterable;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
-import io.agora.cruise.presto.sql.SqlIterator;
-import io.agora.cruise.presto.sql.SqlTextIterable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
 import org.apache.calcite.sql.parser.SqlParseException;

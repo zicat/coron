@@ -1,4 +1,4 @@
-package io.agora.cruise.presto.sql;
+package io.agora.cruise.analyzer.sql;
 
 import java.io.Closeable;
 import java.util.Iterator;

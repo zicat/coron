@@ -1,4 +1,4 @@
-package io.agora.cruise.presto.sql;
+package io.agora.cruise.analyzer.sql;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

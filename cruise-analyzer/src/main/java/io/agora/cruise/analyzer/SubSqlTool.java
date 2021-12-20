@@ -1,12 +1,12 @@
-package io.agora.cruise.presto;
+package io.agora.cruise.analyzer;
 
+import io.agora.cruise.analyzer.sql.SqlFilter;
+import io.agora.cruise.analyzer.sql.SqlIterable;
+import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.CalciteContext;
-import io.agora.cruise.presto.sql.SqlFilter;
-import io.agora.cruise.presto.sql.SqlIterable;
-import io.agora.cruise.presto.sql.SqlIterator;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.dialect.PrestoDialect;
 import org.apache.calcite.sql.parser.SqlParseException;

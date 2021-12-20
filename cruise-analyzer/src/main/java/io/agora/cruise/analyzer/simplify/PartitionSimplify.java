@@ -1,4 +1,4 @@
-package io.agora.cruise.presto.simplify;
+package io.agora.cruise.analyzer.simplify;
 
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;

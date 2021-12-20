@@ -1,11 +1,10 @@
-package io.agora.cruise.presto.test;
+package io.agora.cruise.analyzer.test;
 
+import io.agora.cruise.analyzer.sql.SqlCsvIterable;
+import io.agora.cruise.analyzer.sql.SqlIterator;
+import io.agora.cruise.analyzer.sql.SqlTextIterable;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
-import io.agora.cruise.presto.sql.SqlIterator;
-import io.agora.cruise.presto.sql.SqlJsonIterable;
-import io.agora.cruise.presto.sql.SqlJsonIterator;
-import io.agora.cruise.presto.sql.SqlTextIterable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 
@@ -15,15 +14,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** ViewQueryAnalyzer1113Test. */
-public class ViewQueryAnalyzer1113Test {
+import static io.agora.cruise.analyzer.sql.SqlCsvIterator.CsvParser.FIRST_COLUMN;
+
+/** ViewQueryAnalyzer. */
+public class ViewQueryAnalyzer extends QueryTestBase {
 
     public static void main(String[] args) throws SqlParseException {
 
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlIterator it =
-                new SqlTextIterable("output/view_query_2.sql", StandardCharsets.UTF_8)
-                        .sqlIterator();
+                new SqlTextIterable("output/view_query.sql", StandardCharsets.UTF_8).sqlIterator();
         Map<String, String> viewNameQueryMapping = new HashMap<>();
         while (it.hasNext()) {
             String viewName = "view_" + it.currentOffset();
@@ -36,8 +36,7 @@ public class ViewQueryAnalyzer1113Test {
         int matched = 0;
         Set<String> allMatchedView = new HashSet<>();
 
-        SqlJsonIterator.JsonParser parser = jsonNode -> jsonNode.get("presto_sql").asText();
-        SqlIterator iterator = new SqlJsonIterable("query_13.json", parser).sqlIterator();
+        SqlIterator iterator = new SqlCsvIterable("query2.log", FIRST_COLUMN).sqlIterator();
         while (iterator.hasNext()) {
             String querySql = iterator.next();
             try {
@@ -58,7 +57,6 @@ public class ViewQueryAnalyzer1113Test {
                 queryTestBase.exceptionHandler.handle(null, null, e);
             }
         }
-
         System.out.println("===========matched view================");
         for (String viewName : allMatchedView) {
             System.out.println(viewNameQueryMapping.get(viewName));

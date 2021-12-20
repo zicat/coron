@@ -1,4 +1,4 @@
-package io.agora.cruise.analyzer.simplify;
+package io.agora.cruise.analyzer.shuttle;
 
 import io.agora.cruise.analyzer.util.Lists;
 import io.agora.cruise.core.util.Tuple2;
@@ -17,7 +17,7 @@ import java.util.List;
 /** PartitionFilterSimplify. */
 public class PartitionProjectFilterRelShuttle extends PartitionRelShuttle {
 
-    public PartitionProjectFilterRelShuttle(List<String> partitionFields) {
+    PartitionProjectFilterRelShuttle(List<String> partitionFields) {
         super(partitionFields);
     }
 
@@ -25,12 +25,12 @@ public class PartitionProjectFilterRelShuttle extends PartitionRelShuttle {
     public RelNode visit(LogicalProject project) {
 
         final RelNode newNode = super.visit(project);
-        if (!(newNode instanceof Project) || !(project.getInput() instanceof Filter)) {
+        if (!(newNode instanceof Project) || !(((Project) newNode).getInput() instanceof Filter)) {
             return super.visit(newNode);
         }
-
         final Project newProject = (Project) newNode;
         final Filter filter = (Filter) newProject.getInput();
+
         final Tuple2<RelNode, List<RexNode>> tuple = transFilterCondition(filter);
         if (tuple == null) {
             return super.visit(newProject);

@@ -2,8 +2,7 @@ package io.agora.cruise.analyzer.test;
 
 import io.agora.cruise.analyzer.FileContext;
 import io.agora.cruise.analyzer.SubSqlTool;
-import io.agora.cruise.analyzer.simplify.PartitionAggregateProjectRelShuttle;
-import io.agora.cruise.analyzer.simplify.PartitionProjectFilterRelShuttle;
+import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.core.rel.RelShuttleChain;
@@ -16,11 +15,9 @@ import java.util.List;
 /** QueryTestBase. */
 public class QueryTestBase extends FileContext {
 
-    List<String> partitionFields = Collections.singletonList("date");
-    RelShuttleChain shuttleChain =
-            RelShuttleChain.of(
-                    new PartitionAggregateProjectRelShuttle(partitionFields),
-                    new PartitionProjectFilterRelShuttle(partitionFields));
+    protected List<String> partitionFields = Collections.singletonList("date");
+    protected RelShuttleChain shuttleChain =
+            RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
 
     protected SqlFilter sqlFilter =
             sql ->

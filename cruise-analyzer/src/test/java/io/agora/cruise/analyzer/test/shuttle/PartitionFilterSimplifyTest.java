@@ -1,7 +1,7 @@
-package io.agora.cruise.analyzer.test.simplify;
+package io.agora.cruise.analyzer.test.shuttle;
 
 import io.agora.cruise.analyzer.FileContext;
-import io.agora.cruise.analyzer.simplify.PartitionProjectFilterRelShuttle;
+import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.SqlNodeTool;
@@ -34,7 +34,7 @@ public class PartitionFilterSimplifyTest {
 
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
-                RelShuttleChain.of(new PartitionProjectFilterRelShuttle(partitionFields));
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
@@ -53,7 +53,7 @@ public class PartitionFilterSimplifyTest {
 
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
-                RelShuttleChain.of(new PartitionProjectFilterRelShuttle(partitionFields));
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }

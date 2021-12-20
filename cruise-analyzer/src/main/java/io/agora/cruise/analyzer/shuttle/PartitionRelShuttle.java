@@ -1,4 +1,4 @@
-package io.agora.cruise.analyzer.simplify;
+package io.agora.cruise.analyzer.shuttle;
 
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
@@ -33,10 +33,28 @@ public class PartitionRelShuttle extends RelShuttleImpl {
     protected final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
     protected final List<String> partitionFields;
 
-    public PartitionRelShuttle(List<String> partitionFields) {
+    PartitionRelShuttle(List<String> partitionFields) {
         this.partitionFields = partitionFields;
     }
 
+    /**
+     * create partition shuttles combo.
+     *
+     * @param partitionFields partitionFields
+     * @return RelShuttleImpl[]
+     */
+    public static RelShuttleImpl[] partitionShuttles(List<String> partitionFields) {
+        return new RelShuttleImpl[] {
+            new PartitionProjectFilterRelShuttle(partitionFields),
+            new PartitionAggregateProjectRelShuttle(partitionFields)
+        };
+    }
+
+    /**
+     * get prefix name,default tmp_p_ .
+     *
+     * @return prefix name
+     */
     protected String getPrefixName() {
         return PREFIX_NAME;
     }

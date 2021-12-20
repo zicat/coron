@@ -1,8 +1,7 @@
-package io.agora.cruise.analyzer.test.simplify;
+package io.agora.cruise.analyzer.test.shuttle;
 
 import io.agora.cruise.analyzer.FileContext;
-import io.agora.cruise.analyzer.simplify.PartitionAggregateProjectRelShuttle;
-import io.agora.cruise.analyzer.simplify.PartitionProjectFilterRelShuttle;
+import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.SqlNodeTool;
@@ -35,9 +34,7 @@ public class PartitionAggregateFilterSimplifyTest {
 
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
-                RelShuttleChain.of(
-                        new PartitionAggregateProjectRelShuttle(partitionFields),
-                        new PartitionProjectFilterRelShuttle(partitionFields));
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
@@ -51,20 +48,18 @@ public class PartitionAggregateFilterSimplifyTest {
                         + "WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date, tag"
                         + ") as a where tag = '111' group by date";
         String expectSql =
-                "SELECT date, SUM(fiveSecJoinSuccess)\n"
+                "SELECT date, SUM(fiveSecJoinSuccess), tmp_p_2\n"
                         + "FROM (SELECT date, SUM(fivesecjoinsuccess) fiveSecJoinSuccess, date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_2\n"
                         + "FROM report_datahub.pub_levels_quality_di_1\n"
                         + "WHERE tag = '111'\n"
                         + "GROUP BY date, date_parse(CAST(date AS VARCHAR), '%Y%m%d')) t2\n"
-                        + "GROUP BY date";
+                        + "GROUP BY date, tmp_p_2";
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql, new Int2BooleanConditionShuttle());
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
 
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
-                RelShuttleChain.of(
-                        new PartitionAggregateProjectRelShuttle(partitionFields),
-                        new PartitionProjectFilterRelShuttle(partitionFields));
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));
     }
@@ -78,9 +73,7 @@ public class PartitionAggregateFilterSimplifyTest {
 
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
-                RelShuttleChain.of(
-                        new PartitionAggregateProjectRelShuttle(partitionFields),
-                        new PartitionProjectFilterRelShuttle(partitionFields));
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
 
         NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
         Assert.assertEquals(expectSql, context.toSql(nodeRel1.getPayload()));

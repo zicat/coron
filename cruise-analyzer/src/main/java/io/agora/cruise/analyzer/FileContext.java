@@ -18,12 +18,21 @@ public class FileContext extends CalciteContext {
     private static final String DEFAULT_DDL_SOURCE_FILE = "ddl.txt";
 
     public FileContext(String database) {
-        this(database, DEFAULT_DDL_SOURCE_FILE);
+        this(database, defaultDDLSqlIterator());
     }
 
-    public FileContext(String database, String ddlSourceFile) {
+    public FileContext(String database, SqlIterator it) {
         super(database);
-        initSchema(ddlSourceFile);
+        initSchema(it);
+    }
+
+    /**
+     * default ddl sql.
+     *
+     * @return SqlIterator
+     */
+    private static SqlIterator defaultDDLSqlIterator() {
+        return new SqlTextIterable(DEFAULT_DDL_SOURCE_FILE, StandardCharsets.UTF_8).sqlIterator();
     }
 
     /**
@@ -57,15 +66,9 @@ public class FileContext extends CalciteContext {
         return Tuple2.of(matchedView, optRelNode1);
     }
 
-    /**
-     * init schema.
-     *
-     * @param ddlSourceFile ddlSourceFile
-     */
-    private void initSchema(String ddlSourceFile) {
+    /** init schema. */
+    private void initSchema(SqlIterator it) {
         try {
-            SqlIterator it =
-                    new SqlTextIterable(ddlSourceFile, StandardCharsets.UTF_8).sqlIterator();
             while (it.hasNext()) {
                 addTable(it.next());
             }

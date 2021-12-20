@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
 
-    PartitionAggregateProjectRelShuttle(List<String> partitionFields) {
+    protected PartitionAggregateProjectRelShuttle(List<String> partitionFields) {
         super(partitionFields);
     }
 
@@ -69,12 +69,11 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
                         newAggregate.getAggCallList());
 
         final List<RexNode> projectNodes = new ArrayList<>();
-        projectNames.forEach(
-                name ->
-                        projectNodes.add(
-                                rexBuilder.makeInputRef(
-                                        copyAggregate,
-                                        findIdByName(copyAggregate.getRowType(), name))));
+        for (String name : projectNames) {
+            projectNodes.add(
+                    rexBuilder.makeInputRef(
+                            copyAggregate, findIdByName(copyAggregate.getRowType(), name)));
+        }
         return LogicalProject.create(copyAggregate, new ArrayList<>(), projectNodes, projectNames);
     }
 

@@ -85,15 +85,19 @@ public class NodeUtils {
      */
     public static NodeRel createNodeRelRoot(
             RelNode relRoot, boolean canMaterialized, RelShuttleChain shuttleChain) {
-        final List<MergeConfig> mergeRuleConfigs =
-                Arrays.asList(
-                        TableScanMergeRule.Config.create().materialized(canMaterialized),
-                        ProjectMergeRule.Config.create().materialized(canMaterialized),
-                        FilterMergeRule.Config.create().materialized(canMaterialized),
-                        AggregateMergeRule.Config.create().materialized(canMaterialized),
-                        JoinMergeRule.Config.create().materialized(canMaterialized),
-                        FilterProjectMergeRule.Config.create().materialized(canMaterialized),
-                        ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
+
+        final List<MergeConfig> mergeRuleConfigs = new ArrayList<>();
+        if (canMaterialized) {
+            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createFrom());
+            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createTo());
+        }
+        mergeRuleConfigs.add(TableScanMergeRule.Config.create().materialized(canMaterialized));
+        mergeRuleConfigs.add(ProjectMergeRule.Config.create().materialized(canMaterialized));
+        mergeRuleConfigs.add(FilterMergeRule.Config.create().materialized(canMaterialized));
+        mergeRuleConfigs.add(AggregateMergeRule.Config.create().materialized(canMaterialized));
+        mergeRuleConfigs.add(JoinMergeRule.Config.create().materialized(canMaterialized));
+        mergeRuleConfigs.add(FilterProjectMergeRule.Config.create().materialized(canMaterialized));
+        mergeRuleConfigs.add(ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
         return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs), shuttleChain);
     }
 

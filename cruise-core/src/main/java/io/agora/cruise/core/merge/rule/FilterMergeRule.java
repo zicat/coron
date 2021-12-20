@@ -7,6 +7,7 @@ import io.agora.cruise.core.merge.Operand;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
@@ -17,10 +18,11 @@ import java.util.List;
 /** FilterMergeRule. */
 public class FilterMergeRule extends MergeRule {
 
-    final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
+    final RexBuilder rexBuilder;
 
     public FilterMergeRule(Config mergeConfig) {
         super(mergeConfig);
+        this.rexBuilder = new RexBuilder(mergeConfig.relDataTypeFactory);
     }
 
     @Override
@@ -60,10 +62,17 @@ public class FilterMergeRule extends MergeRule {
     /** Filter Config. */
     public static class Config extends MergeConfig {
 
+        protected RelDataTypeFactory relDataTypeFactory = CalciteContext.DEFAULT_SQL_TYPE_FACTORY;
+
         public static Config create() {
             return new Config()
                     .withOperandSupplier(Operand.of(Filter.class, Filter.class))
                     .as(Config.class);
+        }
+
+        public Config relDataTypeFactory(RelDataTypeFactory relDataTypeFactory) {
+            this.relDataTypeFactory = relDataTypeFactory;
+            return this;
         }
 
         @Override

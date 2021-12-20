@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.agora.cruise.parser.sql.function.FunctionUtils;
 import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
-import io.agora.cruise.parser.sql.type.UTF16SqlTypeFactoryImpl;
 import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -22,7 +21,6 @@ import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyAggrega
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyJoinRule;
 import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewProjectAggregateRule;
 import org.apache.calcite.rel.rules.materialize.MaterializedViewRules;
-import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
@@ -46,8 +44,7 @@ import static org.apache.calcite.linq4j.Nullness.castNonNull;
 public class CalciteContext {
 
     public static final String DEFAULT_DB_NAME = "default";
-    public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY =
-            new UTF16SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
+    public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY = new UTF16JavaTypeFactoryImp();
 
     protected final SchemaPlus rootSchema;
     protected final CalciteSchema calciteSchema;

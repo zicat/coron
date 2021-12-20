@@ -87,6 +87,7 @@ public class SubSqlTool {
             SqlIterator toIt,
             Set<String> viewQuerySet,
             Map<String, RelNode> cache) {
+
         if (source == target) {
             toIt.skip(currentFromOffset);
         }

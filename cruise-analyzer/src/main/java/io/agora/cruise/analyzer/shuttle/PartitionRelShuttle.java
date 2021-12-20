@@ -30,10 +30,10 @@ public class PartitionRelShuttle extends RelShuttleImpl {
                     SqlKind.GREATER_THAN_OR_EQUAL,
                     SqlKind.IN);
 
-    protected final RexBuilder rexBuilder = new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
+    protected final RexBuilder rexBuilder = defaultRexBuilder();
     protected final List<String> partitionFields;
 
-    PartitionRelShuttle(List<String> partitionFields) {
+    protected PartitionRelShuttle(List<String> partitionFields) {
         this.partitionFields = partitionFields;
     }
 
@@ -48,6 +48,10 @@ public class PartitionRelShuttle extends RelShuttleImpl {
             new PartitionProjectFilterRelShuttle(partitionFields),
             new PartitionAggregateProjectRelShuttle(partitionFields)
         };
+    }
+
+    protected RexBuilder defaultRexBuilder() {
+        return new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
     }
 
     /**

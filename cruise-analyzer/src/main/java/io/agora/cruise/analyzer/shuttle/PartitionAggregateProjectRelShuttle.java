@@ -2,12 +2,14 @@ package io.agora.cruise.analyzer.shuttle;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
@@ -33,14 +35,25 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
                 || !(((Aggregate) newNode).getInput() instanceof Project)) {
             return super.visit(newNode);
         }
-
-        for (String name : newNode.getRowType().getFieldNames()) {
-            if (name.startsWith(getPrefixName())) {
-                return newNode;
+        // not support grouping set
+        final Aggregate newAggregate = (Aggregate) newNode;
+        if (newAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
+            return newAggregate;
+        }
+        // if aggregation function rollup not equal self, return
+        for (AggregateCall aggregateCall : newAggregate.getAggCallList()) {
+            SqlAggFunction sqlAggFunction = aggregateCall.getAggregation();
+            if (sqlAggFunction.getRollup() != sqlAggFunction) {
+                return newAggregate;
             }
         }
 
-        final Aggregate newAggregate = (Aggregate) newNode;
+        for (String name : newNode.getRowType().getFieldNames()) {
+            if (name.startsWith(getPrefixName())) {
+                return newAggregate;
+            }
+        }
+
         final Project project = (Project) newAggregate.getInput();
 
         final AtomicBoolean containTmpP = new AtomicBoolean(false);

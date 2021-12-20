@@ -287,12 +287,8 @@ public class AggregateMergeRule extends MergeRule {
 
         // calcite not support materialized group sets, so merged group sets is meaningless
         if (mergeConfig.canMaterialized()
-                && (!fromAggregate
-                                .getGroupSets()
-                                .equals(ImmutableList.of(fromAggregate.getGroupSet()))
-                        || !toAggregate
-                                .getGroupSets()
-                                .equals(ImmutableList.of(toAggregate.getGroupSet())))) {
+                && (fromAggregate.getGroupType() != Aggregate.Group.SIMPLE
+                        || toAggregate.getGroupType() != Aggregate.Group.SIMPLE)) {
             return null;
         }
 

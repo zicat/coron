@@ -17,18 +17,18 @@ import java.util.List;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 
-/** PartitionFilterSimplifyTest. */
-public class PartitionFilterSimplifyTest {
+/** PartitionAggregateFilterSimplifyTest. */
+public class PartitionAggregateProjectRelShuttleTest {
 
     @Test
-    public void test() throws SqlParseException {
+    public void test2() throws SqlParseException {
         FileContext context = new FileContext("report_datahub");
         String sql =
-                "select date FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') ";
+                "select date FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
         String expectSql =
                 "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_1\n"
-                        + "FROM report_datahub.pub_levels_quality_di_1";
-
+                        + "FROM report_datahub.pub_levels_quality_di_1\n"
+                        + "GROUP BY date, date_parse(CAST(date AS VARCHAR), '%Y%m%d')";
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql, new Int2BooleanConditionShuttle());
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
 
@@ -40,14 +40,20 @@ public class PartitionFilterSimplifyTest {
     }
 
     @Test
-    public void test2() throws SqlParseException {
+    public void test3() throws SqlParseException {
         FileContext context = new FileContext("report_datahub");
         String sql =
-                "select date, date_parse(CAST(date AS VARCHAR), '%Y%m%d') FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21')";
+                "select date,sum(fiveSecJoinSuccess) from (select date,tag,sum(fiveSecJoinSuccess) as fiveSecJoinSuccess "
+                        + "FROM report_datahub.pub_levels_quality_di_1 "
+                        + "WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date, tag"
+                        + ") as a where tag = '111' group by date";
         String expectSql =
-                "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d'), date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_2\n"
-                        + "FROM report_datahub.pub_levels_quality_di_1";
-
+                "SELECT date, SUM(fiveSecJoinSuccess), tmp_p_2\n"
+                        + "FROM (SELECT date, SUM(fivesecjoinsuccess) fiveSecJoinSuccess, date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_2\n"
+                        + "FROM report_datahub.pub_levels_quality_di_1\n"
+                        + "WHERE tag = '111'\n"
+                        + "GROUP BY date, date_parse(CAST(date AS VARCHAR), '%Y%m%d')) t2\n"
+                        + "GROUP BY date, tmp_p_2";
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql, new Int2BooleanConditionShuttle());
         final RelNode relNode1 = context.sqlNode2RelNode(sqlNode1);
 

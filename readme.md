@@ -1,8 +1,11 @@
 # Introduce cruise
-Cruise 通过calcite工具对多个Sql进行分析，并试图找出最大公共子树。
-# 项目介绍
+Cruise is a tool to find the max-public sub tree on query list, and create the calcite materialized view query automatically. 
+# Introduce sub modules
 ## cruise-parser
-解析Spark Sql，并转化为Calcite RelNode进行后续分析。
+Provide CalciteContext to convert sql to RelNode conveniently. 
 
 ## cruise-core
-对RelNode进行匹配和查找，生成最大公共子树。
+Find the max-public sub tree on two RelNodes.
+
+## cruise-analyzer
+Check max-public sub tree whether can convert materialized view query and replace the query, filter useless sub tree 

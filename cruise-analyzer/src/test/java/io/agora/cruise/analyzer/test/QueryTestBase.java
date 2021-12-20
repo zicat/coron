@@ -5,6 +5,7 @@ import io.agora.cruise.analyzer.SubSqlTool;
 import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
+import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -49,7 +50,14 @@ public class QueryTestBase extends FileContext {
     public SubSqlTool createSubSqlTool(
             SqlIterable source, SqlIterable target, SqlFilter viewFilter) {
         return new SubSqlTool(
-                source, target, shuttleChain, sqlFilter, exceptionHandler, this, sqlShuttles) {
+                source,
+                target,
+                shuttleChain,
+                sqlFilter,
+                exceptionHandler,
+                this,
+                PrestoDialect.DEFAULT,
+                sqlShuttles) {
 
             /**
              * filter some view query.

@@ -8,7 +8,7 @@ import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.dialect.PrestoDialect;
+import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlShuttle;
 
@@ -30,6 +30,7 @@ public class SubSqlTool {
     protected final CalciteContext calciteContext;
     protected final SqlShuttle[] sqlShuttles;
     protected final ExceptionHandler handler;
+    protected final SqlDialect sqlDialect;
 
     public SubSqlTool(
             SqlIterable source,
@@ -38,6 +39,7 @@ public class SubSqlTool {
             SqlFilter sqlFilter,
             ExceptionHandler handler,
             FileContext calciteContext,
+            SqlDialect sqlDialect,
             SqlShuttle... sqlShuttles) {
         this.source = source;
         this.target = target;
@@ -45,6 +47,7 @@ public class SubSqlTool {
         this.sqlFilter = sqlFilter;
         this.handler = handler;
         this.calciteContext = calciteContext;
+        this.sqlDialect = sqlDialect;
         this.sqlShuttles = sqlShuttles;
     }
 
@@ -139,8 +142,7 @@ public class SubSqlTool {
 
         Set<String> viewNames = new HashSet<>();
         for (ResultNode<RelNode> resultNode : resultNodeList) {
-            final String viewQuery =
-                    calciteContext.toSql(resultNode.getPayload(), PrestoDialect.DEFAULT);
+            final String viewQuery = calciteContext.toSql(resultNode.getPayload(), sqlDialect);
             if (allViewSet.contains(viewQuery)) {
                 continue;
             }

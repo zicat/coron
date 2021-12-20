@@ -1,7 +1,8 @@
-package org.apache.calcite.sql.dialect;
+package io.agora.cruise.analyzer.sql.dialect;
 
 import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.dialect.DefaultSqlDialect;
 
 /** PrestoDialect. */
 public class PrestoDialect extends DefaultSqlDialect {

@@ -9,7 +9,6 @@ import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptMaterialization;
-import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
@@ -46,26 +45,9 @@ import static org.apache.calcite.linq4j.Nullness.castNonNull;
 /** CalciteContext. */
 public class CalciteContext {
 
-    public static final Properties PROPERTIES = new Properties();
+    public static final String DEFAULT_DB_NAME = "default";
     public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY =
             new UTF16SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
-
-    /*
-     * default materialization rules
-     */
-    public static final List<RelOptRule> MATERIALIZATION_RULES =
-            ImmutableList.of(
-                    MaterializedViewRules.FILTER_SCAN,
-                    MaterializedViewRules.PROJECT_FILTER,
-                    MaterializedViewRules.FILTER,
-                    MaterializedViewRules.PROJECT_JOIN,
-                    AliasMaterializedViewOnlyJoinRule.Config.DEFAULT.toRule(),
-                    AliasMaterializedViewProjectAggregateRule.Config.DEFAULT.toRule(),
-                    AliasMaterializedViewOnlyAggregateRule.Config.DEFAULT.toRule());
-
-    static {
-        PROPERTIES.put("caseSensitive", "false");
-    }
 
     protected final SchemaPlus rootSchema;
     protected final CalciteSchema calciteSchema;
@@ -79,24 +61,46 @@ public class CalciteContext {
     protected final SqlOperatorTable sqlOperatorTable;
 
     public CalciteContext(String defaultDatabase) {
-        this.rootSchema = Frameworks.createRootSchema(true);
         this.defaultDatabase = defaultDatabase;
+        this.rootSchema = defaultSchemaPlus();
         this.sqlOperatorTable = defaultSqlOperatorTable();
-        this.calciteSchema = CalciteSchema.from(rootSchema);
+        this.calciteSchema = defaultCalciteSchema();
         this.typeFactory = defaultSqlTypeFactory();
-        this.calciteCatalogReader =
-                new CalciteCatalogReader(
-                        calciteSchema,
-                        calciteSchema.path(null),
-                        typeFactory,
-                        new CalciteConnectionConfigImpl(PROPERTIES));
+        this.calciteCatalogReader = defaultCatalogReader();
         this.sqlValidator = defaultValidator();
         this.sqlToRelConverter = defaultSqlToRelConverter();
         this.hepPlanner = defaultHepPlanner();
     }
 
     public CalciteContext() {
-        this(SchemaTool.DEFAULT_DB_NAME);
+        this(DEFAULT_DB_NAME);
+    }
+
+    /**
+     * create default SchemaPlus.
+     *
+     * @return SchemaPlus
+     */
+    protected SchemaPlus defaultSchemaPlus() {
+        return Frameworks.createRootSchema(true);
+    }
+
+    /**
+     * Create SqlOperatorTable.
+     *
+     * @return SqlOperatorTable
+     */
+    protected SqlOperatorTable defaultSqlOperatorTable() {
+        return FunctionUtils.sqlOperatorTable;
+    }
+
+    /**
+     * create default CalciteSchema.
+     *
+     * @return CalciteSchema
+     */
+    protected CalciteSchema defaultCalciteSchema() {
+        return CalciteSchema.from(rootSchema);
     }
 
     /**
@@ -109,12 +113,18 @@ public class CalciteContext {
     }
 
     /**
-     * Create SqlOperatorTable.
+     * create CatalogReader.
      *
-     * @return SqlOperatorTable
+     * @return CalciteCatalogReader
      */
-    protected SqlOperatorTable defaultSqlOperatorTable() {
-        return FunctionUtils.sqlOperatorTable;
+    protected CalciteCatalogReader defaultCatalogReader() {
+        Properties properties = new Properties();
+        properties.put("caseSensitive", "false");
+        return new CalciteCatalogReader(
+                calciteSchema,
+                calciteSchema.path(null),
+                typeFactory,
+                new CalciteConnectionConfigImpl(properties));
     }
 
     /**
@@ -175,7 +185,15 @@ public class CalciteContext {
     protected HepPlanner createMaterializedHepPlanner() {
         final HepProgramBuilder builder = new HepProgramBuilder();
         builder.addRuleInstance(PruneEmptyRules.PROJECT_INSTANCE);
-        MATERIALIZATION_RULES.forEach(builder::addRuleInstance);
+        ImmutableList.of(
+                        MaterializedViewRules.FILTER_SCAN,
+                        MaterializedViewRules.PROJECT_FILTER,
+                        MaterializedViewRules.FILTER,
+                        MaterializedViewRules.PROJECT_JOIN,
+                        AliasMaterializedViewOnlyJoinRule.Config.DEFAULT.toRule(),
+                        AliasMaterializedViewProjectAggregateRule.Config.DEFAULT.toRule(),
+                        AliasMaterializedViewOnlyAggregateRule.Config.DEFAULT.toRule())
+                .forEach(builder::addRuleInstance);
         final HepProgram hepProgram = builder.build();
         return new HepPlanner(hepProgram);
     }

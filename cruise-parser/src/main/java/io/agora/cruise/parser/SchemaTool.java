@@ -27,8 +27,6 @@ import static org.apache.calcite.sql.SqlKind.CREATE_TABLE;
 /** SchemaTool. */
 public class SchemaTool {
 
-    public static final String DEFAULT_DB_NAME = "default";
-
     /**
      * create schema plus from ddl list.
      *
@@ -36,12 +34,12 @@ public class SchemaTool {
      * @param validator validator
      * @param defaultDBName defaultDBName
      * @param ddlList dbList
-     * @return rootSchema
      * @throws SqlParseException SqlParseException
      */
-    public static SchemaPlus addTableByDDL(
+    public static void addTableByDDL(
             SchemaPlus rootSchema, SqlValidator validator, String defaultDBName, String... ddlList)
             throws SqlParseException {
+
         if (ddlList == null || ddlList.length == 0) {
             throw new IllegalArgumentException("not support create schema from empty ddl list");
         }
@@ -57,7 +55,6 @@ public class SchemaTool {
                     rootSchema,
                     createColumnTable(createTable.columnList, validator));
         }
-        return rootSchema;
     }
 
     /**

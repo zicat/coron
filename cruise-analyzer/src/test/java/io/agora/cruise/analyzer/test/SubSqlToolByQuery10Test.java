@@ -6,7 +6,7 @@ import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.analyzer.sql.SqlJsonIterable;
 import io.agora.cruise.analyzer.sql.SqlJsonIterator;
 import io.agora.cruise.core.util.Tuple2;
-import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
+import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
@@ -71,6 +71,11 @@ public class SubSqlToolByQuery10Test {
             }
         }
 
+        LOG.info("===========matched view================");
+        for (String viewName : allMatchedView) {
+            LOG.info(viewNameQueryMapping.get(viewName));
+            LOG.info("----------------------------------------------");
+        }
         Assert.assertEquals(313, total);
         Assert.assertFalse(allMatchedView.isEmpty());
         LOG.info("total:" + total + ",matched:" + matched + ",view count:" + allMatchedView.size());

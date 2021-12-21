@@ -7,7 +7,8 @@ import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.core.rel.RelShuttleChain;
-import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
+import io.agora.cruise.parser.sql.shuttle.HavingCountShuttle;
+import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import java.util.Collections;
@@ -26,7 +27,8 @@ public class QueryTestBase extends FileContext {
                             || sql.contains("system.runtime")
                             || sql.toUpperCase().startsWith("SHOW ")
                             || sql.contains("levels_usage_dod_di_11");
-    protected SqlShuttle[] sqlShuttles = new SqlShuttle[] {new Int2BooleanConditionShuttle()};
+    protected SqlShuttle[] sqlShuttles =
+            new SqlShuttle[] {new Int2BooleanConditionShuttle(), new HavingCountShuttle()};
     protected SubSqlTool.ExceptionHandler exceptionHandler =
             (sourceSql, targetSql, e) -> {
                 if (!e.toString().contains("Object 'media' not found")

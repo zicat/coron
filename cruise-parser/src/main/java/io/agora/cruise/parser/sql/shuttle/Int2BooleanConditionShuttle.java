@@ -1,4 +1,4 @@
-package io.agora.cruise.parser.sql.presto;
+package io.agora.cruise.parser.sql.shuttle;
 
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlCase;

@@ -42,7 +42,7 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
         // if aggregation function rollup not equal self, return
         for (AggregateCall aggregateCall : newAggregate.getAggCallList()) {
             SqlAggFunction sqlAggFunction = aggregateCall.getAggregation();
-            if (sqlAggFunction.getRollup() != sqlAggFunction) {
+            if (sqlAggFunction.getRollup() == null) {
                 throw new RelShuttleChainException("function not support rollup");
             }
         }

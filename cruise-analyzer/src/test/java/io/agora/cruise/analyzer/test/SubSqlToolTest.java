@@ -5,7 +5,7 @@ import io.agora.cruise.analyzer.sql.SqlCsvIterable;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.core.util.Tuple2;
-import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
+import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 

@@ -6,7 +6,7 @@ import io.agora.cruise.analyzer.shuttle.PartitionProjectFilterRelShuttle;
 import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
-import io.agora.cruise.parser.sql.presto.Int2BooleanConditionShuttle;
+import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;

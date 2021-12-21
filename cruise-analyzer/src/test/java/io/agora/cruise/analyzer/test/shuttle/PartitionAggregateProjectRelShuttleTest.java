@@ -85,9 +85,9 @@ public class PartitionAggregateProjectRelShuttleTest extends FileContext {
     public void test4() throws SqlParseException {
 
         String sql =
-                "select date,COUNT(*) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
+                "select date,AVG(s2l_total_delay_sec) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
         String expectSql =
-                "SELECT date, COUNT(*)\n"
+                "SELECT date, AVG(s2l_total_delay_sec)\n"
                         + "FROM report_datahub.pub_levels_quality_di_1\n"
                         + "WHERE date_parse(CAST(date AS VARCHAR), '%Y%m%d') >= DATE('2021-11-21')"
                         + "\n"
@@ -105,9 +105,9 @@ public class PartitionAggregateProjectRelShuttleTest extends FileContext {
     public void test5() throws SqlParseException {
 
         String sql =
-                "select date,COUNT(*) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
+                "select date,AVG(s2l_total_delay_sec) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
         String expectSql =
-                "SELECT date, COUNT(*)\n"
+                "SELECT date, AVG(s2l_total_delay_sec)\n"
                         + "FROM report_datahub.pub_levels_quality_di_1\n"
                         + "GROUP BY date";
 

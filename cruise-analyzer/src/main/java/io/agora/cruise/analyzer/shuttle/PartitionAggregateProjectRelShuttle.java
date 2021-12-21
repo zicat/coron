@@ -39,7 +39,7 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
 
         final Aggregate newAggregate = (Aggregate) newNode;
 
-        // if aggregation function rollup not equal self, return
+        // if aggregation function rollup is null, return
         for (AggregateCall aggregateCall : newAggregate.getAggCallList()) {
             SqlAggFunction sqlAggFunction = aggregateCall.getAggregation();
             if (sqlAggFunction.getRollup() == null) {
@@ -49,7 +49,7 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
 
         // not support grouping set
         if (newAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
-            return newAggregate;
+            throw new RelShuttleChainException("function not support rollup");
         }
 
         for (String name : newNode.getRowType().getFieldNames()) {

@@ -72,7 +72,7 @@ public class SubSqlToolByQuery10Test {
         }
 
         Assert.assertEquals(313, total);
-        Assert.assertTrue(!allMatchedView.isEmpty());
+        Assert.assertFalse(allMatchedView.isEmpty());
         LOG.info("total:" + total + ",matched:" + matched + ",view count:" + allMatchedView.size());
     }
 }

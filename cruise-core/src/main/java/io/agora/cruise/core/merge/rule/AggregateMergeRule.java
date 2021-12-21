@@ -114,9 +114,10 @@ public class AggregateMergeRule extends MergeRule {
                             toFilter.getInput(),
                             newFilter.getInput(),
                             fromFilter.getInput().getRowType().getFieldCount());
-            if (!newFromCondition.equals(newToCondition)) {
-                return AggregateMergeableCheck.mergeable(fromAggregate)
-                        && AggregateMergeableCheck.mergeable(toAggregate);
+            if (!newFromCondition.equals(newToCondition)
+                    && (!AggregateMergeableCheck.mergeable(fromAggregate)
+                            || !AggregateMergeableCheck.mergeable(toAggregate))) {
+                return false;
             }
         }
         return true;

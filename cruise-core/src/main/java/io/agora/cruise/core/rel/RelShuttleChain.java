@@ -54,7 +54,7 @@ public class RelShuttleChain {
         RelShuttleChain offsetChain = this;
         RelNode result = relNode;
         do {
-            if(offsetChain.shuttles != null && offsetChain.shuttles.length != 0) {
+            if (offsetChain.shuttles != null && offsetChain.shuttles.length != 0) {
                 RelNode tmp = result;
                 for (RelShuttleImpl relShuttle : offsetChain.shuttles) {
                     try {
@@ -69,5 +69,4 @@ public class RelShuttleChain {
         } while (offsetChain != null);
         return result;
     }
-
 }

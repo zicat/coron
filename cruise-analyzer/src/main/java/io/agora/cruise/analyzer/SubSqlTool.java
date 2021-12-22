@@ -12,10 +12,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlShuttle;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findAllSubNode;
@@ -56,10 +53,10 @@ public class SubSqlTool {
      *
      * @return set
      */
-    public Set<String> start() {
+    public List<RelNode> start() {
 
         final Map<String, RelNode> cache = new HashMap<>();
-        final Set<String> viewQuerySet = new HashSet<>();
+        final Map<String, RelNode> viewQuerySet = new HashMap<>();
         final SqlIterator fromIt = source.sqlIterator();
         while (fromIt.hasNext()) {
             final String fromSql = fromIt.next();
@@ -69,7 +66,7 @@ public class SubSqlTool {
             final SqlIterator toIt = target.sqlIterator();
             startBeginFrom(fromSql, fromIt.currentOffset(), toIt, viewQuerySet, cache);
         }
-        return viewQuerySet;
+        return new ArrayList<>(viewQuerySet.values());
     }
 
     /**
@@ -85,7 +82,7 @@ public class SubSqlTool {
             String fromSql,
             int currentFromOffset,
             SqlIterator toIt,
-            Set<String> viewQuerySet,
+            Map<String, RelNode> viewQuerySet,
             Map<String, RelNode> cache) {
 
         if (source == target) {
@@ -128,11 +125,17 @@ public class SubSqlTool {
      * @throws SqlParseException SqlParseException
      */
     private boolean calculate(
-            String fromSql, String toSql, Set<String> allViewSet, Map<String, RelNode> cache)
+            String fromSql,
+            String toSql,
+            Map<String, RelNode> allViewSet,
+            Map<String, RelNode> cache)
             throws SqlParseException {
 
         final RelNode relNode1 = getRelNode(fromSql, cache);
         final RelNode relNode2 = getRelNode(toSql, cache);
+        if (relNode1 == null || relNode2 == null) {
+            return false;
+        }
         final ResultNodeList<RelNode> resultNodeList =
                 findAllSubNode(
                         createNodeRelRoot(relNode1, shuttleChain),
@@ -144,14 +147,14 @@ public class SubSqlTool {
         Set<String> viewNames = new HashSet<>();
         for (ResultNode<RelNode> resultNode : resultNodeList) {
             final String viewQuery = calciteContext.toSql(resultNode.getPayload(), sqlDialect);
-            if (allViewSet.contains(viewQuery)) {
+            if (allViewSet.containsKey(viewQuery)) {
                 continue;
             }
             if (filterMaterializedView(viewQuery)) {
                 continue;
             }
             final String viewName = "view_" + allViewSet.size();
-            allViewSet.add(viewQuery);
+            allViewSet.put(viewQuery, resultNode.getPayload());
             viewNames.add(viewName);
         }
         return !viewNames.isEmpty();
@@ -165,12 +168,16 @@ public class SubSqlTool {
      * @throws SqlParseException SqlParseException
      */
     private RelNode getRelNode(String sql, Map<String, RelNode> cache) throws SqlParseException {
-        RelNode relnode = cache.get(sql);
-        if (relnode == null) {
+        if (cache.containsKey(sql)) {
+            return cache.get(sql);
+        }
+        RelNode relnode = null;
+        try {
             relnode = calciteContext.querySql2Rel(sql, sqlShuttles);
+            return relnode;
+        } finally {
             cache.put(sql, relnode);
         }
-        return relnode;
     }
 
     /** ExceptionHandler. */

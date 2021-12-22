@@ -33,7 +33,9 @@ public class QueryTestBase extends FileContext {
             (sourceSql, targetSql, e) -> {
                 if (!e.toString().contains("Object 'media' not found")
                         && !e.toString().contains("Object 'queries' not found")
-                        && !e.toString().contains("Object 'information_schema' not found")) {
+                        && !e.toString().contains("Object 'information_schema' not found")
+                        && !e.toString().contains("Object 'vendor_vid_sku_final_di_1' not found")
+                        && !e.toString().contains("not found in any table")) {
                     e.printStackTrace();
                 }
             };

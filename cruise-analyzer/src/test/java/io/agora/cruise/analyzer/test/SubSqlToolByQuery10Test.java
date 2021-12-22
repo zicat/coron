@@ -8,14 +8,12 @@ import io.agora.cruise.analyzer.sql.SqlJsonIterator;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /** SubSqlToolByQuery2Test. */
 public class SubSqlToolByQuery10Test {
@@ -23,7 +21,7 @@ public class SubSqlToolByQuery10Test {
     private static final Logger LOG = LoggerFactory.getLogger(SubSqlToolByQuery10Test.class);
 
     @Test
-    public void test() throws SqlParseException {
+    public void test() {
 
         SqlJsonIterator.JsonParser parser = jsonNode -> jsonNode.get("presto_sql").asText();
         SqlIterable source = new SqlJsonIterable("query_11.json", parser);
@@ -31,16 +29,11 @@ public class SubSqlToolByQuery10Test {
         QueryTestBase queryTestBase = new QueryTestBase();
         SubSqlTool subSqlTool =
                 queryTestBase.createSubSqlTool(source, target, sql -> !sql.contains("WHERE"));
-        Set<String> viewQuerySet = subSqlTool.start();
-        List<String> viewQueryList =
-                viewQuerySet.stream()
-                        .map(v -> v.replace("\n", " ").replace("\r", " "))
-                        .collect(Collectors.toList());
-
-        Map<String, String> viewNameQueryMapping = new HashMap<>();
-        for (int i = 0; i < viewQueryList.size(); i++) {
+        List<RelNode> viewQuerySet = subSqlTool.start();
+        Map<String, RelNode> viewNameQueryMapping = new HashMap<>();
+        for (int i = 0; i < viewQuerySet.size(); i++) {
             final String viewName = "view_" + i;
-            final String viewQuery = viewQueryList.get(i);
+            final RelNode viewQuery = viewQuerySet.get(i);
             queryTestBase.addMaterializedView(viewName, viewQuery);
             viewNameQueryMapping.put(viewName, viewQuery);
         }
@@ -73,7 +66,7 @@ public class SubSqlToolByQuery10Test {
 
         LOG.info("===========matched view================");
         for (String viewName : allMatchedView) {
-            LOG.info(viewNameQueryMapping.get(viewName));
+            LOG.info(queryTestBase.toSql(viewNameQueryMapping.get(viewName)));
             LOG.info("----------------------------------------------");
         }
         Assert.assertEquals(313, total);

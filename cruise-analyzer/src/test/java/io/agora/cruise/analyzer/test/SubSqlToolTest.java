@@ -10,7 +10,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.agora.cruise.analyzer.sql.SqlCsvIterator.CsvParser.FIRST_COLUMN;
 
@@ -22,17 +21,12 @@ public class SubSqlToolTest extends QueryTestBase {
 
         QueryTestBase queryTestBase = new QueryTestBase();
         SubSqlTool subSqlTool = queryTestBase.createSubSqlTool(sqlIterable, sqlIterable, null);
-        Set<String> viewQuerySet = subSqlTool.start();
+        List<RelNode> viewQueryList = subSqlTool.start();
 
-        List<String> viewQueryList =
-                viewQuerySet.stream()
-                        .map(v -> v.replace("\n", " ").replace("\r", " "))
-                        .collect(Collectors.toList());
-
-        Map<String, String> viewNameQueryMapping = new HashMap<>();
+        Map<String, RelNode> viewNameQueryMapping = new HashMap<>();
         for (int i = 0; i < viewQueryList.size(); i++) {
             String viewName = "view_" + i;
-            String viewQuery = viewQueryList.get(i);
+            RelNode viewQuery = viewQueryList.get(i);
             queryTestBase.addMaterializedView(viewName, viewQuery);
             viewNameQueryMapping.put(viewName, viewQuery);
         }
@@ -64,7 +58,7 @@ public class SubSqlToolTest extends QueryTestBase {
         }
         System.out.println("===========matched view================");
         for (String viewName : allMatchedView) {
-            System.out.println(viewNameQueryMapping.get(viewName));
+            System.out.println(queryTestBase.toSql(viewNameQueryMapping.get(viewName)));
             System.out.println("----------------------------------------------");
         }
 

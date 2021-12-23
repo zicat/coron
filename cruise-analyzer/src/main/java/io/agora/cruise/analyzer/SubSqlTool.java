@@ -100,6 +100,9 @@ public class SubSqlTool {
         RelNode relNode1;
         try {
             relNode1 = getRelNode(fromSql, cache);
+            if (relNode1 == null) {
+                return;
+            }
         } catch (Throwable e) {
             handler.handle(fromSql, e);
             return;

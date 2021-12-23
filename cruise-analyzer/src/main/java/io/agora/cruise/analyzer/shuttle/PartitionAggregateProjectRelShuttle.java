@@ -4,6 +4,7 @@ import io.agora.cruise.core.rel.RelShuttleChainException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.core.AggregateCallWrapper;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -77,14 +78,7 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
             return super.visit(newAggregate);
         }
 
-        final Aggregate copyAggregate =
-                newAggregate.copy(
-                        newAggregate.getTraitSet(),
-                        project,
-                        ImmutableBitSet.of(newGroupSet),
-                        null,
-                        newAggregate.getAggCallList());
-
+        final Aggregate copyAggregate = newAggregate(newAggregate, newGroupSet);
         final List<RexNode> projectNodes = new ArrayList<>();
         for (String name : projectNames) {
             projectNodes.add(
@@ -92,6 +86,43 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
                             copyAggregate, findIdByName(copyAggregate.getRowType(), name)));
         }
         return LogicalProject.create(copyAggregate, new ArrayList<>(), projectNodes, projectNames);
+    }
+
+    /**
+     * new Aggregate.
+     *
+     * @param aggregate aggregate
+     * @param newGroupSet newGroupSet
+     * @return Aggregate
+     */
+    private Aggregate newAggregate(Aggregate aggregate, List<Integer> newGroupSet) {
+
+        if (aggregate.getGroupCount() != 0) {
+            return aggregate.copy(
+                    aggregate.getTraitSet(),
+                    aggregate.getInput(),
+                    ImmutableBitSet.of(newGroupSet),
+                    null,
+                    aggregate.getAggCallList());
+        }
+
+        // if origin group set is empty, calcite will return the type cast as nullable, cause check
+        // fail.
+        List<AggregateCall> newCalls = new ArrayList<>();
+        for (AggregateCall aggregateCall : aggregate.getAggCallList()) {
+            try {
+                newCalls.add(AggregateCallWrapper.createWrapper(aggregateCall));
+            } catch (Exception e) {
+                throw new RelShuttleChainException("create new function error", e);
+            }
+        }
+
+        return aggregate.copy(
+                aggregate.getTraitSet(),
+                aggregate.getInput(),
+                ImmutableBitSet.of(newGroupSet),
+                null,
+                newCalls);
     }
 
     /**
@@ -103,7 +134,8 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
      */
     private int findIdByName(RelDataType relDataType, String name) {
         int tmpSize = 0;
-        int index = name.startsWith("$f") ? Integer.parseInt(name.replace("$f", "")) : -1;
+        int index =
+                name.startsWith("$f") ? Integer.parseInt(name.replace("$f", "").split("_")[0]) : -1;
         for (int i = 0; i < relDataType.getFieldNames().size(); i++) {
             String field = relDataType.getFieldNames().get(i);
             if (field.startsWith(getPrefixName())) {

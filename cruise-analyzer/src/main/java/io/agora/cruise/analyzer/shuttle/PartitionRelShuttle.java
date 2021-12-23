@@ -9,6 +9,7 @@ import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +52,11 @@ public class PartitionRelShuttle extends RelShuttleImpl {
     }
 
     protected RexBuilder defaultRexBuilder() {
-        return new RexBuilder(CalciteContext.DEFAULT_SQL_TYPE_FACTORY);
+        return new RexBuilder(defaultTypeFactory());
+    }
+
+    protected SqlTypeFactoryImpl defaultTypeFactory() {
+        return CalciteContext.DEFAULT_SQL_TYPE_FACTORY;
     }
 
     /**

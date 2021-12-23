@@ -7,7 +7,6 @@ import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.parser.SqlParseException;
 
 import java.util.*;
 
@@ -16,7 +15,7 @@ import static io.agora.cruise.analyzer.sql.SqlCsvIterator.CsvParser.FIRST_COLUMN
 /** SubSqlToolTest. */
 public class SubSqlToolTest extends QueryTestBase {
 
-    public static void main(String[] args) throws SqlParseException {
+    public static void main(String[] args) {
         SqlIterable sqlIterable = new SqlCsvIterable("query2.log", FIRST_COLUMN);
 
         QueryTestBase queryTestBase = new QueryTestBase();
@@ -53,7 +52,7 @@ public class SubSqlToolTest extends QueryTestBase {
                 }
                 total++;
             } catch (Exception e) {
-                queryTestBase.exceptionHandler.handle(null, null, e);
+                queryTestBase.exceptionHandler.handle(querySql, e);
             }
         }
         System.out.println("===========matched view================");

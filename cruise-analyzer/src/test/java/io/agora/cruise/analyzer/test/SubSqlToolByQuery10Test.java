@@ -60,7 +60,7 @@ public class SubSqlToolByQuery10Test {
                 }
                 total++;
             } catch (Exception e) {
-                queryTestBase.exceptionHandler.handle(null, null, e);
+                queryTestBase.exceptionHandler.handle(querySql, e);
             }
         }
 

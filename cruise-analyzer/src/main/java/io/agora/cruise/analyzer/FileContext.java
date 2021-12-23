@@ -84,6 +84,10 @@ public class FileContext extends CalciteContext {
      * @throws SqlParseException SqlParseException
      */
     private void addTable(String ddl) throws SqlParseException {
+        ddl = ddl.trim();
+        if (ddl.isEmpty()) {
+            return;
+        }
         String[] split = ddl.split("\\s+");
         String table = split[2];
         String[] tableSplit = table.split("\\.");

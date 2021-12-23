@@ -11,6 +11,8 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlShuttle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -19,6 +21,8 @@ import static io.agora.cruise.core.NodeUtils.findAllSubNode;
 
 /** PublicSqlTool. */
 public class SubSqlTool {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SubSqlTool.class);
 
     protected final SqlIterable source;
     protected final SqlIterable target;
@@ -60,6 +64,11 @@ public class SubSqlTool {
         final SqlIterator fromIt = source.sqlIterator();
         while (fromIt.hasNext()) {
             final String fromSql = fromIt.next();
+            LOG.info(
+                    "current:{}, cache size:{}, view_size:{}",
+                    fromIt.currentOffset(),
+                    cache.size(),
+                    viewQuerySet.size());
             if (fromSql == null || sqlFilter.filter(fromSql)) {
                 continue;
             }
@@ -88,17 +97,22 @@ public class SubSqlTool {
         if (source == target) {
             toIt.skip(currentFromOffset);
         }
+        RelNode relNode1;
+        try {
+            relNode1 = getRelNode(fromSql, cache);
+        } catch (Throwable e) {
+            handler.handle(fromSql, e);
+            return;
+        }
         while (toIt.hasNext()) {
             String toSql = toIt.next();
             if (toSql == null || sqlFilter.filter(toSql) || fromSql.equals(toSql)) {
                 continue;
             }
             try {
-                if (calculate(fromSql, toSql, viewQuerySet, cache)) {
-                    break;
-                }
+                calculate(relNode1, toSql, viewQuerySet, cache);
             } catch (Throwable e) {
-                handler.handle(fromSql, toSql, e);
+                handler.handle(toSql, e);
             }
         }
     }
@@ -119,27 +133,24 @@ public class SubSqlTool {
     /**
      * calculate 2 sql materialized query.
      *
-     * @param fromSql fromSql
+     * @param fromNode fromNode
      * @param toSql toSql
      * @param allViewSet allViewSet
      * @throws SqlParseException SqlParseException
      */
-    private boolean calculate(
-            String fromSql,
+    public boolean calculate(
+            RelNode fromNode,
             String toSql,
             Map<String, RelNode> allViewSet,
             Map<String, RelNode> cache)
             throws SqlParseException {
 
-        final RelNode relNode1 = getRelNode(fromSql, cache);
-        final RelNode relNode2 = getRelNode(toSql, cache);
-        if (relNode1 == null || relNode2 == null) {
+        final RelNode toNode = getRelNode(toSql, cache);
+        if (toNode == null) {
             return false;
         }
         final ResultNodeList<RelNode> resultNodeList =
-                findAllSubNode(
-                        createNodeRelRoot(relNode1, shuttleChain),
-                        createNodeRelRoot(relNode2, shuttleChain));
+                findAllSubNode(createNodeRelRoot(fromNode), createNodeRelRoot(toNode));
         if (resultNodeList.isEmpty()) {
             return false;
         }
@@ -167,13 +178,13 @@ public class SubSqlTool {
      * @return RelNode
      * @throws SqlParseException SqlParseException
      */
-    private RelNode getRelNode(String sql, Map<String, RelNode> cache) throws SqlParseException {
+    public RelNode getRelNode(String sql, Map<String, RelNode> cache) throws SqlParseException {
         if (cache.containsKey(sql)) {
             return cache.get(sql);
         }
         RelNode relnode = null;
         try {
-            relnode = calciteContext.querySql2Rel(sql, sqlShuttles);
+            relnode = shuttleChain.accept(calciteContext.querySql2Rel(sql, sqlShuttles));
             return relnode;
         } finally {
             cache.put(sql, relnode);
@@ -186,10 +197,9 @@ public class SubSqlTool {
         /**
          * deal with exception.
          *
-         * @param sourceSql sourceSql.
-         * @param targetSql targetSql.
+         * @param sql sql.
          * @param e e;
          */
-        void handle(String sourceSql, String targetSql, Throwable e);
+        void handle(String sql, Throwable e);
     }
 }

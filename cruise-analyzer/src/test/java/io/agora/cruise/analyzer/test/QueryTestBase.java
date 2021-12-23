@@ -30,7 +30,7 @@ public class QueryTestBase extends FileContext {
     protected SqlShuttle[] sqlShuttles =
             new SqlShuttle[] {new Int2BooleanConditionShuttle(), new HavingCountShuttle()};
     protected SubSqlTool.ExceptionHandler exceptionHandler =
-            (sourceSql, targetSql, e) -> {
+            (sql, e) -> {
                 if (!e.toString().contains("Object 'media' not found")
                         && !e.toString().contains("Object 'queries' not found")
                         && !e.toString().contains("Object 'information_schema' not found")

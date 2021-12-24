@@ -3,6 +3,7 @@ package io.agora.cruise.analyzer;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
+import io.agora.cruise.core.NodeUtils;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.rel.RelShuttleChain;
@@ -107,30 +108,52 @@ public class SubSqlTool {
             handler.handle(fromSql, e);
             return;
         }
+        Map<String, RelNode> matchResult = new HashMap<>();
         while (toIt.hasNext()) {
             String toSql = toIt.next();
             if (toSql == null || sqlFilter.filter(toSql) || fromSql.equals(toSql)) {
                 continue;
             }
             try {
-                calculate(relNode1, toSql, viewQuerySet, cache);
+                Map<String, RelNode> payloads = calculate(relNode1, toSql, cache);
+                if (payloads != null) {
+                    matchResult.putAll(payloads);
+                }
             } catch (Throwable e) {
                 handler.handle(toSql, e);
             }
         }
+        findBestView(matchResult, viewQuerySet);
     }
 
     /**
-     * filter some view query.
+     * find best view query.
      *
-     * @param viewQuery viewQuery
-     * @return boolean filter
+     * @param payloads payloads
+     * @param viewQuerySet viewQuerySet
      */
-    protected boolean filterMaterializedView(String viewQuery) {
-        if (!viewQuery.contains("GROUP BY") && !viewQuery.contains("JOIN")) {
-            return true;
+    protected void findBestView(Map<String, RelNode> payloads, Map<String, RelNode> viewQuerySet) {
+
+        if (payloads == null || payloads.isEmpty()) {
+            return;
         }
-        return !viewQuery.contains("WHERE");
+        Set<Integer> deepLadder = new HashSet<>();
+        Map<String, RelNode> bestSqlMap = new HashMap<>();
+        for (Map.Entry<String, RelNode> entry : payloads.entrySet()) {
+            final String viewSql = entry.getKey();
+            final RelNode viewRelNode = entry.getValue();
+            if (!viewSql.contains("WHERE ") || viewQuerySet.containsKey(viewSql)) {
+                continue;
+            }
+            final int deep = NodeUtils.deep(viewRelNode);
+            if (!deepLadder.contains(deep) && !bestSqlMap.containsKey(viewSql)) {
+                deepLadder.add(deep);
+                bestSqlMap.put(viewSql, viewRelNode);
+            }
+        }
+        for (Map.Entry<String, RelNode> bestSql : bestSqlMap.entrySet()) {
+            viewQuerySet.put("view_" + viewQuerySet.size(), bestSql.getValue());
+        }
     }
 
     /**
@@ -138,40 +161,27 @@ public class SubSqlTool {
      *
      * @param fromNode fromNode
      * @param toSql toSql
-     * @param allViewSet allViewSet
      * @throws SqlParseException SqlParseException
      */
-    public boolean calculate(
-            RelNode fromNode,
-            String toSql,
-            Map<String, RelNode> allViewSet,
-            Map<String, RelNode> cache)
-            throws SqlParseException {
+    public Map<String, RelNode> calculate(
+            RelNode fromNode, String toSql, Map<String, RelNode> cache) throws SqlParseException {
 
         final RelNode toNode = getRelNode(toSql, cache);
         if (toNode == null) {
-            return false;
+            return null;
         }
         final ResultNodeList<RelNode> resultNodeList =
                 findAllSubNode(createNodeRelRoot(fromNode), createNodeRelRoot(toNode));
         if (resultNodeList.isEmpty()) {
-            return false;
+            return null;
         }
 
-        Set<String> viewNames = new HashSet<>();
+        Map<String, RelNode> payloadResult = new HashMap<>();
         for (ResultNode<RelNode> resultNode : resultNodeList) {
             final String viewQuery = calciteContext.toSql(resultNode.getPayload(), sqlDialect);
-            if (allViewSet.containsKey(viewQuery)) {
-                continue;
-            }
-            if (filterMaterializedView(viewQuery)) {
-                continue;
-            }
-            final String viewName = "view_" + allViewSet.size();
-            allViewSet.put(viewQuery, resultNode.getPayload());
-            viewNames.add(viewName);
+            payloadResult.put(viewQuery, resultNode.getPayload());
         }
-        return !viewNames.isEmpty();
+        return payloadResult;
     }
 
     /**

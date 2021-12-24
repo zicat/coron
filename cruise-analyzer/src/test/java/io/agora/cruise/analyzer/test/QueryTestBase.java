@@ -51,8 +51,7 @@ public class QueryTestBase extends FileContext {
      * @param target target sql iterable
      * @return SubSqlTool
      */
-    public SubSqlTool createSubSqlTool(
-            SqlIterable source, SqlIterable target, SqlFilter viewFilter) {
+    public SubSqlTool createSubSqlTool(SqlIterable source, SqlIterable target) {
         return new SubSqlTool(
                 source,
                 target,
@@ -61,20 +60,6 @@ public class QueryTestBase extends FileContext {
                 exceptionHandler,
                 this,
                 PrestoDialect.DEFAULT,
-                sqlShuttles) {
-
-            /**
-             * filter some view query.
-             *
-             * @param viewQuery viewQuery
-             * @return boolean filter
-             */
-            protected boolean filterMaterializedView(String viewQuery) {
-                if (viewFilter != null) {
-                    return viewFilter.filter(viewQuery);
-                }
-                return super.filterMaterializedView(viewQuery);
-            }
-        };
+                sqlShuttles);
     }
 }

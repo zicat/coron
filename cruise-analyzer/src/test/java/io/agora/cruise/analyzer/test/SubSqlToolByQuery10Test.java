@@ -27,8 +27,7 @@ public class SubSqlToolByQuery10Test {
         SqlIterable source = new SqlJsonIterable("query_11.json", parser);
         SqlIterable target = new SqlJsonIterable("query_10.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
-        SubSqlTool subSqlTool =
-                queryTestBase.createSubSqlTool(source, target, sql -> !sql.contains("WHERE"));
+        SubSqlTool subSqlTool = queryTestBase.createSubSqlTool(source, target);
         List<RelNode> viewQuerySet = subSqlTool.start();
         Map<String, RelNode> viewNameQueryMapping = new HashMap<>();
         for (int i = 0; i < viewQuerySet.size(); i++) {

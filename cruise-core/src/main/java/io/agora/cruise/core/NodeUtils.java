@@ -301,4 +301,22 @@ public class NodeUtils {
     private static int sameSize(int size1, int size2) {
         return size1 == size2 ? size1 : -1;
     }
+
+    /**
+     * compute the max deep of RelNode.
+     *
+     * @param relNode relNode
+     * @return the deep of RelNode
+     */
+    public static int deep(RelNode relNode) {
+        int deep = 1;
+        if (!relNode.getInputs().isEmpty()) {
+            int childDeep = Integer.MIN_VALUE;
+            for (int i = 0; i < relNode.getInputs().size(); i++) {
+                childDeep = Math.max(deep(relNode.getInput(i)), childDeep);
+            }
+            deep += childDeep;
+        }
+        return deep;
+    }
 }

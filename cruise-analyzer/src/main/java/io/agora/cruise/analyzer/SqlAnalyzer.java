@@ -15,15 +15,18 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findAllSubNode;
 
 /** PublicSqlTool. */
-public class SubSqlTool {
+public class SqlAnalyzer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SubSqlTool.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzer.class);
 
     protected final SqlIterable source;
     protected final SqlIterable target;
@@ -34,7 +37,7 @@ public class SubSqlTool {
     protected final ExceptionHandler handler;
     protected final SqlDialect sqlDialect;
 
-    public SubSqlTool(
+    public SqlAnalyzer(
             SqlIterable source,
             SqlIterable target,
             RelShuttleChain shuttleChain,
@@ -58,7 +61,7 @@ public class SubSqlTool {
      *
      * @return set
      */
-    public List<RelNode> start() {
+    public Map<String, RelNode> start() {
 
         final Map<String, RelNode> cache = new HashMap<>();
         final Map<String, RelNode> viewQuerySet = new HashMap<>();
@@ -76,7 +79,7 @@ public class SubSqlTool {
             final SqlIterator toIt = target.sqlIterator();
             startBeginFrom(fromSql, fromIt.currentOffset(), toIt, viewQuerySet, cache);
         }
-        return new ArrayList<>(viewQuerySet.values());
+        return viewQuerySet;
     }
 
     /**
@@ -173,7 +176,7 @@ public class SubSqlTool {
      * @return viewName
      */
     protected String viewName(int viewId) {
-        return "view_" + viewId;
+        return calciteContext.defaultDatabase() + ".view_" + viewId;
     }
 
     /**

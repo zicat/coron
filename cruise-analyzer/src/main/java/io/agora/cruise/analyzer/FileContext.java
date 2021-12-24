@@ -21,9 +21,9 @@ public class FileContext extends CalciteContext {
         this(database, defaultDDLSqlIterator());
     }
 
-    public FileContext(String database, SqlIterator it) {
+    public FileContext(String database, SqlIterator ddlIterator) {
         super(database);
-        initSchema(it);
+        initSchema(ddlIterator);
     }
 
     /**

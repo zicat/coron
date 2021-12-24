@@ -1,6 +1,6 @@
 package io.agora.cruise.analyzer.test;
 
-import io.agora.cruise.analyzer.SubSqlTool;
+import io.agora.cruise.analyzer.SqlAnalyzer;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.analyzer.sql.SqlJsonIterable;
@@ -13,12 +13,14 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /** SubSqlToolByQuery2Test. */
-public class SubSqlToolByQuery10Test {
+public class SqlAnalyzerByQuery10Test {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SubSqlToolByQuery10Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzerByQuery10Test.class);
 
     @Test
     public void test() {
@@ -27,15 +29,9 @@ public class SubSqlToolByQuery10Test {
         SqlIterable source = new SqlJsonIterable("query_11.json", parser);
         SqlIterable target = new SqlJsonIterable("query_10.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
-        SubSqlTool subSqlTool = queryTestBase.createSubSqlTool(source, target);
-        List<RelNode> viewQuerySet = subSqlTool.start();
-        Map<String, RelNode> viewNameQueryMapping = new HashMap<>();
-        for (int i = 0; i < viewQuerySet.size(); i++) {
-            final String viewName = "view_" + i;
-            final RelNode viewQuery = viewQuerySet.get(i);
-            queryTestBase.addMaterializedView(viewName, viewQuery);
-            viewNameQueryMapping.put(viewName, viewQuery);
-        }
+        SqlAnalyzer sqlAnalyzer = queryTestBase.createSubSqlTool(source, target);
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start();
+        viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;
         int matched = 0;
@@ -51,8 +47,7 @@ public class SubSqlToolByQuery10Test {
                 final RelNode relNode =
                         queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
                 final Tuple2<Set<String>, RelNode> tuple2 =
-                        queryTestBase.canMaterializedWithRelNode(
-                                relNode, viewNameQueryMapping.keySet());
+                        queryTestBase.canMaterializedWithRelNode(relNode, viewQueryMap.keySet());
                 if (!tuple2.f0.isEmpty()) {
                     matched++;
                     allMatchedView.addAll(tuple2.f0);
@@ -65,7 +60,7 @@ public class SubSqlToolByQuery10Test {
 
         LOG.info("===========matched view================");
         for (String viewName : allMatchedView) {
-            LOG.info(queryTestBase.toSql(viewNameQueryMapping.get(viewName)));
+            LOG.info(queryTestBase.toSql(viewQueryMap.get(viewName)));
             LOG.info("----------------------------------------------");
         }
         Assert.assertEquals(313, total);

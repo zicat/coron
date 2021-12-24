@@ -82,9 +82,6 @@ public class SchemaTool {
             rootSchema.add(dbName, schemaPlus);
         }
         schemaPlus.add(tableName, table);
-        if (defaultDBName.equals(dbName)) {
-            rootSchema.add(tableName, table);
-        }
         return rootSchema;
     }
 

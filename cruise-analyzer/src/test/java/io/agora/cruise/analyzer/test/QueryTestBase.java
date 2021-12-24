@@ -1,7 +1,7 @@
 package io.agora.cruise.analyzer.test;
 
 import io.agora.cruise.analyzer.FileContext;
-import io.agora.cruise.analyzer.SubSqlTool;
+import io.agora.cruise.analyzer.SqlAnalyzer;
 import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
@@ -29,7 +29,7 @@ public class QueryTestBase extends FileContext {
                             || sql.contains("levels_usage_dod_di_11");
     protected SqlShuttle[] sqlShuttles =
             new SqlShuttle[] {new Int2BooleanConditionShuttle(), new HavingCountShuttle()};
-    protected SubSqlTool.ExceptionHandler exceptionHandler =
+    protected SqlAnalyzer.ExceptionHandler exceptionHandler =
             (sql, e) -> {
                 if (!e.toString().contains("Object 'media' not found")
                         && !e.toString().contains("Object 'queries' not found")
@@ -51,8 +51,8 @@ public class QueryTestBase extends FileContext {
      * @param target target sql iterable
      * @return SubSqlTool
      */
-    public SubSqlTool createSubSqlTool(SqlIterable source, SqlIterable target) {
-        return new SubSqlTool(
+    public SqlAnalyzer createSubSqlTool(SqlIterable source, SqlIterable target) {
+        return new SqlAnalyzer(
                 source,
                 target,
                 shuttleChain,

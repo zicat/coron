@@ -29,6 +29,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
                     SqlKind.LESS_THAN_OR_EQUAL,
                     SqlKind.GREATER_THAN,
                     SqlKind.GREATER_THAN_OR_EQUAL,
+                    SqlKind.SEARCH,
                     SqlKind.IN);
 
     protected final RexBuilder rexBuilder = defaultRexBuilder();
@@ -47,7 +48,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
     public static RelShuttleImpl[] partitionShuttles(List<String> partitionFields) {
         return new RelShuttleImpl[] {
             new PartitionProjectFilterRelShuttle(partitionFields),
-            new PartitionAggregateProjectRelShuttle(partitionFields)
+            new PartitionAggregateRelShuttle(partitionFields)
         };
     }
 

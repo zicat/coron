@@ -2,8 +2,8 @@ package io.agora.cruise.parser;
 
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.RelDistributionTraitDef;
 import org.apache.calcite.rel.RelRoot;
@@ -38,7 +38,7 @@ public class SqlToRelConverterTool {
      * @return SqlToRelConverter
      */
     public static SqlToRelConverter createSqlToRelConverter(
-            HepPlanner planner,
+            RelOptPlanner planner,
             SqlTypeFactoryImpl factory,
             CalciteCatalogReader calciteCatalogReader,
             SqlOperatorTable sqlOperatorTable,

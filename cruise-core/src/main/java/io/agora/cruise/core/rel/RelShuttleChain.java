@@ -55,6 +55,9 @@ public class RelShuttleChain {
      */
     public final RelNode accept(RelNode relNode) {
 
+        if (relNode == null) {
+            return null;
+        }
         RelShuttleChain offsetChain = this;
         RelNode result = relNode;
         do {
@@ -63,10 +66,9 @@ public class RelShuttleChain {
                 for (RelShuttleImpl relShuttle : offsetChain.shuttles) {
                     try {
                         result = result.accept(relShuttle);
-                    } catch (RelShuttleChainException e) {
-                        LOG.warn(relShuttle.getClass().getName() + ":" + e.getMessage());
-                        result = tmp;
-                        break;
+                    } catch (Throwable e) {
+                        LOG.warn(relShuttle.getClass().getName() + ": " + e.getMessage());
+                        return null;
                     }
                 }
             }

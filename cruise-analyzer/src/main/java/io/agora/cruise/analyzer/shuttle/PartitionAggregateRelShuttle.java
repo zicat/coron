@@ -5,7 +5,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.AggregateCallWrapper;
-import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.type.RelDataType;
@@ -21,10 +20,12 @@ import java.util.List;
  * PartitionAggregateFilterSimplify.
  *
  * <p>trans: select sum(x) where f(t) = 1 to select t,sum(x) group by f(t). (t in partitionFields)
+ *
+ * <p>TODO: Need to override all node that has child to adapt Project Struct Change.
  */
-public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
+public class PartitionAggregateRelShuttle extends PartitionRelShuttle {
 
-    public PartitionAggregateProjectRelShuttle(List<String> partitionFields) {
+    public PartitionAggregateRelShuttle(List<String> partitionFields) {
         super(partitionFields);
     }
 
@@ -32,12 +33,33 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
     public RelNode visit(LogicalAggregate aggregate) {
 
         final RelNode newNode = super.visit(aggregate);
-        if (!(newNode instanceof Aggregate)
-                || !(((Aggregate) newNode).getInput() instanceof Project)) {
+        if (!(newNode instanceof Aggregate)) {
             return newNode;
         }
 
         final Aggregate newAggregate = (Aggregate) newNode;
+        for (String name : newNode.getRowType().getFieldNames()) {
+            if (name.startsWith(getPrefixName())) {
+                return newNode;
+            }
+        }
+
+        final RelNode input = newAggregate.getInput();
+        final List<Integer> originGroupSet = newAggregate.getGroupSet().asList();
+        final List<Integer> newGroupSet = new ArrayList<>(originGroupSet);
+        final List<String> projectNames =
+                new ArrayList<>(newAggregate.getRowType().getFieldNames());
+
+        for (int i = 0; i < input.getRowType().getFieldList().size(); i++) {
+            RelDataTypeField field = input.getRowType().getFieldList().get(i);
+            if (field.getName().startsWith(getPrefixName())) {
+                projectNames.add(field.getName());
+                newGroupSet.add(field.getIndex());
+            }
+        }
+        if (newGroupSet.size() == originGroupSet.size()) {
+            return newNode;
+        }
 
         // if aggregation function rollup is null, return
         for (AggregateCall aggregateCall : newAggregate.getAggCallList()) {
@@ -51,29 +73,6 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
         // not support grouping set
         if (newAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
             throw new RelShuttleChainException("grouping setting not support");
-        }
-
-        for (String name : newNode.getRowType().getFieldNames()) {
-            if (name.startsWith(getPrefixName())) {
-                return newNode;
-            }
-        }
-
-        final Project project = (Project) newAggregate.getInput();
-        final List<Integer> originGroupSet = newAggregate.getGroupSet().asList();
-        final List<Integer> newGroupSet = new ArrayList<>(originGroupSet);
-        final List<String> projectNames =
-                new ArrayList<>(newAggregate.getRowType().getFieldNames());
-
-        for (int i = 0; i < project.getRowType().getFieldList().size(); i++) {
-            RelDataTypeField field = project.getRowType().getFieldList().get(i);
-            if (field.getName().startsWith(getPrefixName())) {
-                projectNames.add(field.getName());
-                newGroupSet.add(field.getIndex());
-            }
-        }
-        if (newGroupSet.size() == originGroupSet.size()) {
-            return newNode;
         }
 
         final Aggregate copyAggregate = newAggregate(newAggregate, newGroupSet);

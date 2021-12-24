@@ -8,6 +8,7 @@ import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptMaterialization;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
@@ -54,7 +55,6 @@ public class CalciteContext {
     protected final Map<String, List<RelOptMaterialization>> materializationMap = new HashMap<>();
     protected final SqlValidator sqlValidator;
     protected final SqlToRelConverter sqlToRelConverter;
-    protected final HepPlanner hepPlanner;
     protected final SqlOperatorTable sqlOperatorTable;
 
     public CalciteContext(String defaultDatabase) {
@@ -66,7 +66,6 @@ public class CalciteContext {
         this.calciteCatalogReader = defaultCatalogReader();
         this.sqlValidator = defaultValidator();
         this.sqlToRelConverter = defaultSqlToRelConverter();
-        this.hepPlanner = defaultHepPlanner();
     }
 
     public CalciteContext() {
@@ -119,7 +118,7 @@ public class CalciteContext {
         properties.put("caseSensitive", "false");
         return new CalciteCatalogReader(
                 calciteSchema,
-                calciteSchema.path(null),
+                calciteSchema.path(defaultDatabase),
                 typeFactory,
                 new CalciteConnectionConfigImpl(properties));
     }
@@ -146,9 +145,9 @@ public class CalciteContext {
      *
      * @return SqlToRelConverter
      */
-    private SqlToRelConverter defaultSqlToRelConverter() {
+    protected SqlToRelConverter defaultSqlToRelConverter() {
         return SqlToRelConverterTool.createSqlToRelConverter(
-                new HepPlanner(new HepProgramBuilder().build()),
+                defaultRelOptPlanner(),
                 typeFactory,
                 calciteCatalogReader,
                 sqlOperatorTable,
@@ -162,7 +161,7 @@ public class CalciteContext {
      *
      * @return defaultPlanner
      */
-    protected HepPlanner defaultHepPlanner() {
+    protected HepPlanner defaultRelOptPlanner() {
         final HepProgramBuilder builder =
                 new HepProgramBuilder()
                         .addRuleInstance(FilterAggregateTransposeRule.Config.DEFAULT.toRule())
@@ -310,8 +309,9 @@ public class CalciteContext {
      */
     public RelNode sqlNode2RelNode(SqlNode sqlNode) {
         final RelRoot viewQueryRoot = sqlToRelConverter.convertQuery(sqlNode, true, true);
-        hepPlanner.setRoot(viewQueryRoot.rel);
-        return hepPlanner.findBestExp();
+        final RelOptPlanner planner = viewQueryRoot.rel.getCluster().getPlanner();
+        planner.setRoot(viewQueryRoot.rel);
+        return planner.findBestExp();
     }
 
     /**

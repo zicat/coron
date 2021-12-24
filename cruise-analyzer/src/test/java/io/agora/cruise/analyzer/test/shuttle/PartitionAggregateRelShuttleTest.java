@@ -1,8 +1,6 @@
 package io.agora.cruise.analyzer.test.shuttle;
 
 import io.agora.cruise.analyzer.FileContext;
-import io.agora.cruise.analyzer.shuttle.PartitionAggregateProjectRelShuttle;
-import io.agora.cruise.analyzer.shuttle.PartitionProjectFilterRelShuttle;
 import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.core.NodeRel;
 import io.agora.cruise.core.rel.RelShuttleChain;
@@ -18,16 +16,16 @@ import java.util.List;
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 
 /** PartitionAggregateFilterSimplifyTest. */
-public class PartitionAggregateProjectRelShuttleTest extends FileContext {
+public class PartitionAggregateRelShuttleTest extends FileContext {
 
-    public PartitionAggregateProjectRelShuttleTest() {
+    public PartitionAggregateRelShuttleTest() {
         super("report_datahub");
     }
 
     @Test
     public void test1() throws SqlParseException {
         String sql =
-                "select date,SUM(s2l_250ms_delay_sec) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
+                "select date,SUM(s2l_250ms_delay_sec) FROM pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
         String expectSql =
                 "SELECT date, SUM(s2l_250ms_delay_sec), date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_2\n"
                         + "FROM report_datahub.pub_levels_quality_di_1\n"
@@ -86,39 +84,10 @@ public class PartitionAggregateProjectRelShuttleTest extends FileContext {
 
         String sql =
                 "select date,AVG(s2l_total_delay_sec) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
-        String expectSql =
-                "SELECT date, AVG(s2l_total_delay_sec)\n"
-                        + "FROM report_datahub.pub_levels_quality_di_1\n"
-                        + "WHERE date_parse(CAST(date AS VARCHAR), '%Y%m%d') >= DATE('2021-11-21')"
-                        + "\n"
-                        + "GROUP BY date";
-
-        final RelNode relNode1 = querySql2Rel(sql, new Int2BooleanConditionShuttle());
+        final RelNode relNode = querySql2Rel(sql, new Int2BooleanConditionShuttle());
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
-        Assert.assertEquals(expectSql, toSql(nodeRel1.getPayload()));
-    }
-
-    @Test
-    public void test5() throws SqlParseException {
-
-        String sql =
-                "select date,AVG(s2l_total_delay_sec) FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') group by date";
-        String expectSql =
-                "SELECT date, AVG(s2l_total_delay_sec)\n"
-                        + "FROM report_datahub.pub_levels_quality_di_1\n"
-                        + "GROUP BY date";
-
-        final RelNode relNode1 = querySql2Rel(sql, new Int2BooleanConditionShuttle());
-        List<String> partitionFields = Collections.singletonList("date");
-        RelShuttleChain rootChain =
-                RelShuttleChain.of(
-                        RelShuttleChain.of(
-                                new PartitionAggregateProjectRelShuttle(partitionFields)),
-                        new PartitionProjectFilterRelShuttle(partitionFields));
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, rootChain);
-        Assert.assertEquals(expectSql, toSql(nodeRel1.getPayload()));
+        Assert.assertNull(shuttleChain.accept(relNode));
     }
 }

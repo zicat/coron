@@ -40,7 +40,7 @@ public class SubSqlTool {
             RelShuttleChain shuttleChain,
             SqlFilter sqlFilter,
             ExceptionHandler handler,
-            FileContext calciteContext,
+            CalciteContext calciteContext,
             SqlDialect sqlDialect,
             SqlShuttle... sqlShuttles) {
         this.source = source;
@@ -70,7 +70,7 @@ public class SubSqlTool {
                     fromIt.currentOffset(),
                     cache.size(),
                     viewQuerySet.size());
-            if (fromSql == null || sqlFilter.filter(fromSql)) {
+            if (filterSql(fromSql)) {
                 continue;
             }
             final SqlIterator toIt = target.sqlIterator();
@@ -111,7 +111,7 @@ public class SubSqlTool {
         Map<String, RelNode> matchResult = new HashMap<>();
         while (toIt.hasNext()) {
             String toSql = toIt.next();
-            if (toSql == null || sqlFilter.filter(toSql) || fromSql.equals(toSql)) {
+            if (filterSql(toSql) || fromSql.equals(toSql)) {
                 continue;
             }
             try {
@@ -124,6 +124,16 @@ public class SubSqlTool {
             }
         }
         findBestView(matchResult, viewQuerySet);
+    }
+
+    /**
+     * filter illegal.
+     *
+     * @param sql sql
+     * @return boolean filter
+     */
+    protected boolean filterSql(String sql) {
+        return sql == null || sqlFilter.filter(sql);
     }
 
     /**
@@ -152,8 +162,18 @@ public class SubSqlTool {
             }
         }
         for (Map.Entry<String, RelNode> bestSql : bestSqlMap.entrySet()) {
-            viewQuerySet.put("view_" + viewQuerySet.size(), bestSql.getValue());
+            viewQuerySet.put(viewName(viewQuerySet.size()), bestSql.getValue());
         }
+    }
+
+    /**
+     * create viewName by id.
+     *
+     * @param viewId viewId
+     * @return viewName
+     */
+    protected String viewName(int viewId) {
+        return "view_" + viewId;
     }
 
     /**
@@ -163,7 +183,7 @@ public class SubSqlTool {
      * @param toSql toSql
      * @throws SqlParseException SqlParseException
      */
-    public Map<String, RelNode> calculate(
+    private Map<String, RelNode> calculate(
             RelNode fromNode, String toSql, Map<String, RelNode> cache) throws SqlParseException {
 
         final RelNode toNode = getRelNode(toSql, cache);
@@ -191,7 +211,7 @@ public class SubSqlTool {
      * @return RelNode
      * @throws SqlParseException SqlParseException
      */
-    public RelNode getRelNode(String sql, Map<String, RelNode> cache) throws SqlParseException {
+    private RelNode getRelNode(String sql, Map<String, RelNode> cache) throws SqlParseException {
         if (cache.containsKey(sql)) {
             return cache.get(sql);
         }

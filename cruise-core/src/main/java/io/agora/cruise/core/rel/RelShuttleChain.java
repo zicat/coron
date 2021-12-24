@@ -2,9 +2,13 @@ package io.agora.cruise.core.rel;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** RelShuttleChain. */
 public class RelShuttleChain {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RelShuttleChain.class);
 
     private final RelShuttleImpl[] shuttles;
     private final RelShuttleChain nextChain;
@@ -60,6 +64,7 @@ public class RelShuttleChain {
                     try {
                         result = result.accept(relShuttle);
                     } catch (RelShuttleChainException e) {
+                        LOG.warn(relShuttle.getClass().getName() + ":" + e.getMessage());
                         result = tmp;
                         break;
                     }

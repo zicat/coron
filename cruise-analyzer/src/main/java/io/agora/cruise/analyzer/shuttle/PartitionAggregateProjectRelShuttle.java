@@ -16,7 +16,6 @@ import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * PartitionAggregateFilterSimplify.
@@ -35,7 +34,7 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
         final RelNode newNode = super.visit(aggregate);
         if (!(newNode instanceof Aggregate)
                 || !(((Aggregate) newNode).getInput() instanceof Project)) {
-            return super.visit(newNode);
+            return newNode;
         }
 
         final Aggregate newAggregate = (Aggregate) newNode;
@@ -44,25 +43,25 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
         for (AggregateCall aggregateCall : newAggregate.getAggCallList()) {
             SqlAggFunction sqlAggFunction = aggregateCall.getAggregation();
             if (sqlAggFunction.getRollup() == null) {
-                throw new RelShuttleChainException("function not support rollup");
+                throw new RelShuttleChainException(
+                        sqlAggFunction.getName() + " function not support rollup");
             }
         }
 
         // not support grouping set
         if (newAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
-            throw new RelShuttleChainException("function not support rollup");
+            throw new RelShuttleChainException("grouping setting not support");
         }
 
         for (String name : newNode.getRowType().getFieldNames()) {
             if (name.startsWith(getPrefixName())) {
-                return newAggregate;
+                return newNode;
             }
         }
 
         final Project project = (Project) newAggregate.getInput();
-
-        final AtomicBoolean containTmpP = new AtomicBoolean(false);
-        final List<Integer> newGroupSet = new ArrayList<>(newAggregate.getGroupSet().asList());
+        final List<Integer> originGroupSet = newAggregate.getGroupSet().asList();
+        final List<Integer> newGroupSet = new ArrayList<>(originGroupSet);
         final List<String> projectNames =
                 new ArrayList<>(newAggregate.getRowType().getFieldNames());
 
@@ -71,11 +70,10 @@ public class PartitionAggregateProjectRelShuttle extends PartitionRelShuttle {
             if (field.getName().startsWith(getPrefixName())) {
                 projectNames.add(field.getName());
                 newGroupSet.add(field.getIndex());
-                containTmpP.set(true);
             }
         }
-        if (!containTmpP.get()) {
-            return super.visit(newAggregate);
+        if (newGroupSet.size() == originGroupSet.size()) {
+            return newNode;
         }
 
         final Aggregate copyAggregate = newAggregate(newAggregate, newGroupSet);

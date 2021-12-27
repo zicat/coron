@@ -1,31 +1,25 @@
 package io.agora.cruise.analyzer.sql;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Reader;
 import java.util.Iterator;
 
 /** SqlJson. */
 public class SqlJsonIterator extends BasicSqlIterator {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Logger LOG = LoggerFactory.getLogger(SqlJsonIterator.class);
 
-    protected final Reader reader;
     protected final Iterator<JsonNode> iterator;
     protected final JsonParser parser;
     protected int i = 0;
 
-    public SqlJsonIterator(Reader reader, JsonParser parser) {
-        this.reader = reader;
+    public SqlJsonIterator(JsonNode jsonNode, JsonParser parser) {
         this.parser = parser;
         Iterator<JsonNode> it = null;
         try {
-            it = MAPPER.readTree(reader).iterator();
+            it = jsonNode.iterator();
         } catch (Throwable e) {
             LOG.error("parser json error", e);
         }
@@ -44,14 +38,12 @@ public class SqlJsonIterator extends BasicSqlIterator {
     }
 
     @Override
-    public void close() {
-        IOUtils.closeQuietly(reader);
-    }
-
-    @Override
     public int currentOffset() {
         return i;
     }
+
+    @Override
+    public void close() {}
 
     /** JsonParser. */
     public interface JsonParser {

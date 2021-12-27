@@ -13,6 +13,10 @@ public class ResultNodeList<T> extends ArrayList<ResultNode<T>> {
         super();
     }
 
+    public ResultNodeList(int size) {
+        super(size);
+    }
+
     public ResultNodeList(ResultNode<T> e) {
         super();
         add(e);

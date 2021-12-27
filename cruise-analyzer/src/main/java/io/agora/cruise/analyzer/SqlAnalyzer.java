@@ -1,5 +1,7 @@
 package io.agora.cruise.analyzer;
 
+import io.agora.cruise.analyzer.metrics.Metrics;
+import io.agora.cruise.analyzer.module.NodeRelMeta;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
@@ -15,10 +17,7 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findAllSubNode;
@@ -36,6 +35,7 @@ public class SqlAnalyzer {
     protected final SqlShuttle[] sqlShuttles;
     protected final ExceptionHandler handler;
     protected final SqlDialect sqlDialect;
+    static ThreadLocal<Metrics> localMetrics = new ThreadLocal<>();
 
     public SqlAnalyzer(
             SqlIterable source,
@@ -72,23 +72,33 @@ public class SqlAnalyzer {
      */
     public Map<String, RelNode> start(CheckMode checkMode) {
 
-        final Map<String, RelNode> cache = new HashMap<>();
-        final Map<String, RelNode> viewQuerySet = new HashMap<>();
+        final Map<String, NodeRelMeta> cache = new TreeMap<>();
+        final Map<String, RelNode> viewQuerySet = new TreeMap<>();
         final SqlIterator fromIt = source.sqlIterator();
-        while (fromIt.hasNext()) {
-            final String fromSql = fromIt.next();
-            LOG.info(
-                    "current:{}, cache size:{}, view_size:{}",
-                    fromIt.currentOffset(),
-                    cache.size(),
-                    viewQuerySet.size());
-            if (filterSql(fromSql)) {
-                continue;
+        final Metrics metrics = new Metrics();
+        try {
+            localMetrics.set(metrics);
+            while (fromIt.hasNext()) {
+                long start = System.currentTimeMillis();
+                final String fromSql = fromIt.next();
+                LOG.info(
+                        "current:{}, cache size:{}, view_size:{}, {}",
+                        fromIt.currentOffset(),
+                        cache.size(),
+                        viewQuerySet.size(),
+                        metrics);
+                if (filterSql(fromSql)) {
+                    continue;
+                }
+                final SqlIterator toIt = target.sqlIterator();
+                startBeginFrom(
+                        fromSql, fromIt.currentOffset(), toIt, viewQuerySet, cache, checkMode);
+                metrics.addTotalSpend(System.currentTimeMillis() - start);
             }
-            final SqlIterator toIt = target.sqlIterator();
-            startBeginFrom(fromSql, fromIt.currentOffset(), toIt, viewQuerySet, cache, checkMode);
+            return viewQuerySet;
+        } finally {
+            localMetrics.remove();
         }
-        return viewQuerySet;
     }
 
     /**
@@ -105,30 +115,32 @@ public class SqlAnalyzer {
             int currentFromOffset,
             SqlIterator toIt,
             Map<String, RelNode> viewQuerySet,
-            Map<String, RelNode> cache,
+            Map<String, NodeRelMeta> cache,
             CheckMode checkMode) {
 
         if (source == target) {
             toIt.skip(currentFromOffset);
         }
-        RelNode relNode1;
+        NodeRelMeta nodeRelMeta;
         try {
-            relNode1 = getRelNode(fromSql, cache);
-            if (relNode1 == null) {
+            long start = System.currentTimeMillis();
+            nodeRelMeta = getRelNode(fromSql, cache);
+            localMetrics.get().addTotalSql2NodeSpend(System.currentTimeMillis() - start);
+            if (nodeRelMeta == null) {
                 return;
             }
         } catch (Throwable e) {
             handler.handle(fromSql, e);
             return;
         }
-        Map<String, RelNode> matchResult = new HashMap<>();
+        final Map<String, RelNode> matchResult = new TreeMap<>();
         while (toIt.hasNext()) {
             String toSql = toIt.next();
             if (filterSql(toSql) || fromSql.equals(toSql)) {
                 continue;
             }
             try {
-                Map<String, RelNode> payloads = calculate(relNode1, toSql, cache);
+                final Map<String, RelNode> payloads = calculate(nodeRelMeta, toSql, cache);
                 if (payloads != null) {
                     matchResult.putAll(payloads);
                     if (checkMode == CheckMode.SIMPLE) {
@@ -163,8 +175,8 @@ public class SqlAnalyzer {
         if (payloads == null || payloads.isEmpty()) {
             return;
         }
-        Set<Integer> deepLadder = new HashSet<>();
-        Map<String, RelNode> bestSqlMap = new HashMap<>();
+        final Set<Integer> deepLadder = new TreeSet<>();
+        final Map<String, RelNode> bestSqlMap = new TreeMap<>();
         for (Map.Entry<String, RelNode> entry : payloads.entrySet()) {
             final String viewSql = entry.getKey();
             final RelNode viewRelNode = entry.getValue();
@@ -195,28 +207,38 @@ public class SqlAnalyzer {
     /**
      * calculate 2 sql materialized query.
      *
-     * @param fromNode fromNode
+     * @param fromNodeRelMeta fromNodeRelMeta
      * @param toSql toSql
      * @throws SqlParseException SqlParseException
      */
     private Map<String, RelNode> calculate(
-            RelNode fromNode, String toSql, Map<String, RelNode> cache) throws SqlParseException {
+            NodeRelMeta fromNodeRelMeta, String toSql, Map<String, NodeRelMeta> cache)
+            throws SqlParseException {
 
-        final RelNode toNode = getRelNode(toSql, cache);
-        if (toNode == null) {
+        long start = System.currentTimeMillis();
+        final NodeRelMeta toNodeRelMeta = getRelNode(toSql, cache);
+        localMetrics.get().addTotalSql2NodeSpend(System.currentTimeMillis() - start);
+        if (toNodeRelMeta == null || !NodeRelMeta.contains(fromNodeRelMeta, toNodeRelMeta)) {
             return null;
         }
+        start = System.currentTimeMillis();
         final ResultNodeList<RelNode> resultNodeList =
-                findAllSubNode(createNodeRelRoot(fromNode), createNodeRelRoot(toNode));
+                findAllSubNode(
+                        fromNodeRelMeta.nodeRel(),
+                        fromNodeRelMeta.leafNodes(),
+                        toNodeRelMeta.leafNodes());
+        localMetrics.get().addTotalSubSqlSpend(System.currentTimeMillis() - start);
         if (resultNodeList.isEmpty()) {
             return null;
         }
 
+        start = System.currentTimeMillis();
         Map<String, RelNode> payloadResult = new HashMap<>();
         for (ResultNode<RelNode> resultNode : resultNodeList) {
             final String viewQuery = calciteContext.toSql(resultNode.getPayload(), sqlDialect);
             payloadResult.put(viewQuery, resultNode.getPayload());
         }
+        localMetrics.get().addTotalNode2SqlSpend(System.currentTimeMillis() - start);
         return payloadResult;
     }
 
@@ -227,16 +249,21 @@ public class SqlAnalyzer {
      * @return RelNode
      * @throws SqlParseException SqlParseException
      */
-    private RelNode getRelNode(String sql, Map<String, RelNode> cache) throws SqlParseException {
+    private NodeRelMeta getRelNode(String sql, Map<String, NodeRelMeta> cache)
+            throws SqlParseException {
         if (cache.containsKey(sql)) {
             return cache.get(sql);
         }
-        RelNode relnode = null;
+        NodeRelMeta nodeRelMeta = null;
         try {
-            relnode = shuttleChain.accept(calciteContext.querySql2Rel(sql, sqlShuttles));
-            return relnode;
+            final RelNode relnode =
+                    shuttleChain.accept(calciteContext.querySql2Rel(sql, sqlShuttles));
+            if (relnode != null) {
+                nodeRelMeta = new NodeRelMeta(createNodeRelRoot(relnode));
+            }
+            return nodeRelMeta;
         } finally {
-            cache.put(sql, relnode);
+            cache.put(sql, nodeRelMeta);
         }
     }
 
@@ -255,6 +282,6 @@ public class SqlAnalyzer {
     /** CheckMode. */
     public enum CheckMode {
         SIMPLE,
-        FULL;
+        FULL
     }
 }

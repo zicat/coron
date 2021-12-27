@@ -38,6 +38,7 @@ public class SubSqlToolByQuery11Test {
                 new SqlJsonIterable("/Users/zj/Desktop/query_22.json", parser).sqlIterator();
         while (iterator.hasNext()) {
             String querySql = iterator.next();
+            System.out.println("start to check materialized view " + iterator.currentOffset());
             try {
                 if (queryTestBase.sqlFilter.filter(querySql)) {
                     continue;

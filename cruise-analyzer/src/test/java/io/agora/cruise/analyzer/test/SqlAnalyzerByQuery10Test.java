@@ -38,9 +38,9 @@ public class SqlAnalyzerByQuery10Test {
         Set<String> allMatchedView = new HashSet<>();
 
         SqlIterator iterator = new SqlJsonIterable("query_13.json", parser).sqlIterator();
-        LOG.info("start to check materialized view");
         while (iterator.hasNext()) {
             String querySql = iterator.next();
+            LOG.info("start to check materialized view " + iterator.currentOffset());
             try {
                 if (queryTestBase.sqlFilter.filter(querySql)) {
                     continue;

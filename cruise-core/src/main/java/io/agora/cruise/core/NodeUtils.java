@@ -3,13 +3,35 @@ package io.agora.cruise.core;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.RelNodeMergePlanner;
 import io.agora.cruise.core.merge.rule.*;
-import io.agora.cruise.core.rel.RelShuttleChain;
 import org.apache.calcite.rel.RelNode;
 
 import java.util.*;
 
 /** NodeUtils. */
 public class NodeUtils {
+
+    public static final List<MergeConfig> DEFAULT_MATERIALIZED_CONFIGS = new ArrayList<>();
+    public static final List<MergeConfig> DEFAULT_CONFIGS = new ArrayList<>();
+
+    static {
+        DEFAULT_MATERIALIZED_CONFIGS.add(AggregateFilterMergeRule.Config.createFrom());
+        DEFAULT_MATERIALIZED_CONFIGS.add(AggregateFilterMergeRule.Config.createTo());
+        DEFAULT_MATERIALIZED_CONFIGS.add(TableScanMergeRule.Config.create().materialized(true));
+        DEFAULT_MATERIALIZED_CONFIGS.add(ProjectMergeRule.Config.create().materialized(true));
+        DEFAULT_MATERIALIZED_CONFIGS.add(FilterMergeRule.Config.create().materialized(true));
+        DEFAULT_MATERIALIZED_CONFIGS.add(AggregateMergeRule.Config.create().materialized(true));
+        DEFAULT_MATERIALIZED_CONFIGS.add(JoinMergeRule.Config.create().materialized(true));
+        DEFAULT_MATERIALIZED_CONFIGS.add(FilterProjectMergeRule.Config.create().materialized(true));
+        DEFAULT_MATERIALIZED_CONFIGS.add(ProjectFilterMergeRule.Config.create().materialized(true));
+
+        DEFAULT_CONFIGS.add(TableScanMergeRule.Config.create().materialized(false));
+        DEFAULT_CONFIGS.add(ProjectMergeRule.Config.create().materialized(false));
+        DEFAULT_CONFIGS.add(FilterMergeRule.Config.create().materialized(false));
+        DEFAULT_CONFIGS.add(AggregateMergeRule.Config.create().materialized(false));
+        DEFAULT_CONFIGS.add(JoinMergeRule.Config.create().materialized(false));
+        DEFAULT_CONFIGS.add(FilterProjectMergeRule.Config.create().materialized(false));
+        DEFAULT_CONFIGS.add(ProjectFilterMergeRule.Config.create().materialized(false));
+    }
 
     /**
      * create node rel root.
@@ -18,20 +40,8 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot, RelNodeMergePlanner mergePlanner) {
-        return createNodeRelRoot(relRoot, mergePlanner, RelShuttleChain.empty());
-    }
-
-    /**
-     * create node rel root.
-     *
-     * @param relRoot rel root
-     * @param shuttleChain shuttleChain
-     * @return node rel
-     */
-    public static NodeRel createNodeRelRoot(
-            RelNode relRoot, RelNodeMergePlanner mergePlanner, RelShuttleChain shuttleChain) {
         final Queue<NodeRel> queue = new LinkedList<>();
-        final NodeRel nodeRoot = NodeRel.of(mergePlanner, shuttleChain.accept(relRoot));
+        final NodeRel nodeRoot = NodeRel.of(mergePlanner, relRoot);
         queue.offer(nodeRoot);
         while (!queue.isEmpty()) {
             final Node<RelNode> node = queue.poll();
@@ -50,18 +60,10 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot) {
+        if (relRoot == null) {
+            return null;
+        }
         return createNodeRelRoot(relRoot, true);
-    }
-
-    /**
-     * create node rel root.
-     *
-     * @param relRoot rel root
-     * @param shuttleChain shuttleChain
-     * @return node rel
-     */
-    public static NodeRel createNodeRelRoot(RelNode relRoot, RelShuttleChain shuttleChain) {
-        return createNodeRelRoot(relRoot, true, shuttleChain);
     }
 
     /**
@@ -72,33 +74,10 @@ public class NodeUtils {
      * @return node rel
      */
     public static NodeRel createNodeRelRoot(RelNode relRoot, boolean canMaterialized) {
-        return createNodeRelRoot(relRoot, canMaterialized, RelShuttleChain.empty());
-    }
 
-    /**
-     * create node rel root.
-     *
-     * @param relRoot rel root
-     * @param canMaterialized materialized
-     * @param shuttleChain shuttleChain
-     * @return node rel
-     */
-    public static NodeRel createNodeRelRoot(
-            RelNode relRoot, boolean canMaterialized, RelShuttleChain shuttleChain) {
-
-        final List<MergeConfig> mergeRuleConfigs = new ArrayList<>();
-        if (canMaterialized) {
-            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createFrom());
-            mergeRuleConfigs.add(AggregateFilterMergeRule.Config.createTo());
-        }
-        mergeRuleConfigs.add(TableScanMergeRule.Config.create().materialized(canMaterialized));
-        mergeRuleConfigs.add(ProjectMergeRule.Config.create().materialized(canMaterialized));
-        mergeRuleConfigs.add(FilterMergeRule.Config.create().materialized(canMaterialized));
-        mergeRuleConfigs.add(AggregateMergeRule.Config.create().materialized(canMaterialized));
-        mergeRuleConfigs.add(JoinMergeRule.Config.create().materialized(canMaterialized));
-        mergeRuleConfigs.add(FilterProjectMergeRule.Config.create().materialized(canMaterialized));
-        mergeRuleConfigs.add(ProjectFilterMergeRule.Config.create().materialized(canMaterialized));
-        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs), shuttleChain);
+        final List<MergeConfig> mergeRuleConfigs =
+                canMaterialized ? DEFAULT_MATERIALIZED_CONFIGS : DEFAULT_CONFIGS;
+        return createNodeRelRoot(relRoot, new RelNodeMergePlanner(mergeRuleConfigs));
     }
 
     /**
@@ -110,18 +89,23 @@ public class NodeUtils {
      * @return ResultNodeList
      */
     public static <T> ResultNodeList<T> findAllSubNode(Node<T> rootFrom, Node<T> rootTo) {
-
         final List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
         final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);
-        final ResultNodeList<T> resultNodes = new ResultNodeList<>();
+        return findAllSubNode(rootFrom, nodeFromLeaves, nodeToLeaves, false);
+    }
 
-        for (Node<T> fromNode : nodeToLeaves) {
-            for (Node<T> toNode : nodeFromLeaves) {
-                final ResultNode<T> resultNode = merge(rootFrom, fromNode, toNode, false);
-                resultNodes.add(resultNode);
-            }
-        }
-        return resultNodes;
+    /**
+     * find all Sub Node list.
+     *
+     * @param rootFrom rootFrom
+     * @param nodeFromLeaves nodeFromLeaves
+     * @param nodeToLeaves nodeToLeaves
+     * @param <T> payload type
+     * @return ResultNodeList
+     */
+    public static <T> ResultNodeList<T> findAllSubNode(
+            Node<T> rootFrom, List<Node<T>> nodeFromLeaves, List<Node<T>> nodeToLeaves) {
+        return findAllSubNode(rootFrom, nodeFromLeaves, nodeToLeaves, false);
     }
 
     /**
@@ -136,16 +120,43 @@ public class NodeUtils {
 
         final List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
         final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);
-
-        for (Node<T> fromNode : nodeToLeaves) {
-            for (Node<T> toNode : nodeFromLeaves) {
-                final ResultNode<T> resultNode = merge(rootFrom, fromNode, toNode, false);
+        for (Node<T> nodeFrom : nodeFromLeaves) {
+            for (Node<T> nodeTo : nodeToLeaves) {
+                final ResultNode<T> resultNode = merge(rootFrom, nodeFrom, nodeTo, false);
                 if (!resultNode.isEmpty()) {
                     return resultNode;
                 }
             }
         }
         return ResultNode.empty();
+    }
+
+    /**
+     * find all Sub Node.
+     *
+     * @param rootFrom rootFrom
+     * @param nodeFromLeaves nodeFromLeaves
+     * @param nodeToLeaves nodeToLeaves
+     * @param first is return first one
+     * @param <T> payload type
+     * @return result node
+     */
+    private static <T> ResultNodeList<T> findAllSubNode(
+            Node<T> rootFrom,
+            List<Node<T>> nodeFromLeaves,
+            List<Node<T>> nodeToLeaves,
+            boolean first) {
+        final int size = Math.min(nodeFromLeaves.size(), nodeToLeaves.size());
+        final ResultNodeList<T> resultNodes = new ResultNodeList<>(size);
+        for (int i = 0; i < size; i++) {
+            final ResultNode<T> resultNode =
+                    merge(rootFrom, nodeFromLeaves.get(i), nodeToLeaves.get(i), false);
+            resultNodes.add(resultNode);
+            if (first && !resultNodes.isEmpty()) {
+                return resultNodes;
+            }
+        }
+        return resultNodes;
     }
 
     /**
@@ -190,7 +201,7 @@ public class NodeUtils {
                 resultOffset.add(brotherMergeResult);
             }
             // size mean all brother equals, 1 mean me equal
-            if (resultOffset.size() != size + 1) {
+            if (size == -1 || resultOffset.size() != size + 1) {
                 break;
             }
             final ResultNode<T> parentResultNode = fromOffset.parentMerge(toOffset, resultOffset);
@@ -265,7 +276,7 @@ public class NodeUtils {
      * @param <T> payload
      * @return list
      */
-    private static <T> List<Node<T>> findAllFirstLeafNode(Node<T> node) {
+    public static <T> List<Node<T>> findAllFirstLeafNode(Node<T> node) {
 
         final List<Node<T>> result = new ArrayList<>();
         if (node == null) {

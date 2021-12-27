@@ -402,7 +402,7 @@ public class NodeRelGroupTest extends NodeRelTest {
         final String sql1 = "select a, sum(b), sum(c) from test_db.test_table  group by a ";
         final String sql2 = "select a, sum(c)  from test_db.test_table  group by a ";
         final String expectSql =
-                "SELECT a, SUM(c), SUM(b), SUM(c)\nFROM test_db.test_table\nGROUP BY a";
+                "SELECT a, SUM(b), SUM(c), SUM(c)\nFROM test_db.test_table\n" + "GROUP BY a";
 
         final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
         final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);

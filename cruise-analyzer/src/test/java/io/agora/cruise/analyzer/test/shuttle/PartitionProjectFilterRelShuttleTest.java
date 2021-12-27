@@ -35,7 +35,7 @@ public class PartitionProjectFilterRelShuttleTest extends FileContext {
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
+        NodeRel nodeRel1 = createNodeRelRoot(shuttleChain.accept(relNode1));
         Assert.assertEquals(expectSql, toSql(nodeRel1.getPayload()));
     }
 
@@ -52,7 +52,7 @@ public class PartitionProjectFilterRelShuttleTest extends FileContext {
         List<String> partitionFields = Collections.singletonList("date");
         RelShuttleChain shuttleChain =
                 RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
-        NodeRel nodeRel1 = createNodeRelRoot(relNode1, shuttleChain);
+        NodeRel nodeRel1 = createNodeRelRoot(shuttleChain.accept(relNode1));
         Assert.assertEquals(expectSql, toSql(nodeRel1.getPayload()));
     }
 }

@@ -39,15 +39,6 @@ public class RelShuttleChain {
     }
 
     /**
-     * empty chain.
-     *
-     * @return RelShuttleChain
-     */
-    public static RelShuttleChain empty() {
-        return new RelShuttleChain(null, null);
-    }
-
-    /**
      * translate RelNode struct by shuttles.
      *
      * @param relNode relNode

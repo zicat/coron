@@ -57,11 +57,20 @@ public class SqlAnalyzer {
     }
 
     /**
-     * start calculate.
+     * start to.
      *
-     * @return set
+     * @return map.
      */
     public Map<String, RelNode> start() {
+        return start(CheckMode.FULL);
+    }
+
+    /**
+     * start calculate.
+     *
+     * @return map
+     */
+    public Map<String, RelNode> start(CheckMode checkMode) {
 
         final Map<String, RelNode> cache = new HashMap<>();
         final Map<String, RelNode> viewQuerySet = new HashMap<>();
@@ -77,7 +86,7 @@ public class SqlAnalyzer {
                 continue;
             }
             final SqlIterator toIt = target.sqlIterator();
-            startBeginFrom(fromSql, fromIt.currentOffset(), toIt, viewQuerySet, cache);
+            startBeginFrom(fromSql, fromIt.currentOffset(), toIt, viewQuerySet, cache, checkMode);
         }
         return viewQuerySet;
     }
@@ -96,7 +105,8 @@ public class SqlAnalyzer {
             int currentFromOffset,
             SqlIterator toIt,
             Map<String, RelNode> viewQuerySet,
-            Map<String, RelNode> cache) {
+            Map<String, RelNode> cache,
+            CheckMode checkMode) {
 
         if (source == target) {
             toIt.skip(currentFromOffset);
@@ -121,6 +131,9 @@ public class SqlAnalyzer {
                 Map<String, RelNode> payloads = calculate(relNode1, toSql, cache);
                 if (payloads != null) {
                     matchResult.putAll(payloads);
+                    if (checkMode == CheckMode.SIMPLE) {
+                        break;
+                    }
                 }
             } catch (Throwable e) {
                 handler.handle(toSql, e);
@@ -237,5 +250,11 @@ public class SqlAnalyzer {
          * @param e e;
          */
         void handle(String sql, Throwable e);
+    }
+
+    /** CheckMode. */
+    public enum CheckMode {
+        SIMPLE,
+        FULL;
     }
 }

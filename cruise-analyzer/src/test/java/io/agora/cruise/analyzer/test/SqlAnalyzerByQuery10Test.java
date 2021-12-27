@@ -30,7 +30,7 @@ public class SqlAnalyzerByQuery10Test {
         SqlIterable target = new SqlJsonIterable("query_10.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlAnalyzer sqlAnalyzer = queryTestBase.createSubSqlTool(source, target);
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start();
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(SqlAnalyzer.CheckMode.FULL);
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;
@@ -38,6 +38,7 @@ public class SqlAnalyzerByQuery10Test {
         Set<String> allMatchedView = new HashSet<>();
 
         SqlIterator iterator = new SqlJsonIterable("query_13.json", parser).sqlIterator();
+        LOG.info("start to check materialized view");
         while (iterator.hasNext()) {
             String querySql = iterator.next();
             try {

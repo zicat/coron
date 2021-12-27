@@ -27,7 +27,7 @@ public class PartitionProjectFilterRelShuttleTest extends FileContext {
         String sql =
                 "select date FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21') ";
         String expectSql =
-                "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_1\n"
+                "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_280\n"
                         + "FROM report_datahub.pub_levels_quality_di_1";
 
         final RelNode relNode1 = querySql2Rel(sql, new Int2BooleanConditionShuttle());
@@ -44,7 +44,7 @@ public class PartitionProjectFilterRelShuttleTest extends FileContext {
         String sql =
                 "select date, date_parse(CAST(date AS VARCHAR), '%Y%m%d') FROM report_datahub.pub_levels_quality_di_1 WHERE date_parse(cast( date as VARCHAR), '%Y%m%d') >= DATE('2021-11-21')";
         String expectSql =
-                "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d'), date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_2\n"
+                "SELECT date, date_parse(CAST(date AS VARCHAR), '%Y%m%d'), date_parse(CAST(date AS VARCHAR), '%Y%m%d') tmp_p_280\n"
                         + "FROM report_datahub.pub_levels_quality_di_1";
 
         final RelNode relNode1 = querySql2Rel(sql, new Int2BooleanConditionShuttle());

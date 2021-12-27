@@ -1,5 +1,6 @@
 package org.apache.calcite.rel.core;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -129,16 +130,18 @@ public class AggregateCallWrapper extends AggregateCall {
      * create AggregateCallWrapper.
      *
      * @param aggregateCall aggregateCall
+     * @param newArgList newArgList
      * @return aggregateCall
      * @throws Exception Exception
      */
-    public static AggregateCall createWrapper(AggregateCall aggregateCall) throws Exception {
+    public static AggregateCall createWrapper(AggregateCall aggregateCall, List<Integer> newArgList)
+            throws Exception {
         return createWrapper(
                 aggregateCall.getAggregation(),
                 aggregateCall.isDistinct(),
                 aggregateCall.isApproximate(),
                 aggregateCall.ignoreNulls(),
-                aggregateCall.getArgList(),
+                ImmutableList.copyOf(newArgList),
                 aggregateCall.filterArg,
                 aggregateCall.distinctKeys,
                 aggregateCall.collation,

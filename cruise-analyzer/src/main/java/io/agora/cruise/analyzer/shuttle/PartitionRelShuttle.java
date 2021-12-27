@@ -1,5 +1,6 @@
 package io.agora.cruise.analyzer.shuttle;
 
+import io.agora.cruise.core.rel.RelShuttleChainException;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.PredictRexShuttle;
@@ -46,10 +47,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      * @return RelShuttleImpl[]
      */
     public static RelShuttleImpl[] partitionShuttles(List<String> partitionFields) {
-        return new RelShuttleImpl[] {
-            new PartitionProjectFilterRelShuttle(partitionFields),
-            new PartitionAggregateRelShuttle(partitionFields)
-        };
+        return new RelShuttleImpl[] {new PartitionAllRelShuttle(partitionFields)};
     }
 
     protected RexBuilder defaultRexBuilder() {
@@ -58,6 +56,37 @@ public class PartitionRelShuttle extends RelShuttleImpl {
 
     protected SqlTypeFactoryImpl defaultTypeFactory() {
         return CalciteContext.DEFAULT_SQL_TYPE_FACTORY;
+    }
+
+    /**
+     * create newId by newInput row type.
+     *
+     * @param id id
+     * @param newInput newInput
+     * @return newId
+     */
+    protected int findNewId(int id, RelNode newInput) {
+        return findNewId(id, newInput.getRowType().getFieldNames());
+    }
+
+    /**
+     * create newId by newNames.
+     *
+     * @param id id
+     * @param fieldList fieldList
+     * @return newId
+     */
+    protected int findNewId(int id, List<String> fieldList) {
+        int groupIdOffset = id;
+        int offset = 0;
+        while (offset <= groupIdOffset) {
+            String name = fieldList.get(offset);
+            if (name.startsWith(getPrefixName())) {
+                groupIdOffset++;
+            }
+            offset++;
+        }
+        return groupIdOffset;
     }
 
     /**
@@ -75,12 +104,12 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      * @param filter filter
      * @return tuple2
      */
-    protected Tuple2<RelNode, List<RexNode>> transFilterCondition(Filter filter) {
+    protected Tuple2<RelNode, List<RexNode>> transFilterCondition(Filter filter, RelNode input) {
 
         final RexNode rexNode = filter.getCondition();
         final RexNode leftExp = leftExpParser(rexNode, filter);
         if (leftExp != null) {
-            return new Tuple2<>(filter.getInput(), Collections.singletonList(leftExp));
+            return new Tuple2<>(input, Collections.singletonList(leftExp));
         }
         if (rexNode.getKind() != SqlKind.AND) {
             return null;
@@ -100,16 +129,18 @@ public class PartitionRelShuttle extends RelShuttleImpl {
         if (partitionRexNode.isEmpty()) {
             return null;
         }
+        if (partitionRexNode.size() > 1) {
+            throw new RelShuttleChainException(" only support transfer one type filter");
+        }
         if (noPartitionRexNode.isEmpty()) {
-            return new Tuple2<>(filter.getInput(), partitionRexNode);
+            return new Tuple2<>(input, partitionRexNode);
         }
         final RexNode newCondition =
                 noPartitionRexNode.size() == 1
                         ? noPartitionRexNode.get(0)
                         : andRexCall.clone(andRexCall.type, noPartitionRexNode);
         return new Tuple2<>(
-                filter.copy(filter.getTraitSet(), filter.getInput(), newCondition),
-                partitionRexNode);
+                filter.copy(filter.getTraitSet(), input, newCondition), partitionRexNode);
     }
 
     /**

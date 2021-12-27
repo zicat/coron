@@ -62,7 +62,6 @@ public class RelShuttleChain {
         RelNode result = relNode;
         do {
             if (offsetChain.shuttles != null && offsetChain.shuttles.length != 0) {
-                RelNode tmp = result;
                 for (RelShuttleImpl relShuttle : offsetChain.shuttles) {
                     try {
                         result = result.accept(relShuttle);

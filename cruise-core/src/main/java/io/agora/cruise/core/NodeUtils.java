@@ -91,21 +91,7 @@ public class NodeUtils {
     public static <T> ResultNodeList<T> findAllSubNode(Node<T> rootFrom, Node<T> rootTo) {
         final List<Node<T>> nodeFromLeaves = findAllFirstLeafNode(rootFrom);
         final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);
-        return findAllSubNode(rootFrom, nodeFromLeaves, nodeToLeaves, false);
-    }
-
-    /**
-     * find all Sub Node list.
-     *
-     * @param rootFrom rootFrom
-     * @param nodeFromLeaves nodeFromLeaves
-     * @param nodeToLeaves nodeToLeaves
-     * @param <T> payload type
-     * @return ResultNodeList
-     */
-    public static <T> ResultNodeList<T> findAllSubNode(
-            Node<T> rootFrom, List<Node<T>> nodeFromLeaves, List<Node<T>> nodeToLeaves) {
-        return findAllSubNode(rootFrom, nodeFromLeaves, nodeToLeaves, false);
+        return findAllSubNode(rootFrom, nodeFromLeaves, nodeToLeaves);
     }
 
     /**
@@ -137,24 +123,17 @@ public class NodeUtils {
      * @param rootFrom rootFrom
      * @param nodeFromLeaves nodeFromLeaves
      * @param nodeToLeaves nodeToLeaves
-     * @param first is return first one
      * @param <T> payload type
      * @return result node
      */
-    private static <T> ResultNodeList<T> findAllSubNode(
-            Node<T> rootFrom,
-            List<Node<T>> nodeFromLeaves,
-            List<Node<T>> nodeToLeaves,
-            boolean first) {
+    public static <T> ResultNodeList<T> findAllSubNode(
+            Node<T> rootFrom, List<Node<T>> nodeFromLeaves, List<Node<T>> nodeToLeaves) {
         final int size = Math.min(nodeFromLeaves.size(), nodeToLeaves.size());
         final ResultNodeList<T> resultNodes = new ResultNodeList<>(size);
         for (int i = 0; i < size; i++) {
             final ResultNode<T> resultNode =
                     merge(rootFrom, nodeFromLeaves.get(i), nodeToLeaves.get(i), false);
             resultNodes.add(resultNode);
-            if (first && !resultNodes.isEmpty()) {
-                return resultNodes;
-            }
         }
         return resultNodes;
     }

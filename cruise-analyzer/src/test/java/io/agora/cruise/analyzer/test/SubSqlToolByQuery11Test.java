@@ -27,7 +27,7 @@ public class SubSqlToolByQuery11Test {
         SqlIterable target = new SqlJsonIterable("/Users/zj/Desktop/query_21.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlAnalyzer sqlAnalyzer = queryTestBase.createSubSqlTool(source, target);
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(SqlAnalyzer.CheckMode.FULL);
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start();
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;

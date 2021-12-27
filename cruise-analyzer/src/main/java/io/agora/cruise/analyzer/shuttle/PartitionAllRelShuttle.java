@@ -104,7 +104,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
      * @return boolean contains
      */
     private List<Tuple2<RexNode, String>> getPrefixRexNode(List<RelDataTypeField> inputNames) {
-        List<Tuple2<RexNode, String>> ids = new ArrayList<>();
+        final List<Tuple2<RexNode, String>> ids = new ArrayList<>();
         for (int i = 0; i < inputNames.size(); i++) {
             RelDataTypeField field = inputNames.get(i);
             if (field.getName().startsWith(getPrefixName())) {
@@ -134,8 +134,9 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
                                 return new RexInputRef(newId, inputRef.getType());
                             }
                         });
-        RexNode leftRexNode = getFirstOnePrefixId(newLeft, 0);
-        RexNode rightRexNode = getFirstOnePrefixId(newRight, newLeft.getRowType().getFieldCount());
+        final RexNode leftRexNode = getFirstOnePrefixId(newLeft, 0);
+        final RexNode rightRexNode =
+                getFirstOnePrefixId(newRight, newLeft.getRowType().getFieldCount());
         RexNode andNode = null;
         if (leftRexNode != null && rightRexNode != null) {
             andNode =
@@ -164,7 +165,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
      */
     private RexNode getFirstOnePrefixId(RelNode relNode, int offset) {
         for (int i = 0; i < relNode.getRowType().getFieldList().size(); i++) {
-            RelDataTypeField field = relNode.getRowType().getFieldList().get(i);
+            final RelDataTypeField field = relNode.getRowType().getFieldList().get(i);
             if (field.getName().startsWith(getPrefixName())) {
                 return new RexInputRef(field.getIndex() + offset, field.getType());
             }
@@ -183,7 +184,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
         }
         final List<Integer> prefixGroupSet = new ArrayList<>();
         for (int i = 0; i < newInput.getRowType().getFieldList().size(); i++) {
-            RelDataTypeField field = newInput.getRowType().getFieldList().get(i);
+            final RelDataTypeField field = newInput.getRowType().getFieldList().get(i);
             if (field.getName().startsWith(getPrefixName())) {
                 prefixGroupSet.add(i);
             }
@@ -214,10 +215,10 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
                 Lists.merge(newOriginGroupSet, prefixGroupSet).stream()
                         .distinct()
                         .collect(Collectors.toList());
-        List<AggregateCall> newCalls = new ArrayList<>();
+        final List<AggregateCall> newCalls = new ArrayList<>();
         for (AggregateCall call : aggregate.getAggCallList()) {
             try {
-                List<Integer> newArgList =
+                final List<Integer> newArgList =
                         call.getArgList().stream()
                                 .map(id -> findNewId(id, newInput))
                                 .collect(Collectors.toList());

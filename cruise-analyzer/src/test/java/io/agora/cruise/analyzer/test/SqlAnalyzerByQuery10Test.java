@@ -30,7 +30,7 @@ public class SqlAnalyzerByQuery10Test {
         SqlIterable target = new SqlJsonIterable("query_10.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlAnalyzer sqlAnalyzer = queryTestBase.createSubSqlTool(source, target);
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(SqlAnalyzer.CheckMode.FULL);
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start();
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;

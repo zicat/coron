@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /** SqlJsonIterable. */
-public class SqlJsonIterable extends SqlIterable {
+public class SqlJsonIterable extends SqlReaderIterable {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     protected SqlJsonIterator.JsonParser parser;

@@ -3,7 +3,7 @@ package io.agora.cruise.analyzer.sql;
 import java.nio.charset.Charset;
 
 /** SqlCsvIterable. */
-public class SqlCsvIterable extends SqlIterable {
+public class SqlCsvIterable extends SqlReaderIterable {
 
     protected final SqlCsvIterator.CsvParser parser;
 

@@ -64,6 +64,7 @@ public class AggregateCallWrapper extends AggregateCall {
      * @param type Result type
      * @param name Name (may be null)
      */
+    @SuppressWarnings("deprecation")
     public AggregateCallWrapper(
             SqlAggFunction aggFunction,
             Boolean distinct,

@@ -40,7 +40,6 @@ public class SqlAnalyzerByQuery10Test {
         SqlIterator iterator = new SqlJsonIterable("query_13.json", parser).sqlIterator();
         while (iterator.hasNext()) {
             String querySql = iterator.next();
-            LOG.info("start to check materialized view " + iterator.currentOffset());
             try {
                 if (queryTestBase.sqlFilter.filter(querySql)) {
                     continue;

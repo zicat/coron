@@ -55,15 +55,15 @@ public class FileContext extends CalciteContext {
      */
     public Tuple2<Set<String>, RelNode> canMaterializedWithRelNode(
             RelNode relNode, Set<String> viewNames) {
-        RelNode optRelNode1 = materializedViewOpt(relNode);
-        Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode1);
-        Set<String> matchedView = new HashSet<>();
+        final RelNode optRelNode = materializedViewOpt(relNode);
+        final Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode);
+        final Set<String> matchedView = new HashSet<>();
         for (String opRelNode1Table : opRelNode1Tables) {
             if (viewNames.contains(opRelNode1Table)) {
                 matchedView.add(opRelNode1Table);
             }
         }
-        return Tuple2.of(matchedView, optRelNode1);
+        return Tuple2.of(matchedView, optRelNode);
     }
 
     /** init schema. */

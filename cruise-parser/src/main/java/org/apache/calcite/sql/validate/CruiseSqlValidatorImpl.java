@@ -30,6 +30,13 @@ public class CruiseSqlValidatorImpl extends SqlValidatorImpl {
 
     @Override
     public RelDataType getValidatedNodeType(SqlNode node) {
+        if (node instanceof SqlCall && ((SqlCall) node).getOperator().getKind() == SqlKind.OVER) {
+            SqlNode operand0 = ((SqlCall) node).getOperandList().get(0);
+            if (operand0 instanceof SqlCall
+                    && ((SqlCall) operand0).getOperator().getKind() == SqlKind.RANK) {
+                return sqlTypeFactory.createSqlType(SqlTypeName.BIGINT);
+            }
+        }
         if (!(node instanceof SqlIdentifier)) {
             return super.getValidatedNodeType(node);
         }

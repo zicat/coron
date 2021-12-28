@@ -4,6 +4,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.fun.SqlRegexpOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
@@ -20,6 +21,7 @@ public class FunctionUtils {
     static {
         ListSqlOperatorTable listSqlOperatorTable = new ListSqlOperatorTable();
         listSqlOperatorTable.add(new CollectionDistinct());
+        listSqlOperatorTable.add(SqlRegexpOperator.INSTANCE);
         sqlOperatorTable =
                 SqlOperatorTables.chain(listSqlOperatorTable, SqlStdOperatorTable.instance());
     }

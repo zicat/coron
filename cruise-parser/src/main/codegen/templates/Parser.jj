@@ -3722,6 +3722,8 @@ List<Object> Expression2(ExprContext exprContext) :
                         |
                             <RLIKE> { op = SqlLibraryOperators.NOT_RLIKE; }
                         |
+                            <REGEXP> { op = SqlRegexpOperator.INSTANCE; }
+                        |
                             <SIMILAR> <TO> { op = SqlStdOperatorTable.NOT_SIMILAR_TO; }
                         )
                     |
@@ -3730,6 +3732,8 @@ List<Object> Expression2(ExprContext exprContext) :
                         <ILIKE> { op = SqlLibraryOperators.ILIKE; }
                     |
                         <RLIKE> { op = SqlLibraryOperators.RLIKE; }
+                    |
+                        <REGEXP> { op = SqlRegexpOperator.INSTANCE; }
                     |
                         <SIMILAR> <TO> { op = SqlStdOperatorTable.SIMILAR_TO; }
                     )
@@ -7812,6 +7816,7 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < RETURNS: "RETURNS" >
 |   < REVOKE: "REVOKE" >
 |   < RIGHT: "RIGHT" >
+|   < REGEXP: "REGEXP" >
 |   < RLIKE: "RLIKE" >
 |   < ROLE: "ROLE" >
 |   < ROLLBACK: "ROLLBACK" >

@@ -78,4 +78,25 @@ public class SqlToRelConverterToolTest extends TestBase {
         Assert.assertNotNull(relNode);
         LOG.info(relNode.explain());
     }
+
+    @Test
+    public void testWindowRank() throws SqlParseException {
+        final String querySql =
+                "select a,c, case when b = '1' then 't' else x end as x, RANK() OVER (PARTITION BY a ORDER BY c DESC) AS highest_ver_rank"
+                        + " from test_db.test_table group by  a,c, case when b = '1' then 't' else x end";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelNode relNode = sqlNode2RelNode(sqlNode);
+        Assert.assertNotNull(relNode);
+        LOG.info(relNode.explain());
+    }
+
+    @Test
+    public void testRegexp() throws SqlParseException {
+        final String querySql = "select * from test_db.test_table WHERE b REGEXP '^[0-9]' ";
+        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final RelNode relNode = sqlNode2RelNode(sqlNode);
+        final String expectSql = "SELECT *\nFROM test_db.test_table\nWHERE b REGEXP '^[0-9]'";
+        Assert.assertNotNull(relNode);
+        Assert.assertEquals(expectSql, toSql(relNode));
+    }
 }

@@ -63,7 +63,7 @@ public class SqlAnalyzer {
      * @return Map
      */
     public Map<String, RelNode> start() {
-        return start(50);
+        return start(Runtime.getRuntime().availableProcessors());
     }
 
     /**
@@ -112,6 +112,9 @@ public class SqlAnalyzer {
                     matchResult.putAll(payloadResult);
                 }
                 findBestView(matchResult, viewQuerySet);
+                if (i % threadCount == 0) {
+                    LOG.info("current_query:{}, view_size:{}, {}", i, viewQuerySet.size(), metrics);
+                }
             }
             LOG.info("finish match, view_size:{}, {}", viewQuerySet.size(), metrics);
             return viewQuerySet;

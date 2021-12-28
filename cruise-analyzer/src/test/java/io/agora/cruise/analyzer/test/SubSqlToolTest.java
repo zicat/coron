@@ -5,6 +5,7 @@ import io.agora.cruise.analyzer.sql.SqlCsvIterable;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.core.util.Tuple2;
+import io.agora.cruise.parser.sql.shuttle.HavingCountShuttle;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 
@@ -37,7 +38,10 @@ public class SubSqlToolTest extends QueryTestBase {
                     continue;
                 }
                 final RelNode relNode =
-                        queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
+                        queryTestBase.querySql2Rel(
+                                querySql,
+                                new Int2BooleanConditionShuttle(),
+                                new HavingCountShuttle());
                 final Tuple2<Set<String>, RelNode> tuple2 =
                         queryTestBase.canMaterializedWithRelNode(relNode, viewQueryMap.keySet());
                 if (!tuple2.f0.isEmpty()) {

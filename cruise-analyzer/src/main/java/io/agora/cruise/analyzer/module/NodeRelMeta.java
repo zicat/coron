@@ -13,9 +13,17 @@ import static io.agora.cruise.core.NodeUtils.findAllFirstLeafNode;
 /** NodeRelMeta. */
 public class NodeRelMeta {
 
+    public static final NodeRelMeta EMPTY = new NodeRelMeta();
+
     private final NodeRel nodeRel;
     private final Set<String> tables;
     private final List<Node<RelNode>> leafNodes;
+
+    private NodeRelMeta() {
+        this.nodeRel = null;
+        this.tables = null;
+        this.leafNodes = null;
+    }
 
     public NodeRelMeta(NodeRel nodeRel) {
         this.nodeRel = nodeRel;

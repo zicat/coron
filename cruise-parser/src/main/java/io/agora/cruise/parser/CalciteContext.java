@@ -38,23 +38,22 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Frameworks;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
-/** CalciteContext. */
+/** CalciteContext. @ThreadSafe */
 public class CalciteContext {
 
     public static final String DEFAULT_DB_NAME = "default";
     public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY = new UTF16JavaTypeFactoryImp();
-
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     protected final SchemaPlus rootSchema;
     protected final CalciteSchema calciteSchema;
     protected final SqlTypeFactoryImpl typeFactory;
     protected final CalciteCatalogReader calciteCatalogReader;
     protected final String defaultDatabase;
     protected final Map<String, List<RelOptMaterialization>> materializationMap = new HashMap<>();
-    protected final SqlValidator sqlValidator;
-    protected final SqlToRelConverter sqlToRelConverter;
     protected final SqlOperatorTable sqlOperatorTable;
 
     public CalciteContext(String defaultDatabase) {
@@ -64,8 +63,6 @@ public class CalciteContext {
         this.calciteSchema = defaultCalciteSchema();
         this.typeFactory = defaultSqlTypeFactory();
         this.calciteCatalogReader = defaultCatalogReader();
-        this.sqlValidator = defaultValidator();
-        this.sqlToRelConverter = defaultSqlToRelConverter();
     }
 
     public CalciteContext() {
@@ -128,7 +125,7 @@ public class CalciteContext {
      *
      * @return SqlValidator
      */
-    protected SqlValidator defaultValidator() {
+    protected SqlValidator createValidator() {
         return CruiseSqlValidatorImpl.newValidator(
                 typeFactory,
                 sqlOperatorTable,
@@ -145,14 +142,14 @@ public class CalciteContext {
      *
      * @return SqlToRelConverter
      */
-    protected SqlToRelConverter defaultSqlToRelConverter() {
+    protected SqlToRelConverter createSqlToRelConverter() {
         return SqlToRelConverterTool.createSqlToRelConverter(
                 defaultRelOptPlanner(),
                 typeFactory,
                 calciteCatalogReader,
                 sqlOperatorTable,
                 rootSchema,
-                sqlValidator,
+                createValidator(),
                 null);
     }
 
@@ -211,7 +208,13 @@ public class CalciteContext {
      * @throws SqlParseException exception.
      */
     public CalciteContext addTables(String... ddlList) throws SqlParseException {
-        SchemaTool.addTableByDDL(rootSchema, sqlValidator, defaultDatabase, ddlList);
+        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            SchemaTool.addTableByDDL(rootSchema, createValidator(), defaultDatabase, ddlList);
+        } finally {
+            writeLock.unlock();
+        }
         return this;
     }
 
@@ -253,19 +256,39 @@ public class CalciteContext {
      */
     public CalciteContext addMaterializedView(String viewName, RelNode viewQueryRel) {
         final ImmutableList<String> viewPath = ImmutableList.copyOf(viewName.split("\\."));
-        SchemaTool.addTable(
-                viewPath, defaultDatabase, rootSchema, new SchemaTool.RelTable(viewQueryRel));
+        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            SchemaTool.addTable(
+                    viewPath, defaultDatabase, rootSchema, new SchemaTool.RelTable(viewQueryRel));
+        } finally {
+            writeLock.unlock();
+        }
+
         final Set<String> queryTables = TableRelShuttleImpl.tables(viewQueryRel);
-        final RelNode tableReq =
-                sqlToRelConverter.toRel(
-                        calciteCatalogReader.getTable(viewPath), Lists.newArrayList());
+        final SqlToRelConverter converter = createSqlToRelConverter();
+        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+        final RelNode tableReq;
+        readLock.lock();
+        try {
+            tableReq =
+                    converter.toRel(calciteCatalogReader.getTable(viewPath), Lists.newArrayList());
+        } finally {
+            readLock.unlock();
+        }
+
         final RelOptMaterialization materialization =
                 new RelOptMaterialization(
                         castNonNull(tableReq), castNonNull(viewQueryRel), null, viewPath);
-        for (String queryTable : queryTables) {
-            List<RelOptMaterialization> viewList =
-                    materializationMap.computeIfAbsent(queryTable, k -> new ArrayList<>());
-            viewList.add(materialization);
+        writeLock.lock();
+        try {
+            for (String queryTable : queryTables) {
+                List<RelOptMaterialization> viewList =
+                        materializationMap.computeIfAbsent(queryTable, k -> new ArrayList<>());
+                viewList.add(materialization);
+            }
+        } finally {
+            writeLock.unlock();
         }
         return this;
     }
@@ -279,14 +302,20 @@ public class CalciteContext {
     public RelNode materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
         final HepPlanner materializedHepPlanner = createMaterializedHepPlanner();
-        for (String table : tables) {
-            final List<RelOptMaterialization> matchResult = materializationMap.get(table);
-            if (matchResult != null) {
-                matchResult.forEach(materializedHepPlanner::addMaterialization);
+        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            for (String table : tables) {
+                final List<RelOptMaterialization> matchResult = materializationMap.get(table);
+                if (matchResult != null) {
+                    matchResult.forEach(materializedHepPlanner::addMaterialization);
+                }
             }
+            materializedHepPlanner.setRoot(relNode);
+            return materializedHepPlanner.findBestExp();
+        } finally {
+            readLock.unlock();
         }
-        materializedHepPlanner.setRoot(relNode);
-        return materializedHepPlanner.findBestExp();
     }
 
     /**
@@ -297,7 +326,13 @@ public class CalciteContext {
      * @return CalciteContext
      */
     public CalciteContext addFunction(String name, Function function) {
-        rootSchema.add(name, function);
+        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            rootSchema.add(name, function);
+        } finally {
+            writeLock.unlock();
+        }
         return this;
     }
 
@@ -308,10 +343,17 @@ public class CalciteContext {
      * @return relNode
      */
     public RelNode sqlNode2RelNode(SqlNode sqlNode) {
-        final RelRoot viewQueryRoot = sqlToRelConverter.convertQuery(sqlNode, true, true);
-        final RelOptPlanner planner = viewQueryRoot.rel.getCluster().getPlanner();
-        planner.setRoot(viewQueryRoot.rel);
-        return planner.findBestExp();
+        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+        final SqlToRelConverter converter = createSqlToRelConverter();
+        readLock.lock();
+        try {
+            final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
+            final RelOptPlanner planner = defaultRelOptPlanner();
+            planner.setRoot(viewQueryRoot.rel);
+            return planner.findBestExp();
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**

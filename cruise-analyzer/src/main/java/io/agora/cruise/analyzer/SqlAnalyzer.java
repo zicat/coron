@@ -33,30 +33,24 @@ public class SqlAnalyzer {
 
     protected final SqlIterable source;
     protected final SqlIterable target;
-    protected final RelShuttleChain shuttleChain;
     protected final SqlFilter sqlFilter;
     protected final CalciteContext calciteContext;
-    protected final SqlShuttle[] sqlShuttles;
     protected final ExceptionHandler handler;
     protected final SqlDialect sqlDialect;
 
     public SqlAnalyzer(
             SqlIterable source,
             SqlIterable target,
-            RelShuttleChain shuttleChain,
             SqlFilter sqlFilter,
             ExceptionHandler handler,
             CalciteContext calciteContext,
-            SqlDialect sqlDialect,
-            SqlShuttle... sqlShuttles) {
+            SqlDialect sqlDialect) {
         this.source = source;
         this.target = target;
-        this.shuttleChain = shuttleChain;
         this.sqlFilter = sqlFilter;
         this.handler = handler;
         this.calciteContext = calciteContext;
         this.sqlDialect = sqlDialect;
-        this.sqlShuttles = sqlShuttles;
     }
 
     /**
@@ -285,7 +279,8 @@ public class SqlAnalyzer {
         try {
 
             final RelNode relnode =
-                    shuttleChain.accept(calciteContext.querySql2Rel(sql, sqlShuttles));
+                    createShuttleChain()
+                            .accept(calciteContext.querySql2Rel(sql, createSqlShuttle()));
             if (relnode != null) {
                 nodeRelMeta = new NodeRelMeta(createNodeRelRoot(relnode));
             }
@@ -296,6 +291,24 @@ public class SqlAnalyzer {
         }
         metrics.addTotalSql2NodeSpend(System.currentTimeMillis() - start);
         return nodeRelMeta;
+    }
+
+    /**
+     * create Sql Shuttle.
+     *
+     * @return SqlShuttle[]
+     */
+    protected SqlShuttle[] createSqlShuttle() {
+        return null;
+    }
+
+    /**
+     * create shuttle Chain.
+     *
+     * @return RelShuttleChain.
+     */
+    protected RelShuttleChain createShuttleChain() {
+        return RelShuttleChain.empty();
     }
 
     /** ExceptionHandler. */

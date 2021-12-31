@@ -2,7 +2,6 @@ package io.agora.cruise.analyzer.test;
 
 import io.agora.cruise.analyzer.FileContext;
 import io.agora.cruise.analyzer.SqlAnalyzer;
-import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
@@ -14,12 +13,10 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import java.util.Collections;
 import java.util.List;
 
+import static io.agora.cruise.analyzer.shuttle.PartitionRelShuttle.partitionShuttles;
+
 /** QueryTestBase. */
 public class QueryTestBase extends FileContext {
-
-    protected List<String> partitionFields = Collections.singletonList("date");
-    protected RelShuttleChain shuttleChain =
-            RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
 
     protected SqlFilter sqlFilter =
             sql ->
@@ -27,8 +24,6 @@ public class QueryTestBase extends FileContext {
                             || sql.contains("system.runtime")
                             || sql.toUpperCase().startsWith("SHOW ")
                             || sql.contains("levels_usage_dod_di_11");
-    protected SqlShuttle[] sqlShuttles =
-            new SqlShuttle[] {new Int2BooleanConditionShuttle(), new HavingCountShuttle()};
     protected SqlAnalyzer.ExceptionHandler exceptionHandler =
             (sql, e) -> {
                 String eString = e.toString();
@@ -55,13 +50,18 @@ public class QueryTestBase extends FileContext {
      */
     public SqlAnalyzer createSubSqlTool(SqlIterable source, SqlIterable target) {
         return new SqlAnalyzer(
-                source,
-                target,
-                shuttleChain,
-                sqlFilter,
-                exceptionHandler,
-                this,
-                PrestoDialect.DEFAULT,
-                sqlShuttles);
+                source, target, sqlFilter, exceptionHandler, this, PrestoDialect.DEFAULT) {
+
+            protected RelShuttleChain createShuttleChain() {
+                List<String> partitionFields = Collections.singletonList("date");
+                return RelShuttleChain.of(partitionShuttles(partitionFields));
+            }
+
+            protected SqlShuttle[] createSqlShuttle() {
+                return new SqlShuttle[] {
+                    new Int2BooleanConditionShuttle(), new HavingCountShuttle()
+                };
+            }
+        };
     }
 }

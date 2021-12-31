@@ -18,6 +18,10 @@ public class RelShuttleChain {
         this.nextChain = nextChain;
     }
 
+    public static RelShuttleChain empty() {
+        return new RelShuttleChain(null, null);
+    }
+
     /**
      * create RelShuttleChain.
      *

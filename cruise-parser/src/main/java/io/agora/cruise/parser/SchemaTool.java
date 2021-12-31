@@ -36,7 +36,7 @@ public class SchemaTool {
      * @param ddlList dbList
      * @throws SqlParseException SqlParseException
      */
-    public static void addTableByDDL(
+    public static SchemaPlus addTableByDDL(
             SchemaPlus rootSchema, SqlValidator validator, String defaultDBName, String... ddlList)
             throws SqlParseException {
 
@@ -55,6 +55,7 @@ public class SchemaTool {
                     rootSchema,
                     createColumnTable(createTable.columnList, validator));
         }
+        return rootSchema;
     }
 
     /**

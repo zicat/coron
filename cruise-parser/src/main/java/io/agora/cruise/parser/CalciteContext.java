@@ -38,6 +38,7 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Frameworks;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
@@ -45,6 +46,7 @@ import static org.apache.calcite.linq4j.Nullness.castNonNull;
 /** CalciteContext. @ThreadSafe */
 public class CalciteContext {
 
+    private static final Object VOID = new Object();
     public static final String DEFAULT_DB_NAME = "default";
     public static final SqlTypeFactoryImpl DEFAULT_SQL_TYPE_FACTORY = new UTF16JavaTypeFactoryImp();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
@@ -205,16 +207,12 @@ public class CalciteContext {
      *
      * @param ddlList ddl list
      * @return this
-     * @throws SqlParseException exception.
      */
-    public CalciteContext addTables(String... ddlList) throws SqlParseException {
-        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
-        writeLock.lock();
-        try {
-            SchemaTool.addTableByDDL(rootSchema, createValidator(), defaultDatabase, ddlList);
-        } finally {
-            writeLock.unlock();
-        }
+    public CalciteContext addTables(String... ddlList) {
+        writeLock(
+                () ->
+                        SchemaTool.addTableByDDL(
+                                rootSchema, createValidator(), defaultDatabase, ddlList));
         return this;
     }
 
@@ -256,40 +254,37 @@ public class CalciteContext {
      */
     public CalciteContext addMaterializedView(String viewName, RelNode viewQueryRel) {
         final ImmutableList<String> viewPath = ImmutableList.copyOf(viewName.split("\\."));
-        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
-        writeLock.lock();
-        try {
-            SchemaTool.addTable(
-                    viewPath, defaultDatabase, rootSchema, new SchemaTool.RelTable(viewQueryRel));
-        } finally {
-            writeLock.unlock();
-        }
+        writeLock(
+                () ->
+                        SchemaTool.addTable(
+                                viewPath,
+                                defaultDatabase,
+                                rootSchema,
+                                new SchemaTool.RelTable(viewQueryRel)));
 
         final Set<String> queryTables = TableRelShuttleImpl.tables(viewQueryRel);
         final SqlToRelConverter converter = createSqlToRelConverter();
-        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
-        final RelNode tableReq;
-        readLock.lock();
-        try {
-            tableReq =
-                    converter.toRel(calciteCatalogReader.getTable(viewPath), Lists.newArrayList());
-        } finally {
-            readLock.unlock();
-        }
+
+        final RelNode tableReq =
+                readLock(
+                        () ->
+                                converter.toRel(
+                                        calciteCatalogReader.getTable(viewPath),
+                                        Lists.newArrayList()));
 
         final RelOptMaterialization materialization =
                 new RelOptMaterialization(
                         castNonNull(tableReq), castNonNull(viewQueryRel), null, viewPath);
-        writeLock.lock();
-        try {
-            for (String queryTable : queryTables) {
-                List<RelOptMaterialization> viewList =
-                        materializationMap.computeIfAbsent(queryTable, k -> new ArrayList<>());
-                viewList.add(materialization);
-            }
-        } finally {
-            writeLock.unlock();
-        }
+        writeLock(
+                () -> {
+                    for (String queryTable : queryTables) {
+                        List<RelOptMaterialization> viewList =
+                                materializationMap.computeIfAbsent(
+                                        queryTable, k -> new ArrayList<>());
+                        viewList.add(materialization);
+                    }
+                    return VOID;
+                });
         return this;
     }
 
@@ -302,20 +297,18 @@ public class CalciteContext {
     public RelNode materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
         final HepPlanner materializedHepPlanner = createMaterializedHepPlanner();
-        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            for (String table : tables) {
-                final List<RelOptMaterialization> matchResult = materializationMap.get(table);
-                if (matchResult != null) {
-                    matchResult.forEach(materializedHepPlanner::addMaterialization);
-                }
-            }
-            materializedHepPlanner.setRoot(relNode);
-            return materializedHepPlanner.findBestExp();
-        } finally {
-            readLock.unlock();
-        }
+        return readLock(
+                () -> {
+                    for (String table : tables) {
+                        final List<RelOptMaterialization> matchResult =
+                                materializationMap.get(table);
+                        if (matchResult != null) {
+                            matchResult.forEach(materializedHepPlanner::addMaterialization);
+                        }
+                    }
+                    materializedHepPlanner.setRoot(relNode);
+                    return materializedHepPlanner.findBestExp();
+                });
     }
 
     /**
@@ -326,13 +319,11 @@ public class CalciteContext {
      * @return CalciteContext
      */
     public CalciteContext addFunction(String name, Function function) {
-        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
-        writeLock.lock();
-        try {
-            rootSchema.add(name, function);
-        } finally {
-            writeLock.unlock();
-        }
+        writeLock(
+                () -> {
+                    rootSchema.add(name, function);
+                    return VOID;
+                });
         return this;
     }
 
@@ -343,17 +334,14 @@ public class CalciteContext {
      * @return relNode
      */
     public RelNode sqlNode2RelNode(SqlNode sqlNode) {
-        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
         final SqlToRelConverter converter = createSqlToRelConverter();
-        readLock.lock();
-        try {
-            final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
-            final RelOptPlanner planner = defaultRelOptPlanner();
-            planner.setRoot(viewQueryRoot.rel);
-            return planner.findBestExp();
-        } finally {
-            readLock.unlock();
-        }
+        return readLock(
+                () -> {
+                    final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
+                    final RelOptPlanner planner = defaultRelOptPlanner();
+                    planner.setRoot(viewQueryRoot.rel);
+                    return planner.findBestExp();
+                });
     }
 
     /**
@@ -418,5 +406,40 @@ public class CalciteContext {
         final RelToSqlConverter relToSqlConverter =
                 new JdbcImplementor(sqlDialect, new UTF16JavaTypeFactoryImp());
         return relToSqlConverter.visitRoot(relNode).asQueryOrValues();
+    }
+
+    /**
+     * writeLock Function.
+     *
+     * @param functionHandler functionHandler
+     */
+    private <T> void writeLock(FunctionHandler<T> functionHandler) {
+        lock(functionHandler, lock.writeLock());
+    }
+
+    /**
+     * readLock Function.
+     *
+     * @param functionHandler functionHandler
+     */
+    private <T> T readLock(FunctionHandler<T> functionHandler) {
+        return lock(functionHandler, lock.readLock());
+    }
+
+    /**
+     * lock function.
+     *
+     * @param functionHandler functionHandler
+     * @param lock lock
+     */
+    private <T> T lock(FunctionHandler<T> functionHandler, Lock lock) {
+        lock.lock();
+        try {
+            return functionHandler.apply();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            lock.unlock();
+        }
     }
 }

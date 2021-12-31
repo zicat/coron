@@ -6,7 +6,6 @@ import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.core.rel.RelShuttleChain;
-import io.agora.cruise.parser.sql.shuttle.HavingCountShuttle;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.sql.util.SqlShuttle;
 
@@ -58,9 +57,7 @@ public class QueryTestBase extends FileContext {
             }
 
             protected SqlShuttle[] createSqlShuttle() {
-                return new SqlShuttle[] {
-                    new Int2BooleanConditionShuttle(), new HavingCountShuttle()
-                };
+                return new SqlShuttle[] {new Int2BooleanConditionShuttle()};
             }
         };
     }

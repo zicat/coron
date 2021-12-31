@@ -172,6 +172,42 @@ public class PartitionRelShuttle extends RelShuttleImpl {
                 : null;
     }
 
+    /**
+     * create newCondition mapping with newInput.
+     *
+     * @param rexNode rexNode
+     * @param newInput newInput
+     * @return RexNode
+     */
+    protected RexNode newCondition(RexNode rexNode, RelNode newInput) {
+        return rexNode.accept(
+                new RexShuttle() {
+                    @Override
+                    public RexNode visitInputRef(RexInputRef inputRef) {
+                        int newId = findNewId(inputRef.getIndex(), newInput);
+                        return new RexInputRef(newId, inputRef.getType());
+                    }
+                });
+    }
+
+    /**
+     * create newCondition mapping with newFieldList.
+     *
+     * @param rexNode rexNode
+     * @param fieldList newInput
+     * @return RexNode
+     */
+    protected RexNode newCondition(RexNode rexNode, List<String> fieldList) {
+        return rexNode.accept(
+                new RexShuttle() {
+                    @Override
+                    public RexNode visitInputRef(RexInputRef inputRef) {
+                        int newId = findNewId(inputRef.getIndex(), fieldList);
+                        return new RexInputRef(newId, inputRef.getType());
+                    }
+                });
+    }
+
     /** PartitionFieldFounder. */
     private static class PartitionFieldFounder extends RexShuttle {
 

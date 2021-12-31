@@ -7,13 +7,6 @@ import java.util.Iterator;
 public interface SqlIterator extends Iterator<String>, Closeable {
 
     /**
-     * skip i sql.
-     *
-     * @param i i
-     */
-    void skip(int i);
-
-    /**
      * get current offset.
      *
      * @return offset

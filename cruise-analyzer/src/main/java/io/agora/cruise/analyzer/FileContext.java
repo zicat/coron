@@ -6,7 +6,6 @@ import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
-import org.apache.calcite.sql.parser.SqlParseException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -81,9 +80,8 @@ public class FileContext extends CalciteContext {
      * parser ddl query.
      *
      * @param ddl ddl
-     * @throws SqlParseException SqlParseException
      */
-    private void addTable(String ddl) throws SqlParseException {
+    private void addTable(String ddl) {
         ddl = ddl.trim();
         if (ddl.isEmpty()) {
             return;

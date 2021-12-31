@@ -16,7 +16,6 @@ import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -42,7 +41,8 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
         final RelNode newInput = filter.getInput().accept(this);
         final Tuple2<RelNode, List<RexNode>> tuple = transFilterCondition(filter, newInput);
         if (tuple == null) {
-            return filter.copy(filter.getTraitSet(), newInput, filter.getCondition());
+            final RexNode newCondition = newCondition(filter.getCondition(), newInput);
+            return filter.copy(filter.getTraitSet(), newInput, newCondition);
         }
 
         final List<RelDataTypeField> newRelTypeFields =
@@ -73,15 +73,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
         final List<Tuple2<RexNode, String>> prefixProjects = getPrefixRexNode(inputNames);
         final List<RexNode> newProjects = new ArrayList<>();
         for (RexNode function : project.getProjects()) {
-            newProjects.add(
-                    function.accept(
-                            new RexShuttle() {
-                                @Override
-                                public RexNode visitInputRef(RexInputRef inputRef) {
-                                    int newId = findNewId(inputRef.getIndex(), newInput);
-                                    return new RexInputRef(newId, inputRef.getType());
-                                }
-                            }));
+            newProjects.add(newCondition(function, newInput));
         }
 
         final List<RelDataTypeField> newRelTypeFields =
@@ -120,20 +112,11 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
         final RelNode newLeft = join.getLeft().accept(this);
         final RelNode newRight = join.getRight().accept(this);
         final RexNode condition = join.getCondition();
-
         final List<String> allNames =
                 Lists.merge(
                         newLeft.getRowType().getFieldNames(),
                         newRight.getRowType().getFieldNames());
-        final RexNode newIndexCondition =
-                condition.accept(
-                        new RexShuttle() {
-                            @Override
-                            public RexNode visitInputRef(RexInputRef inputRef) {
-                                int newId = findNewId(inputRef.getIndex(), allNames);
-                                return new RexInputRef(newId, inputRef.getType());
-                            }
-                        });
+        final RexNode newIndexCondition = newCondition(condition, allNames);
         final RexNode leftRexNode = getFirstOnePrefixId(newLeft, 0);
         final RexNode rightRexNode =
                 getFirstOnePrefixId(newRight, newLeft.getRowType().getFieldCount());

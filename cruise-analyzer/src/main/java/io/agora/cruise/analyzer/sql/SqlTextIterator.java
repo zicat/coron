@@ -14,7 +14,7 @@ public class SqlTextIterator extends BasicSqlIterator {
     private static final Logger LOG = LoggerFactory.getLogger(SqlJsonIterator.class);
 
     private int i = 0;
-    private final BufferedReader br;
+    private BufferedReader br;
     private String line;
 
     public SqlTextIterator(Reader reader) {
@@ -33,7 +33,10 @@ public class SqlTextIterator extends BasicSqlIterator {
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(br);
+        if (br != null) {
+            IOUtils.closeQuietly(br);
+            br = null;
+        }
     }
 
     @Override
@@ -49,8 +52,7 @@ public class SqlTextIterator extends BasicSqlIterator {
             line = br.readLine();
         } catch (IOException e) {
             LOG.error("read text error", e);
-            line = null;
-            close();
+            IOUtils.closeQuietly(this);
         }
         return result;
     }

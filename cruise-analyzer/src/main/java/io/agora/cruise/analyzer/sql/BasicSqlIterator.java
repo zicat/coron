@@ -15,12 +15,4 @@ public abstract class BasicSqlIterator implements SqlIterator {
         }
         return hasNext;
     }
-
-    @Override
-    public void skip(int i) {
-        while (i != 0 && hasNext()) {
-            next();
-            i--;
-        }
-    }
 }

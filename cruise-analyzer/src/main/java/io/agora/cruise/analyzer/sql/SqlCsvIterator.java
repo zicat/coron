@@ -12,15 +12,12 @@ public class SqlCsvIterator extends BasicSqlIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlCsvIterator.class);
 
-    protected final Reader reader;
-    protected final CsvReader csvReader;
+    protected CsvReader csvReader;
     protected final CsvParser parser;
     protected int i = 0;
 
     public SqlCsvIterator(Reader reader, CsvParser parser) {
-        this.reader = reader;
         this.parser = parser;
-
         CsvReader tmpReader = null;
         try {
             tmpReader = new CsvReader(reader);
@@ -50,6 +47,7 @@ public class SqlCsvIterator extends BasicSqlIterator {
     public void close() {
         if (csvReader != null) {
             csvReader.close();
+            csvReader = null;
         }
     }
 

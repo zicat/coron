@@ -120,20 +120,18 @@ public class SqlAnalyzer {
             Metrics metrics,
             Map<String, RelNode> matchResult) {
         for (Future<ResultNodeList<RelNode>> future : fs) {
-            final Map<String, RelNode> payloadResult = new TreeMap<>();
             try {
                 final ResultNodeList<RelNode> resultNodeList = future.get();
                 final long start = System.currentTimeMillis();
                 for (ResultNode<RelNode> resultNode : resultNodeList) {
                     final String viewQuery =
                             calciteContext.toSql(resultNode.getPayload(), sqlDialect);
-                    payloadResult.put(viewQuery, resultNode.getPayload());
+                    matchResult.put(viewQuery, resultNode.getPayload());
                 }
                 metrics.addTotalNode2SqlSpend(System.currentTimeMillis() - start);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-            matchResult.putAll(payloadResult);
         }
         fs.clear();
     }
@@ -214,11 +212,11 @@ public class SqlAnalyzer {
         final Set<Integer> deepLadder = new TreeSet<>();
         final Map<String, RelNode> bestSqlMap = new TreeMap<>();
         for (Map.Entry<String, RelNode> entry : payloads.entrySet()) {
-            final String viewSql = entry.getKey();
-            final RelNode viewRelNode = entry.getValue();
-            if (!viewSql.contains("WHERE ") || viewQuerySet.containsKey(viewSql)) {
+            if (filterView(entry, viewQuerySet)) {
                 continue;
             }
+            final String viewSql = entry.getKey();
+            final RelNode viewRelNode = entry.getValue();
             final int deep = NodeUtils.deep(viewRelNode);
             if (!deepLadder.contains(deep) && !bestSqlMap.containsKey(viewSql)) {
                 deepLadder.add(deep);
@@ -228,6 +226,18 @@ public class SqlAnalyzer {
         for (Map.Entry<String, RelNode> bestSql : bestSqlMap.entrySet()) {
             viewQuerySet.put(viewName(viewQuerySet.size()), bestSql.getValue());
         }
+    }
+
+    /**
+     * filter view by viewSql.
+     *
+     * @param entry viewSql, ViewNode
+     * @param viewQuerySet viewQuerySet
+     * @return return true if filter
+     */
+    protected boolean filterView(
+            Map.Entry<String, RelNode> entry, Map<String, RelNode> viewQuerySet) {
+        return !entry.getKey().contains("WHERE ") || viewQuerySet.containsKey(entry.getKey());
     }
 
     /**
@@ -277,12 +287,10 @@ public class SqlAnalyzer {
         NodeRelMeta nodeRelMeta = EMPTY;
         final long start = System.currentTimeMillis();
         try {
-
-            final RelNode relnode =
-                    createShuttleChain()
-                            .accept(calciteContext.querySql2Rel(sql, createSqlShuttle()));
-            if (relnode != null) {
-                nodeRelMeta = new NodeRelMeta(createNodeRelRoot(relnode));
+            final RelNode relNode = calciteContext.querySql2Rel(sql, createSqlShuttle(sql));
+            final RelNode chainedRelNode = createShuttleChain(relNode).accept(relNode);
+            if (chainedRelNode != null) {
+                nodeRelMeta = new NodeRelMeta(createNodeRelRoot(chainedRelNode));
             }
         } catch (Exception e) {
             handler.handle(sql, e);
@@ -298,7 +306,7 @@ public class SqlAnalyzer {
      *
      * @return SqlShuttle[]
      */
-    protected SqlShuttle[] createSqlShuttle() {
+    protected SqlShuttle[] createSqlShuttle(String sql) {
         return null;
     }
 
@@ -307,7 +315,7 @@ public class SqlAnalyzer {
      *
      * @return RelShuttleChain.
      */
-    protected RelShuttleChain createShuttleChain() {
+    protected RelShuttleChain createShuttleChain(RelNode relNode) {
         return RelShuttleChain.empty();
     }
 

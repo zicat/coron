@@ -264,7 +264,6 @@ public class CalciteContext {
 
         final Set<String> queryTables = TableRelShuttleImpl.tables(viewQueryRel);
         final SqlToRelConverter converter = createSqlToRelConverter();
-
         final RelNode tableReq =
                 readLock(
                         () ->
@@ -297,7 +296,7 @@ public class CalciteContext {
     public RelNode materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
         final HepPlanner materializedHepPlanner = createMaterializedHepPlanner();
-        return readLock(
+        readLock(
                 () -> {
                     for (String table : tables) {
                         final List<RelOptMaterialization> matchResult =
@@ -306,6 +305,10 @@ public class CalciteContext {
                             matchResult.forEach(materializedHepPlanner::addMaterialization);
                         }
                     }
+                    return VOID;
+                });
+        return writeLock(
+                () -> {
                     materializedHepPlanner.setRoot(relNode);
                     return materializedHepPlanner.findBestExp();
                 });
@@ -335,10 +338,10 @@ public class CalciteContext {
      */
     public RelNode sqlNode2RelNode(SqlNode sqlNode) {
         final SqlToRelConverter converter = createSqlToRelConverter();
-        return readLock(
+        final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
+        final RelOptPlanner planner = defaultRelOptPlanner();
+        return writeLock(
                 () -> {
-                    final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
-                    final RelOptPlanner planner = defaultRelOptPlanner();
                     planner.setRoot(viewQueryRoot.rel);
                     return planner.findBestExp();
                 });
@@ -413,8 +416,8 @@ public class CalciteContext {
      *
      * @param functionHandler functionHandler
      */
-    private <T> void writeLock(FunctionHandler<T> functionHandler) {
-        lock(functionHandler, lock.writeLock());
+    protected final <T> T writeLock(FunctionHandler<T> functionHandler) {
+        return lock(functionHandler, lock.writeLock());
     }
 
     /**
@@ -422,7 +425,7 @@ public class CalciteContext {
      *
      * @param functionHandler functionHandler
      */
-    private <T> T readLock(FunctionHandler<T> functionHandler) {
+    protected final <T> T readLock(FunctionHandler<T> functionHandler) {
         return lock(functionHandler, lock.readLock());
     }
 
@@ -432,7 +435,7 @@ public class CalciteContext {
      * @param functionHandler functionHandler
      * @param lock lock
      */
-    private <T> T lock(FunctionHandler<T> functionHandler, Lock lock) {
+    protected final <T> T lock(FunctionHandler<T> functionHandler, Lock lock) {
         lock.lock();
         try {
             return functionHandler.apply();

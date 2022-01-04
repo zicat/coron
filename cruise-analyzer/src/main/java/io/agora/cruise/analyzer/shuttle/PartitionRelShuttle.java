@@ -77,16 +77,16 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      * @return newId
      */
     protected int findNewId(int id, List<String> fieldList) {
-        int groupIdOffset = id;
-        int offset = 0;
-        while (offset <= groupIdOffset) {
-            String name = fieldList.get(offset);
+        int idOffset = id;
+        int start = 0;
+        while (start <= idOffset) {
+            String name = fieldList.get(start);
             if (name.startsWith(getPrefixName())) {
-                groupIdOffset++;
+                idOffset++;
             }
-            offset++;
+            start++;
         }
-        return groupIdOffset;
+        return idOffset;
     }
 
     /**
@@ -130,7 +130,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
             return null;
         }
         if (partitionRexNode.size() > 1) {
-            throw new RelShuttleChainException(" only support transfer one type filter");
+            throw new RelShuttleChainException("only support transfer one type filter");
         }
         if (noPartitionRexNode.isEmpty()) {
             return new Tuple2<>(input, partitionRexNode);
@@ -152,24 +152,29 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      */
     private RexNode leftExpParser(RexNode rexNode, Filter filter) {
 
-        if (!COMPARE_KIND.contains(rexNode.getKind())) {
+        if (!containsCompareKind(rexNode)) {
             return null;
         }
         final RexCall functionCall = (RexCall) rexNode;
         final RexNode leftExp = functionCall.getOperands().get(0);
         final RelDataType relDataType = filter.getInput().getRowType();
-        boolean rightNotContain = true;
         for (int i = 1; i < functionCall.getOperands().size(); i++) {
             final RexNode rightRexNode = functionCall.getOperands().get(i);
             if (!PredictRexShuttle.predicts(rightRexNode).isEmpty()) {
-                rightNotContain = false;
-                break;
+                return null;
             }
         }
-        return PartitionFieldFounder.contains(leftExp, relDataType, partitionFields)
-                        && rightNotContain
-                ? leftExp
-                : null;
+        return PartitionFieldFounder.contains(leftExp, relDataType, partitionFields);
+    }
+
+    /**
+     * check rexNode kind in compare kind.
+     *
+     * @param rexNode rexNode
+     * @return boolean contains
+     */
+    protected boolean containsCompareKind(RexNode rexNode) {
+        return COMPARE_KIND.contains(rexNode.getKind());
     }
 
     /**
@@ -180,14 +185,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      * @return RexNode
      */
     protected RexNode newCondition(RexNode rexNode, RelNode newInput) {
-        return rexNode.accept(
-                new RexShuttle() {
-                    @Override
-                    public RexNode visitInputRef(RexInputRef inputRef) {
-                        int newId = findNewId(inputRef.getIndex(), newInput);
-                        return new RexInputRef(newId, inputRef.getType());
-                    }
-                });
+        return newCondition(rexNode, newInput.getRowType().getFieldNames());
     }
 
     /**
@@ -234,15 +232,15 @@ public class PartitionRelShuttle extends RelShuttleImpl {
          * @param rexNode reNode
          * @param relDataType relDataType
          * @param partitionFields partitionFields
-         * @return true if contains
+         * @return rexNode if contains else null
          */
-        public static boolean contains(
+        public static RexNode contains(
                 RexNode rexNode, RelDataType relDataType, List<String> partitionFields) {
 
             final PartitionFieldFounder fieldFounder =
                     new PartitionFieldFounder(relDataType, partitionFields);
             rexNode.accept(fieldFounder);
-            return fieldFounder.contains.get();
+            return fieldFounder.contains.get() ? rexNode : null;
         }
     }
 }

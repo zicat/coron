@@ -7,6 +7,7 @@ import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import java.util.Collections;
@@ -51,12 +52,14 @@ public class QueryTestBase extends FileContext {
         return new SqlAnalyzer(
                 source, target, sqlFilter, exceptionHandler, this, PrestoDialect.DEFAULT) {
 
-            protected RelShuttleChain createShuttleChain() {
+            @Override
+            protected RelShuttleChain createShuttleChain(RelNode relNode) {
                 List<String> partitionFields = Collections.singletonList("date");
                 return RelShuttleChain.of(partitionShuttles(partitionFields));
             }
 
-            protected SqlShuttle[] createSqlShuttle() {
+            @Override
+            protected SqlShuttle[] createSqlShuttle(String sql) {
                 return new SqlShuttle[] {new Int2BooleanConditionShuttle()};
             }
         };

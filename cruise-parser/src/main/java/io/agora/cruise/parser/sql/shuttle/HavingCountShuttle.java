@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 /** HavingCountShuttle. remove having count(1|*) > 0 */
+@Deprecated
 public class HavingCountShuttle extends SqlShuttle {
 
     @Override

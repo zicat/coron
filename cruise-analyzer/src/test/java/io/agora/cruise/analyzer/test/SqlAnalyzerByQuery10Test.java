@@ -29,8 +29,8 @@ public class SqlAnalyzerByQuery10Test {
         SqlIterable source = new SqlJsonIterable("query_11.json", parser);
         SqlIterable target = new SqlJsonIterable("query_10.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
-        SqlAnalyzer sqlAnalyzer = queryTestBase.createSubSqlTool(source, target);
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start();
+        SqlAnalyzer sqlAnalyzer = queryTestBase.createSqlAnalyzer();
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(source, target);
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;

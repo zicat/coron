@@ -1,5 +1,6 @@
 package io.agora.cruise.analyzer;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.agora.cruise.analyzer.metrics.Metrics;
 import io.agora.cruise.analyzer.module.NodeRelMeta;
 import io.agora.cruise.analyzer.sql.SqlFilter;
@@ -31,22 +32,16 @@ public class SqlAnalyzer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzer.class);
 
-    protected final SqlIterable source;
-    protected final SqlIterable target;
     protected final SqlFilter sqlFilter;
     protected final CalciteContext calciteContext;
     protected final ExceptionHandler handler;
     protected final SqlDialect sqlDialect;
 
     public SqlAnalyzer(
-            SqlIterable source,
-            SqlIterable target,
             SqlFilter sqlFilter,
             ExceptionHandler handler,
             CalciteContext calciteContext,
             SqlDialect sqlDialect) {
-        this.source = source;
-        this.target = target;
         this.sqlFilter = sqlFilter;
         this.handler = handler;
         this.calciteContext = calciteContext;
@@ -58,8 +53,8 @@ public class SqlAnalyzer {
      *
      * @return Map
      */
-    public Map<String, RelNode> start() {
-        return start(Runtime.getRuntime().availableProcessors());
+    public Map<String, RelNode> start(SqlIterable source, SqlIterable target) {
+        return start(source, target, Runtime.getRuntime().availableProcessors());
     }
 
     /**
@@ -68,7 +63,7 @@ public class SqlAnalyzer {
      * @param threadCount threadCount
      * @return Map
      */
-    public Map<String, RelNode> start(int threadCount) {
+    public Map<String, RelNode> start(SqlIterable source, SqlIterable target, int threadCount) {
 
         final Map<String, NodeRelMeta> cache = new ConcurrentHashMap<>();
         final Map<String, RelNode> viewQuerySet = new TreeMap<>();
@@ -246,7 +241,8 @@ public class SqlAnalyzer {
      * @param viewId viewId
      * @return viewName
      */
-    protected String viewName(int viewId) {
+    @VisibleForTesting
+    public String viewName(int viewId) {
         return calciteContext.defaultDatabase() + ".view_" + viewId;
     }
 
@@ -281,7 +277,8 @@ public class SqlAnalyzer {
      * @return RelNode
      */
     private NodeRelMeta getRelNode(String sql, Map<String, NodeRelMeta> cache, Metrics metrics) {
-        if (cache.containsKey(sql)) {
+
+        if (cache != null && cache.containsKey(sql)) {
             return cache.get(sql);
         }
         NodeRelMeta nodeRelMeta = EMPTY;
@@ -295,7 +292,9 @@ public class SqlAnalyzer {
         } catch (Exception e) {
             handler.handle(sql, e);
         } finally {
-            cache.put(sql, nodeRelMeta);
+            if (cache != null) {
+                cache.put(sql, nodeRelMeta);
+            }
         }
         metrics.addTotalSql2NodeSpend(System.currentTimeMillis() - start);
         return nodeRelMeta;

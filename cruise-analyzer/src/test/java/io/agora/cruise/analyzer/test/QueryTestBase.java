@@ -3,7 +3,6 @@ package io.agora.cruise.analyzer.test;
 import io.agora.cruise.analyzer.FileContext;
 import io.agora.cruise.analyzer.SqlAnalyzer;
 import io.agora.cruise.analyzer.sql.SqlFilter;
-import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
@@ -44,13 +43,10 @@ public class QueryTestBase extends FileContext {
     /**
      * create SubSql Tool.
      *
-     * @param source source sql iterable
-     * @param target target sql iterable
      * @return SubSqlTool
      */
-    public SqlAnalyzer createSubSqlTool(SqlIterable source, SqlIterable target) {
-        return new SqlAnalyzer(
-                source, target, sqlFilter, exceptionHandler, this, PrestoDialect.DEFAULT) {
+    public SqlAnalyzer createSqlAnalyzer() {
+        return new SqlAnalyzer(sqlFilter, exceptionHandler, this, PrestoDialect.DEFAULT) {
 
             @Override
             protected RelShuttleChain createShuttleChain(RelNode relNode) {

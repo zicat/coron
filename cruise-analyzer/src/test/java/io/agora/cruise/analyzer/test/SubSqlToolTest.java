@@ -21,8 +21,8 @@ public class SubSqlToolTest extends QueryTestBase {
         SqlIterable sqlIterable = new SqlCsvIterable("query2.log", FIRST_COLUMN);
 
         QueryTestBase queryTestBase = new QueryTestBase();
-        SqlAnalyzer sqlAnalyzer = queryTestBase.createSubSqlTool(sqlIterable, sqlIterable);
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start();
+        SqlAnalyzer sqlAnalyzer = queryTestBase.createSqlAnalyzer();
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(sqlIterable, sqlIterable);
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;

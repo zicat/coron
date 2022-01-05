@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.agora.cruise.parser.sql.function.FunctionUtils;
 import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
+import io.agora.cruise.parser.utils.LockUtils;
 import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -31,6 +32,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.dialect.DefaultSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.CruiseSqlValidatorImpl;
@@ -40,9 +42,11 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Frameworks;
 
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_DDL_PARSER_CONFIG;
+import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG;
+import static io.agora.cruise.parser.utils.LockUtils.lock;
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
 /** CalciteContext. @ThreadSafe */
@@ -59,9 +63,13 @@ public class CalciteContext {
     protected final String defaultDatabase;
     protected final Map<String, List<RelOptMaterialization>> materializationMap = new HashMap<>();
     protected final SqlOperatorTable sqlOperatorTable;
+    protected final SqlParser.Config ddlConfig;
+    protected final SqlParser.Config queryConfig;
 
     public CalciteContext(String defaultDatabase) {
         this.defaultDatabase = defaultDatabase;
+        this.ddlConfig = defaultDDLConfig();
+        this.queryConfig = defaultQueryConfig();
         this.rootSchema = defaultSchemaPlus();
         this.sqlOperatorTable = defaultSqlOperatorTable();
         this.calciteSchema = defaultCalciteSchema();
@@ -80,6 +88,24 @@ public class CalciteContext {
      */
     protected SchemaPlus defaultSchemaPlus() {
         return Frameworks.createRootSchema(true);
+    }
+
+    /**
+     * create default ddl config.
+     *
+     * @return config
+     */
+    protected SqlParser.Config defaultDDLConfig() {
+        return DEFAULT_DDL_PARSER_CONFIG;
+    }
+
+    /**
+     * create default query config.
+     *
+     * @return config
+     */
+    protected SqlParser.Config defaultQueryConfig() {
+        return DEFAULT_QUERY_PARSER_CONFIG;
     }
 
     /**
@@ -212,7 +238,10 @@ public class CalciteContext {
      */
     public CalciteContext addTables(String... ddlList) {
         final SqlValidator validator = createValidator();
-        writeLock(() -> SchemaTool.addTableByDDL(rootSchema, validator, defaultDatabase, ddlList));
+        writeLock(
+                () ->
+                        SchemaTool.addTableByDDL(
+                                rootSchema, validator, ddlConfig, defaultDatabase, ddlList));
         return this;
     }
 
@@ -240,7 +269,7 @@ public class CalciteContext {
      */
     public CalciteContext addMaterializedView(
             String viewName, String querySql, SqlShuttle... sqlShuttles) throws SqlParseException {
-        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql, sqlShuttles);
+        final SqlNode sqlNode = SqlNodeTool.toSqlNode(querySql, queryConfig, sqlShuttles);
         final RelNode viewQueryRoot = sqlNode2RelNode(sqlNode);
         return addMaterializedView(viewName, viewQueryRoot);
     }
@@ -435,7 +464,7 @@ public class CalciteContext {
      * @throws SqlParseException SqlParseException
      */
     public RelNode querySql2Rel(String sql, SqlShuttle... sqlShuttles) throws SqlParseException {
-        return sqlNode2RelNode(SqlNodeTool.toQuerySqlNode(sql, sqlShuttles));
+        return sqlNode2RelNode(SqlNodeTool.toSqlNode(sql, queryConfig, sqlShuttles));
     }
 
     /**
@@ -456,7 +485,7 @@ public class CalciteContext {
      *
      * @param functionHandler functionHandler
      */
-    protected final <T> T writeLock(FunctionHandler<T> functionHandler) {
+    protected final <T> T writeLock(LockUtils.FunctionHandler<T> functionHandler) {
         return lock(functionHandler, lock.writeLock());
     }
 
@@ -465,24 +494,7 @@ public class CalciteContext {
      *
      * @param functionHandler functionHandler
      */
-    protected final <T> T readLock(FunctionHandler<T> functionHandler) {
+    protected final <T> T readLock(LockUtils.FunctionHandler<T> functionHandler) {
         return lock(functionHandler, lock.readLock());
-    }
-
-    /**
-     * lock function.
-     *
-     * @param functionHandler functionHandler
-     * @param lock lock
-     */
-    protected final <T> T lock(FunctionHandler<T> functionHandler, Lock lock) {
-        lock.lock();
-        try {
-            return functionHandler.apply();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            lock.unlock();
-        }
     }
 }

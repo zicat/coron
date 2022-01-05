@@ -7,7 +7,6 @@ import io.agora.cruise.analyzer.sql.SqlTextIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.SqlNodeTool;
-import io.agora.cruise.parser.sql.shuttle.HavingCountShuttle;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -32,7 +31,7 @@ public class SlowQueryTest {
         Map<String, String> allViews = new HashMap<>();
         String viewQuery = it.next();
         String viewName = queryTestBase.defaultDatabase() + ".view_query_0";
-        SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(viewQuery);
+        SqlNode sqlNode = SqlNodeTool.toSqlNode(viewQuery, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         RelNode viewQueryRoot = queryTestBase.sqlNode2RelNode(sqlNode);
         allViews.put(viewName, viewQuery);
         queryTestBase.addMaterializedView(viewName, viewQueryRoot);
@@ -50,10 +49,7 @@ public class SlowQueryTest {
                     continue;
                 }
                 RelNode relNode =
-                        queryTestBase.querySql2Rel(
-                                querySql,
-                                new Int2BooleanConditionShuttle(),
-                                new HavingCountShuttle());
+                        queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
                 Tuple2<Set<String>, RelNode> tuple2 =
                         queryTestBase.canMaterializedWithRelNode(relNode, allViews.keySet());
                 if (!tuple2.f0.isEmpty()) {

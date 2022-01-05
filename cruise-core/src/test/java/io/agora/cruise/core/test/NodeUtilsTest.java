@@ -20,7 +20,8 @@ public class NodeUtilsTest extends NodeRelTest {
                 "select t1.a from test_db.test_table t1 "
                         + "inner join (select * from test_db.test_table where a in (111, 222)) t2 "
                         + "on t1.a = t2.a and t1.b=t2.a ";
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         Assert.assertEquals(5, NodeUtils.deep(relNode1));
     }

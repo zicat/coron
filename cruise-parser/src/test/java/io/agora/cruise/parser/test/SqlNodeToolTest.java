@@ -18,13 +18,14 @@ public class SqlNodeToolTest extends TestBase {
 
     @Test
     public void testQuerySql() throws SqlParseException {
-        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(querySql);
+        final SqlNode sqlNode =
+                SqlNodeTool.toSqlNode(querySql, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         Assert.assertEquals(expectQuerySql, SqlNodeTool.toSql(sqlNode));
     }
 
     @Test
     public void testDDLSql() throws SqlParseException {
-        final SqlNode sqlNode = SqlNodeTool.toDDLSqlNode(ddl1);
+        final SqlNode sqlNode = SqlNodeTool.toSqlNode(ddl1, SqlNodeTool.DEFAULT_DDL_PARSER_CONFIG);
         Assert.assertEquals(ddl1, SqlNodeTool.toSql(sqlNode));
     }
 }

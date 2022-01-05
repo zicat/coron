@@ -34,25 +34,14 @@ public class SqlNodeTool {
      * Sql to query SqlNode.
      *
      * @param sql sql
-     * @return SqlNode
-     * @throws SqlParseException SqlParseException
-     */
-    public static SqlNode toQuerySqlNode(String sql) throws SqlParseException {
-        return toQuerySqlNode(sql, new SqlShuttle[] {});
-    }
-
-    /**
-     * Sql to query SqlNode.
-     *
-     * @param sql sql
+     * @param config config
      * @param sqlShuttles sql shuttle
      * @return SqlNode
      * @throws SqlParseException SqlParseException
      */
-    public static SqlNode toQuerySqlNode(String sql, SqlShuttle... sqlShuttles)
+    public static SqlNode toSqlNode(String sql, SqlParser.Config config, SqlShuttle... sqlShuttles)
             throws SqlParseException {
-        SqlParser sqlParser = fromQuerySql(sql);
-        SqlNode sqlNode = sqlParser.parseStmt();
+        SqlNode sqlNode = toSqlNode(sql, config);
         if (sqlShuttles != null && sqlShuttles.length > 0) {
             for (SqlShuttle sqlShuttle : sqlShuttles) {
                 sqlNode = sqlNode.accept(sqlShuttle);
@@ -65,11 +54,12 @@ public class SqlNodeTool {
      * Sql to ddl SqlNode.
      *
      * @param sql sql
+     * @param config config
      * @return SqlNode
      * @throws SqlParseException SqlParseException
      */
-    public static SqlNode toDDLSqlNode(String sql) throws SqlParseException {
-        SqlParser sqlParser = fromDDLSql(sql);
+    public static SqlNode toSqlNode(String sql, SqlParser.Config config) throws SqlParseException {
+        SqlParser sqlParser = fromSql(sql, config);
         return sqlParser.parseStmt();
     }
 
@@ -79,18 +69,8 @@ public class SqlNodeTool {
      * @param sql sql
      * @return SqlParser
      */
-    private static SqlParser fromQuerySql(String sql) {
-        return SqlParser.create(sql, DEFAULT_QUERY_PARSER_CONFIG);
-    }
-
-    /**
-     * Sql to ddl SqlParser.
-     *
-     * @param sql sql
-     * @return SqlParser
-     */
-    private static SqlParser fromDDLSql(String sql) {
-        return SqlParser.create(sql, DEFAULT_DDL_PARSER_CONFIG);
+    private static SqlParser fromSql(String sql, SqlParser.Config config) {
+        return SqlParser.create(sql, config);
     }
 
     /**

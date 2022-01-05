@@ -22,8 +22,10 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
         final String sql2 = "SELECT a, b, c  FROM test_db.test_table";
         final String expectSql = "SELECT a, b aaa, b, c, a s\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -48,8 +50,10 @@ public class NodeRelScanWithFilterTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 

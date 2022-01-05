@@ -19,15 +19,27 @@ public class HavingCountShuttleTest {
 
         Assert.assertEquals(
                 expectSql,
-                SqlNodeTool.toQuerySqlNode(querySql, new HavingCountShuttle()).toString());
+                SqlNodeTool.toSqlNode(
+                                querySql,
+                                SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG,
+                                new HavingCountShuttle())
+                        .toString());
         Assert.assertEquals(
                 expectSql,
-                SqlNodeTool.toQuerySqlNode(querySql2, new HavingCountShuttle()).toString());
+                SqlNodeTool.toSqlNode(
+                                querySql2,
+                                SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG,
+                                new HavingCountShuttle())
+                        .toString());
 
         String querySql3 = "select * from table1 having count(*) = 0";
         String expectSql3 = "SELECT *\nFROM `table1`\nHAVING COUNT(*) = 0";
         Assert.assertEquals(
                 expectSql3,
-                SqlNodeTool.toQuerySqlNode(querySql3, new HavingCountShuttle()).toString());
+                SqlNodeTool.toSqlNode(
+                                querySql3,
+                                SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG,
+                                new HavingCountShuttle())
+                        .toString());
     }
 }

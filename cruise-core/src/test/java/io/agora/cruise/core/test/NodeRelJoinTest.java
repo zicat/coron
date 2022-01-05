@@ -28,8 +28,10 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "left join test_db.test_table t2 "
                         + "on t1.a = t2.a and t1.b=t2.a ";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -53,8 +55,10 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "inner join test_db.test_table t2 "
                         + "on t1.a = t2.a and t1.b=t2.c ";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -82,8 +86,10 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.a";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -114,8 +120,10 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -146,8 +154,10 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 

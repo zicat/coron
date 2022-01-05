@@ -13,6 +13,7 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.ddl.SqlColumnDeclaration;
 import org.apache.calcite.sql.ddl.SqlCreateTable;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.tools.Frameworks;
 
@@ -37,14 +38,18 @@ public class SchemaTool {
      * @throws SqlParseException SqlParseException
      */
     public static SchemaPlus addTableByDDL(
-            SchemaPlus rootSchema, SqlValidator validator, String defaultDBName, String... ddlList)
+            SchemaPlus rootSchema,
+            SqlValidator validator,
+            SqlParser.Config config,
+            String defaultDBName,
+            String... ddlList)
             throws SqlParseException {
 
         if (ddlList == null || ddlList.length == 0) {
             throw new IllegalArgumentException("not support create schema from empty ddl list");
         }
         for (String ddl : ddlList) {
-            SqlNode node = SqlNodeTool.toDDLSqlNode(ddl);
+            SqlNode node = SqlNodeTool.toSqlNode(ddl, config);
             if (node.getKind() != CREATE_TABLE) {
                 throw new RuntimeException("register table only support ddl statement, sql:" + ddl);
             }

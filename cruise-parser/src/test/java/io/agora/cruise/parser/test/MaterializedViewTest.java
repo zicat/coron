@@ -25,8 +25,9 @@ public class MaterializedViewTest extends TestBase {
         String viewTableName = "test_db.testView2";
         addMaterializedView(viewTableName, viewQuerySql);
         final SqlNode sqlNode =
-                SqlNodeTool.toQuerySqlNode(
-                        "select sum(c) as s_c from test_db.test_table having count(*) > 1");
+                SqlNodeTool.toSqlNode(
+                        "select sum(c) as s_c from test_db.test_table having count(*) > 1",
+                        SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode = sqlNode2RelNode(sqlNode);
         final RelNode optNode = materializedViewOpt(relNode);
         final Set<String> queryTables = TableRelShuttleImpl.tables(optNode);
@@ -39,12 +40,14 @@ public class MaterializedViewTest extends TestBase {
         String viewTableName = "test_db.materialized_view";
         addMaterializedView(viewTableName, viewQuerySql);
         String sql1 = "select * from test_db.materialized_view";
-        final SqlNode sqlNode = SqlNodeTool.toQuerySqlNode(sql1);
+        final SqlNode sqlNode =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode = sqlNode2RelNode(sqlNode);
         Assert.assertNotNull(relNode);
         LOG.info(relNode.explain());
 
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(viewQuerySql);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(viewQuerySql, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
         final RelNode optRelNode = materializedViewOpt(relNode2);
         final Set<String> queryTables = TableRelShuttleImpl.tables(optRelNode);
@@ -57,7 +60,9 @@ public class MaterializedViewTest extends TestBase {
         String viewTableName = "test_db.testView2";
         addMaterializedView(viewTableName, viewQuerySql);
         final SqlNode sqlNode =
-                SqlNodeTool.toQuerySqlNode("select a,sum(c) from test_db.test_table group by a");
+                SqlNodeTool.toSqlNode(
+                        "select a,sum(c) from test_db.test_table group by a",
+                        SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode = sqlNode2RelNode(sqlNode);
         final RelNode optNode = materializedViewOpt(relNode);
         final Set<String> queryTables = TableRelShuttleImpl.tables(optNode);

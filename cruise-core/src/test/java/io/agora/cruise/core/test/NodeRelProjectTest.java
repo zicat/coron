@@ -23,8 +23,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql2 = "SELECT a, b  FROM test_db.test_table";
         final String expectSql = "SELECT a, b, ABS(a) c\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -42,8 +44,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
         final String sql2 = "SELECT c, b  FROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -61,8 +65,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql1 = "SELECT abs(a) as c, b FROM test_db.test_table";
         final String sql2 = "SELECT abs(d) as c, b  FROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -80,8 +86,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql2 = "SELECT abs(a) as c, b FROM test_db.test_table";
         final String expectSql = "SELECT b, ABS(a) c\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -100,8 +108,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql2 = "SELECT abs(a) as x, b FROM test_db.test_table";
         final String expectSql = "SELECT a, b, c, d, ABS(a) x\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -119,8 +129,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql1 = "SELECT abs(a) as f, abs(b) as g FROM test_db.test_table";
         final String sql2 = "SELECT abs(b) as f, abs(a) as g FROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -139,8 +151,10 @@ public class NodeRelProjectTest extends NodeRelTest {
         final String sql2 = "SELECT * FROM test_db.test_table";
         final String expectSql = "SELECT a, b, c, d, a f, b g\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
 
@@ -172,8 +186,10 @@ public class NodeRelProjectTest extends NodeRelTest {
                         + "FROM test_db.test_table) t\n"
                         + "WHERE row_num = 1 OR row_num <= 2";
 
-        final SqlNode sqlNode1 = SqlNodeTool.toQuerySqlNode(sql1);
-        final SqlNode sqlNode2 = SqlNodeTool.toQuerySqlNode(sql2);
+        final SqlNode sqlNode1 =
+                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+        final SqlNode sqlNode2 =
+                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
         ResultNode<RelNode> resultNode =

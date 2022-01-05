@@ -17,7 +17,7 @@ public class MaterializedViewTest extends TestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(MaterializedViewTest.class);
 
-    public MaterializedViewTest() throws SqlParseException {}
+    public MaterializedViewTest() {}
 
     @Test
     public void testView2() throws SqlParseException {

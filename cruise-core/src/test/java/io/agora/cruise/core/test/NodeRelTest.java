@@ -3,7 +3,6 @@ package io.agora.cruise.core.test;
 import io.agora.cruise.core.ResultNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.dialect.DefaultSqlDialect;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 
 import java.util.Set;
@@ -11,7 +10,7 @@ import java.util.Set;
 /** NodeRelTest. */
 public class NodeRelTest extends TestBase {
 
-    public NodeRelTest() throws SqlParseException {}
+    public NodeRelTest() {}
 
     public void assertResultNode(String expectSql, ResultNode<RelNode> resultNode) {
         Assert.assertEquals(expectSql, toSql(resultNode));

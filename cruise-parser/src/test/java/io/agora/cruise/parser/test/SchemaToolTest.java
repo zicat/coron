@@ -1,6 +1,5 @@
 package io.agora.cruise.parser.test;
 
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -9,7 +8,7 @@ import java.util.Objects;
 /** SchemaToolTest. */
 public class SchemaToolTest extends TestBase {
 
-    public SchemaToolTest() throws SqlParseException {}
+    public SchemaToolTest() {}
 
     @Test
     public void test() {

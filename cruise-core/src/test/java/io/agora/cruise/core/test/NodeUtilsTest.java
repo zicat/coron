@@ -11,7 +11,7 @@ import org.junit.Test;
 /** NodeUtilsTest. */
 public class NodeUtilsTest extends NodeRelTest {
 
-    public NodeUtilsTest() throws SqlParseException {}
+    public NodeUtilsTest() {}
 
     @Test
     public void test() throws SqlParseException {

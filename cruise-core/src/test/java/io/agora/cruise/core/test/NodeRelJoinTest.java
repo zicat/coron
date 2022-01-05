@@ -1,9 +1,7 @@
 package io.agora.cruise.core.test;
 
 import io.agora.cruise.core.ResultNode;
-import io.agora.cruise.parser.SqlNodeTool;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,7 +12,7 @@ import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
 /** NodeRelJoinTest. */
 public class NodeRelJoinTest extends NodeRelTest {
 
-    public NodeRelJoinTest() throws SqlParseException {}
+    public NodeRelJoinTest() {}
 
     @Test
     public void testJoin() throws SqlParseException {
@@ -28,12 +26,8 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "left join test_db.test_table t2 "
                         + "on t1.a = t2.a and t1.b=t2.a ";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -55,12 +49,8 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "inner join test_db.test_table t2 "
                         + "on t1.a = t2.a and t1.b=t2.c ";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -86,12 +76,8 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.a";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -120,12 +106,8 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
 
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
@@ -154,13 +136,8 @@ public class NodeRelJoinTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "INNER JOIN test_db.test_table test_table0 ON test_table.a = test_table0.a AND test_table.b = test_table0.b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);

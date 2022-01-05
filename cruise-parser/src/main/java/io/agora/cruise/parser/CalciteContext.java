@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.agora.cruise.parser.sql.function.FunctionUtils;
 import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
-import io.agora.cruise.parser.utils.LockUtils;
+import io.agora.cruise.parser.util.LockUtils;
 import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -46,7 +46,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_DDL_PARSER_CONFIG;
 import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG;
-import static io.agora.cruise.parser.utils.LockUtils.lock;
+import static io.agora.cruise.parser.util.LockUtils.lock;
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
 /** CalciteContext. @ThreadSafe */

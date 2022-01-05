@@ -14,7 +14,7 @@ public class SqlNodeToolTest extends TestBase {
     String expectQuerySql =
             "SELECT a, b, SUM(c)\n" + "FROM t1\n" + "WHERE a > '10'\n" + "GROUP BY a, b";
 
-    public SqlNodeToolTest() throws SqlParseException {}
+    public SqlNodeToolTest() {}
 
     @Test
     public void testQuerySql() throws SqlParseException {

@@ -1,9 +1,7 @@
 package io.agora.cruise.core.test;
 
 import io.agora.cruise.core.ResultNode;
-import io.agora.cruise.parser.SqlNodeTool;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Test;
 
@@ -13,7 +11,7 @@ import static io.agora.cruise.core.NodeUtils.findFirstSubNode;
 /** NodeRelGroupTest. */
 public class NodeRelGroupTest extends NodeRelTest {
 
-    public NodeRelGroupTest() throws SqlParseException {}
+    public NodeRelGroupTest() {}
 
     @Test
     public void testGroupBy() throws SqlParseException {
@@ -25,13 +23,8 @@ public class NodeRelGroupTest extends NodeRelTest {
         final String expectSql =
                 "SELECT a, b, c, d\nFROM test_db.test_table\nWHERE c < 5000 OR c < 1000";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -52,13 +45,8 @@ public class NodeRelGroupTest extends NodeRelTest {
         final String expectSql =
                 "SELECT a, b, c, d\nFROM test_db.test_table\nWHERE c < 5000 OR c < 1000";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -83,13 +71,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "WHERE a < 5000 OR a < 1000\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -114,13 +97,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "WHERE a < 5000 OR a < 1000\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -145,13 +123,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "WHERE b < 5000 OR b < 1000\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -176,13 +149,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "WHERE a > 1000 OR a < 5000\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -205,13 +173,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "GROUP BY nvl(b, NULL), a";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -233,13 +196,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a, b, c, sum(d) as sd from test_db.test_table group by grouping sets((b,c),(a,b,c))";
         final String expectSql = "SELECT if(c > 0, b, a) $f3, a, b, c, d\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -260,13 +218,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "GROUP BY GROUPING SETS((a, b, c), (b, c))";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(
                         createNodeRelRoot(relNode1, false), createNodeRelRoot(relNode2, false));
@@ -288,13 +241,8 @@ public class NodeRelGroupTest extends NodeRelTest {
         final String expectSql =
                 "SELECT a, b, c\nFROM test_db.test_table\nWHERE c < 5000 OR c < 1000";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -319,13 +267,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "WHERE c < 5000\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -349,13 +292,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "FROM test_db.test_table\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -376,13 +314,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                 "select a as cc, b as dd, max(c) m_c from test_db.test_table group by a, b";
         final String expectSql = "SELECT a, b, c\nFROM test_db.test_table";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -406,13 +339,8 @@ public class NodeRelGroupTest extends NodeRelTest {
                         + "WHERE a > 1000 AND c < 5000\n"
                         + "GROUP BY a, b";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);
@@ -432,13 +360,8 @@ public class NodeRelGroupTest extends NodeRelTest {
         final String expectSql =
                 "SELECT a, SUM(b), SUM(c), SUM(c)\nFROM test_db.test_table\n" + "GROUP BY a";
 
-        final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final SqlNode sqlNode2 =
-                SqlNodeTool.toSqlNode(sql2, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
-        final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-
+        final RelNode relNode1 = querySql2Rel(sql1);
+        final RelNode relNode2 = querySql2Rel(sql2);
         ResultNode<RelNode> resultNode =
                 findFirstSubNode(createNodeRelRoot(relNode1), createNodeRelRoot(relNode2));
         assertResultNode(expectSql, resultNode);

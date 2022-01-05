@@ -14,7 +14,7 @@ public class SqlToRelConverterToolTest extends TestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlToRelConverterToolTest.class);
 
-    public SqlToRelConverterToolTest() throws SqlParseException {}
+    public SqlToRelConverterToolTest() {}
 
     @Test
     public void test() throws SqlParseException {

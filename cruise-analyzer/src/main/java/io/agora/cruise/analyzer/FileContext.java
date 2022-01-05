@@ -6,6 +6,8 @@ import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -15,6 +17,7 @@ import java.util.Set;
 public class FileContext extends CalciteContext {
 
     private static final String DEFAULT_DDL_SOURCE_FILE = "ddl.txt";
+    private static final Logger LOG = LoggerFactory.getLogger(FileContext.class);
 
     public FileContext(String database) {
         this(database, defaultDDLSqlIterator());
@@ -82,8 +85,7 @@ public class FileContext extends CalciteContext {
      * @param ddl ddl
      */
     private void addTable(String ddl) {
-        ddl = ddl.trim();
-        if (ddl.isEmpty()) {
+        if ((ddl = ddl.trim()).isEmpty()) {
             return;
         }
         String[] split = ddl.split("\\s+");
@@ -91,6 +93,7 @@ public class FileContext extends CalciteContext {
         String[] tableSplit = table.split("\\.");
         String newTable;
         if (tableSplit.length < 2 || tableSplit.length > 3) {
+            LOG.warn("add table fail, ddl:{}", ddl);
             return;
         } else if (tableSplit.length == 2) {
             newTable = tableSplit[0] + ".\"" + tableSplit[1] + "\"";

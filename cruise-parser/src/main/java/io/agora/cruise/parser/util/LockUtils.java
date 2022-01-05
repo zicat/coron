@@ -1,4 +1,4 @@
-package io.agora.cruise.parser.utils;
+package io.agora.cruise.parser.util;
 
 import java.util.concurrent.locks.Lock;
 

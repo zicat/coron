@@ -13,6 +13,7 @@ import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.TableRelShuttleImpl;
@@ -24,6 +25,7 @@ import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewProjectAggr
 import org.apache.calcite.rel.rules.materialize.MaterializedViewRules;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
@@ -144,9 +146,9 @@ public class CalciteContext {
      *
      * @return SqlToRelConverter
      */
-    protected SqlToRelConverter createSqlToRelConverter() {
+    protected SqlToRelConverter createSqlToRelConverter(RelOptPlanner planner) {
         return SqlToRelConverterTool.createSqlToRelConverter(
-                defaultRelOptPlanner(),
+                planner,
                 typeFactory,
                 calciteCatalogReader,
                 sqlOperatorTable,
@@ -209,10 +211,8 @@ public class CalciteContext {
      * @return this
      */
     public CalciteContext addTables(String... ddlList) {
-        writeLock(
-                () ->
-                        SchemaTool.addTableByDDL(
-                                rootSchema, createValidator(), defaultDatabase, ddlList));
+        final SqlValidator validator = createValidator();
+        writeLock(() -> SchemaTool.addTableByDDL(rootSchema, validator, defaultDatabase, ddlList));
         return this;
     }
 
@@ -253,27 +253,30 @@ public class CalciteContext {
      * @return this
      */
     public CalciteContext addMaterializedView(String viewName, RelNode viewQueryRel) {
+
         final ImmutableList<String> viewPath = ImmutableList.copyOf(viewName.split("\\."));
-        writeLock(
-                () ->
-                        SchemaTool.addTable(
-                                viewPath,
-                                defaultDatabase,
-                                rootSchema,
-                                new SchemaTool.RelTable(viewQueryRel)));
-
+        addTable(viewPath, defaultDatabase, rootSchema, viewQueryRel);
         final Set<String> queryTables = TableRelShuttleImpl.tables(viewQueryRel);
-        final SqlToRelConverter converter = createSqlToRelConverter();
-        final RelNode tableReq =
-                readLock(
-                        () ->
-                                converter.toRel(
-                                        calciteCatalogReader.getTable(viewPath),
-                                        Lists.newArrayList()));
-
+        final RelOptPlanner planner = defaultRelOptPlanner();
+        final SqlToRelConverter converter = createSqlToRelConverter(planner);
+        final Prepare.PreparingTable table =
+                readLock(() -> calciteCatalogReader.getTable(viewPath));
+        final RelNode tableReq = converter.toRel(table, Lists.newArrayList());
         final RelOptMaterialization materialization =
                 new RelOptMaterialization(
                         castNonNull(tableReq), castNonNull(viewQueryRel), null, viewPath);
+        addMaterializationCache(queryTables, materialization);
+        return this;
+    }
+
+    /**
+     * add materialization to cache.
+     *
+     * @param queryTables queryTables
+     * @param materialization materialization
+     */
+    private void addMaterializationCache(
+            Set<String> queryTables, RelOptMaterialization materialization) {
         writeLock(
                 () -> {
                     for (String queryTable : queryTables) {
@@ -284,7 +287,23 @@ public class CalciteContext {
                     }
                     return VOID;
                 });
-        return this;
+    }
+
+    /**
+     * add table with writeLock.
+     *
+     * @param fullName fullName
+     * @param defaultDBName defaultDBName
+     * @param rootSchema rootSchema
+     * @param relNode relNode
+     */
+    private void addTable(
+            ImmutableList<String> fullName,
+            String defaultDBName,
+            SchemaPlus rootSchema,
+            RelNode relNode) {
+        final Table table = new SchemaTool.RelTable(relNode);
+        writeLock(() -> SchemaTool.addTable(fullName, defaultDBName, rootSchema, table));
     }
 
     /**
@@ -296,22 +315,32 @@ public class CalciteContext {
     public RelNode materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
         final HepPlanner materializedHepPlanner = createMaterializedHepPlanner();
-        readLock(
-                () -> {
-                    for (String table : tables) {
-                        final List<RelOptMaterialization> matchResult =
-                                materializationMap.get(table);
-                        if (matchResult != null) {
-                            matchResult.forEach(materializedHepPlanner::addMaterialization);
-                        }
-                    }
-                    return VOID;
-                });
-        return writeLock(
-                () -> {
-                    materializedHepPlanner.setRoot(relNode);
-                    return materializedHepPlanner.findBestExp();
-                });
+        addMaterializeView2Planner(tables, materializedHepPlanner);
+        return optimize(relNode, materializedHepPlanner);
+    }
+
+    /**
+     * add RelOptMaterialization to materializedHepPlanner.
+     *
+     * @param tables tables
+     * @param materializedHepPlanner materializedHepPlanner
+     */
+    private void addMaterializeView2Planner(Set<String> tables, HepPlanner materializedHepPlanner) {
+        List<RelOptMaterialization> views =
+                readLock(
+                        () -> {
+                            List<RelOptMaterialization> tmp = new ArrayList<>();
+                            tables.forEach(
+                                    table -> {
+                                        final List<RelOptMaterialization> viewList =
+                                                materializationMap.get(table);
+                                        if (viewList != null) {
+                                            tmp.addAll(viewList);
+                                        }
+                                    });
+                            return tmp;
+                        });
+        views.forEach(materializedHepPlanner::addMaterialization);
     }
 
     /**
@@ -337,12 +366,23 @@ public class CalciteContext {
      * @return relNode
      */
     public RelNode sqlNode2RelNode(SqlNode sqlNode) {
-        final SqlToRelConverter converter = createSqlToRelConverter();
-        final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
         final RelOptPlanner planner = defaultRelOptPlanner();
+        final SqlToRelConverter converter = createSqlToRelConverter(planner);
+        final RelRoot viewQueryRoot = converter.convertQuery(sqlNode, true, true);
+        return optimize(viewQueryRoot.rel, planner);
+    }
+
+    /**
+     * optimize relNode.
+     *
+     * @param relNode relNode
+     * @param planner planner
+     * @return relNode
+     */
+    private RelNode optimize(RelNode relNode, RelOptPlanner planner) {
         return writeLock(
                 () -> {
-                    planner.setRoot(viewQueryRoot.rel);
+                    planner.setRoot(relNode);
                     return planner.findBestExp();
                 });
     }

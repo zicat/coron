@@ -10,13 +10,10 @@ import java.util.stream.Collectors;
 /** TableRelShuttleImpl. */
 public class TableRelShuttleImpl extends RelShuttleImpl {
 
-    private Set<String> tables;
+    private Set<String> tables = new HashSet<>();
 
     @Override
     public RelNode visit(TableScan tableScan) {
-        if (tables == null) {
-            tables = new HashSet<>();
-        }
         tables.add(String.join(".", tableScan.getTable().getQualifiedName()));
         return tableScan;
     }

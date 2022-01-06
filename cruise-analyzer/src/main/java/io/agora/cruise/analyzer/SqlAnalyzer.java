@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static io.agora.cruise.analyzer.module.NodeRelMeta.EMPTY;
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findAllSubNode;
 
@@ -173,7 +172,7 @@ public class SqlAnalyzer {
         for (Future<NodeRelMeta> future : fs) {
             try {
                 NodeRelMeta nodeRelMeta = future.get();
-                if (nodeRelMeta != EMPTY) {
+                if (!nodeRelMeta.isEmpty()) {
                     metaList.add(nodeRelMeta);
                 }
             } catch (Exception e) {
@@ -257,7 +256,8 @@ public class SqlAnalyzer {
     private ResultNodeList<RelNode> calculate(
             NodeRelMeta fromNodeRelMeta, NodeRelMeta toNodeRelMeta, Metrics metrics) {
 
-        if (toNodeRelMeta == null || !NodeRelMeta.contains(fromNodeRelMeta, toNodeRelMeta)) {
+        if (toNodeRelMeta == null
+                || !NodeRelMeta.isTableIntersect(fromNodeRelMeta, toNodeRelMeta)) {
             return new ResultNodeList<>();
         }
         final long start = System.currentTimeMillis();
@@ -278,11 +278,13 @@ public class SqlAnalyzer {
      */
     private NodeRelMeta getRelNode(String sql, Map<String, NodeRelMeta> cache, Metrics metrics) {
 
-        if (cache != null && cache.containsKey(sql)) {
-            return cache.get(sql);
+        NodeRelMeta nodeRelMeta;
+        if (cache != null && (nodeRelMeta = cache.get(sql)) != null) {
+            return nodeRelMeta;
         }
-        NodeRelMeta nodeRelMeta = EMPTY;
+
         final long start = System.currentTimeMillis();
+        nodeRelMeta = NodeRelMeta.empty();
         try {
             final RelNode relNode = calciteContext.querySql2Rel(sql, createSqlShuttle(sql));
             final RelNode chainedRelNode = createShuttleChain(relNode).accept(relNode);

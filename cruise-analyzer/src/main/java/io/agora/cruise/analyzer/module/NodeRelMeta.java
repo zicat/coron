@@ -5,15 +5,16 @@ import io.agora.cruise.core.NodeRel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static io.agora.cruise.core.NodeUtils.findAllFirstLeafNode;
 
 /** NodeRelMeta. */
-public class NodeRelMeta {
+public final class NodeRelMeta {
 
-    public static final NodeRelMeta EMPTY = new NodeRelMeta();
+    private static final NodeRelMeta EMPTY = new NodeRelMeta();
 
     private final NodeRel nodeRel;
     private final Set<String> tables;
@@ -39,23 +40,53 @@ public class NodeRelMeta {
         return tables;
     }
 
-    public List<Node<RelNode>> leafNodes() {
+    public final List<Node<RelNode>> leafNodes() {
         return leafNodes;
     }
 
     /**
-     * at least contains one value from from to to.
+     * create empty instance.
+     *
+     * @return NodeRelMeta
+     */
+    public static NodeRelMeta empty() {
+        return EMPTY;
+    }
+
+    /**
+     * check if empty.
+     *
+     * @return boolean
+     */
+    public final boolean isEmpty() {
+        return this == EMPTY;
+    }
+
+    /**
+     * intersectTables.
      *
      * @param from from
      * @param to to
-     * @return boolean
+     * @return intersectTables
      */
-    public static boolean contains(NodeRelMeta from, NodeRelMeta to) {
+    public static Set<String> intersectTables(NodeRelMeta from, NodeRelMeta to) {
+        Set<String> intersectTables = new HashSet<>();
         for (String a : from.tables) {
             if (to.tables.contains(a)) {
-                return true;
+                intersectTables.add(a);
             }
         }
-        return false;
+        return intersectTables;
+    }
+
+    /**
+     * check is isTableIntersect.
+     *
+     * @param from from
+     * @param to to
+     * @return isTableIntersect
+     */
+    public static boolean isTableIntersect(NodeRelMeta from, NodeRelMeta to) {
+        return !intersectTables(from, to).isEmpty();
     }
 }

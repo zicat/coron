@@ -38,6 +38,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
 
     @Override
     public RelNode visit(LogicalFilter filter) {
+
         final RelNode newInput = filter.getInput().accept(this);
         final Tuple2<RelNode, List<RexNode>> tuple = transFilterCondition(filter, newInput);
         if (tuple == null) {

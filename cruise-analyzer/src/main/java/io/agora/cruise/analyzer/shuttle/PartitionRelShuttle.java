@@ -106,6 +106,13 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      */
     protected Tuple2<RelNode, List<RexNode>> transFilterCondition(Filter filter, RelNode input) {
 
+        // if input already has prefixName field, this filterNode skip check.
+        for (String name : input.getRowType().getFieldNames()) {
+            if (name.startsWith(getPrefixName())) {
+                return null;
+            }
+        }
+
         final RexNode rexNode = filter.getCondition();
         final RexNode leftExp = leftExpParser(rexNode, filter);
         if (leftExp != null) {

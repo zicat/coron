@@ -44,8 +44,8 @@ import org.apache.calcite.tools.Frameworks;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_DDL_PARSER_CONFIG;
-import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG;
+import static io.agora.cruise.parser.SqlNodeUtils.DEFAULT_DDL_PARSER_CONFIG;
+import static io.agora.cruise.parser.SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG;
 import static io.agora.cruise.parser.util.LockUtils.lock;
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
@@ -173,7 +173,7 @@ public class CalciteContext {
      * @return SqlToRelConverter
      */
     protected SqlToRelConverter createSqlToRelConverter(RelOptPlanner planner) {
-        return SqlToRelConverterTool.createSqlToRelConverter(
+        return SqlToRelConverterUtils.createSqlToRelConverter(
                 planner,
                 typeFactory,
                 calciteCatalogReader,
@@ -240,7 +240,7 @@ public class CalciteContext {
         final SqlValidator validator = createValidator();
         writeLock(
                 () ->
-                        SchemaTool.addTableByDDL(
+                        SchemaUtils.addTableByDDL(
                                 rootSchema, validator, ddlConfig, defaultDatabase, ddlList));
         return this;
     }
@@ -269,7 +269,7 @@ public class CalciteContext {
      */
     public CalciteContext addMaterializedView(
             String viewName, String querySql, SqlShuttle... sqlShuttles) throws SqlParseException {
-        final SqlNode sqlNode = SqlNodeTool.toSqlNode(querySql, queryConfig, sqlShuttles);
+        final SqlNode sqlNode = SqlNodeUtils.toSqlNode(querySql, queryConfig, sqlShuttles);
         final RelNode viewQueryRoot = sqlNode2RelNode(sqlNode);
         return addMaterializedView(viewName, viewQueryRoot);
     }
@@ -331,8 +331,8 @@ public class CalciteContext {
             String defaultDBName,
             SchemaPlus rootSchema,
             RelNode relNode) {
-        final Table table = new SchemaTool.RelTable(relNode);
-        writeLock(() -> SchemaTool.addTable(fullName, defaultDBName, rootSchema, table));
+        final Table table = new SchemaUtils.RelTable(relNode);
+        writeLock(() -> SchemaUtils.addTable(fullName, defaultDBName, rootSchema, table));
     }
 
     /**
@@ -464,7 +464,7 @@ public class CalciteContext {
      * @throws SqlParseException SqlParseException
      */
     public RelNode querySql2Rel(String sql, SqlShuttle... sqlShuttles) throws SqlParseException {
-        return sqlNode2RelNode(SqlNodeTool.toSqlNode(sql, queryConfig, sqlShuttles));
+        return sqlNode2RelNode(SqlNodeUtils.toSqlNode(sql, queryConfig, sqlShuttles));
     }
 
     /**

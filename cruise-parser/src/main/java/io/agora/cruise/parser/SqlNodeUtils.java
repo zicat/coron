@@ -11,7 +11,7 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
 /** SqlParserConfigTool. */
-public class SqlNodeTool {
+public class SqlNodeUtils {
 
     public static final SqlParser.Config DEFAULT_QUERY_PARSER_CONFIG =
             SqlParser.config()

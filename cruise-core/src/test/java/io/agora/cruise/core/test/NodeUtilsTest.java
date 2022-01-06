@@ -1,7 +1,7 @@
 package io.agora.cruise.core.test;
 
 import io.agora.cruise.core.NodeUtils;
-import io.agora.cruise.parser.SqlNodeTool;
+import io.agora.cruise.parser.SqlNodeUtils;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -21,7 +21,7 @@ public class NodeUtilsTest extends NodeRelTest {
                         + "inner join (select * from test_db.test_table where a in (111, 222)) t2 "
                         + "on t1.a = t2.a and t1.b=t2.a ";
         final SqlNode sqlNode1 =
-                SqlNodeTool.toSqlNode(sql1, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
+                SqlNodeUtils.toSqlNode(sql1, SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode1 = sqlNode2RelNode(sqlNode1);
         Assert.assertEquals(5, NodeUtils.deep(relNode1));
     }

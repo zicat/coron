@@ -62,10 +62,11 @@ public class FilterMergeRule extends MergeRule {
     /** Filter Config. */
     public static class Config extends MergeConfig {
 
-        protected RelDataTypeFactory relDataTypeFactory = CalciteContext.DEFAULT_SQL_TYPE_FACTORY;
+        protected RelDataTypeFactory relDataTypeFactory;
 
         public static Config create() {
             return new Config()
+                    .relDataTypeFactory(CalciteContext.DEFAULT_SQL_TYPE_FACTORY)
                     .withOperandSupplier(Operand.of(Filter.class, Filter.class))
                     .as(Config.class);
         }

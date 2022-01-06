@@ -1,6 +1,6 @@
 package io.agora.cruise.parser.test.shuttle;
 
-import io.agora.cruise.parser.SqlNodeTool;
+import io.agora.cruise.parser.SqlNodeUtils;
 import io.agora.cruise.parser.sql.shuttle.HavingCountShuttle;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
@@ -19,16 +19,16 @@ public class HavingCountShuttleTest {
 
         Assert.assertEquals(
                 expectSql,
-                SqlNodeTool.toSqlNode(
+                SqlNodeUtils.toSqlNode(
                                 querySql,
-                                SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG,
+                                SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG,
                                 new HavingCountShuttle())
                         .toString());
         Assert.assertEquals(
                 expectSql,
-                SqlNodeTool.toSqlNode(
+                SqlNodeUtils.toSqlNode(
                                 querySql2,
-                                SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG,
+                                SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG,
                                 new HavingCountShuttle())
                         .toString());
 
@@ -36,9 +36,9 @@ public class HavingCountShuttleTest {
         String expectSql3 = "SELECT *\nFROM `table1`\nHAVING COUNT(*) = 0";
         Assert.assertEquals(
                 expectSql3,
-                SqlNodeTool.toSqlNode(
+                SqlNodeUtils.toSqlNode(
                                 querySql3,
-                                SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG,
+                                SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG,
                                 new HavingCountShuttle())
                         .toString());
     }

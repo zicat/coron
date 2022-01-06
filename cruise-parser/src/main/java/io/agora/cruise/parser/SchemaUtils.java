@@ -2,6 +2,7 @@ package io.agora.cruise.parser;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import io.agora.cruise.parser.util.CruiseParserException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 import static org.apache.calcite.sql.SqlKind.CREATE_TABLE;
 
 /** SchemaTool. */
-public class SchemaTool {
+public class SchemaUtils {
 
     /**
      * create schema plus from ddl list.
@@ -49,9 +50,10 @@ public class SchemaTool {
             throw new IllegalArgumentException("not support create schema from empty ddl list");
         }
         for (String ddl : ddlList) {
-            SqlNode node = SqlNodeTool.toSqlNode(ddl, config);
+            SqlNode node = SqlNodeUtils.toSqlNode(ddl, config);
             if (node.getKind() != CREATE_TABLE) {
-                throw new RuntimeException("register table only support ddl statement, sql:" + ddl);
+                throw new CruiseParserException(
+                        "register table only support ddl statement, sql:" + ddl);
             }
             SqlCreateTable createTable = (SqlCreateTable) node;
             addTable(
@@ -78,7 +80,7 @@ public class SchemaTool {
             SchemaPlus rootSchema,
             Table table) {
         if (fullName.size() > 2) {
-            throw new RuntimeException("register table name identifier length > 2");
+            throw new IllegalArgumentException("register table name identifier length > 2");
         }
         String dbName = fullName.size() == 2 ? fullName.get(0) : defaultDBName;
         String tableName = fullName.get(fullName.size() - 1);

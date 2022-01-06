@@ -21,10 +21,10 @@ import org.apache.calcite.tools.Frameworks;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import static io.agora.cruise.parser.SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG;
+import static io.agora.cruise.parser.SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG;
 
 /** SqlToRelConverterTool. */
-public class SqlToRelConverterTool {
+public class SqlToRelConverterUtils {
 
     /**
      * create sql to rel converter.

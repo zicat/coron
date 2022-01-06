@@ -4,6 +4,7 @@ import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
+import io.agora.cruise.parser.util.CruiseParserException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataType;
@@ -41,8 +42,8 @@ public abstract class MergeRule {
      *
      * <p>calcite: not support materialized topNode not equal aggregation.
      *
-     * @param relNode
-     * @return
+     * @param relNode relNode
+     * @return boolean contains aggregate
      */
     protected boolean containsAggregate(RelNode relNode) {
         return TopAggregationFinder.contains(relNode);
@@ -74,7 +75,7 @@ public abstract class MergeRule {
                             newIndex = findIndexByName(newInput.getRowType(), name);
                         }
                         if (newIndex == -1) {
-                            throw new RuntimeException(
+                            throw new CruiseParserException(
                                     "create new input RexNode fail, node detail: "
                                             + rexNode.toString());
                         }

@@ -6,9 +6,9 @@ import org.junit.Test;
 import java.util.Objects;
 
 /** SchemaToolTest. */
-public class SchemaToolTest extends TestBase {
+public class SchemaUtilsTest extends TestBase {
 
-    public SchemaToolTest() {}
+    public SchemaUtilsTest() {}
 
     @Test
     public void test() {

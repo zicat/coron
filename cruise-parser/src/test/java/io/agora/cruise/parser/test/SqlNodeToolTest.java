@@ -1,6 +1,6 @@
 package io.agora.cruise.parser.test;
 
-import io.agora.cruise.parser.SqlNodeTool;
+import io.agora.cruise.parser.SqlNodeUtils;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
@@ -19,13 +19,14 @@ public class SqlNodeToolTest extends TestBase {
     @Test
     public void testQuerySql() throws SqlParseException {
         final SqlNode sqlNode =
-                SqlNodeTool.toSqlNode(querySql, SqlNodeTool.DEFAULT_QUERY_PARSER_CONFIG);
-        Assert.assertEquals(expectQuerySql, SqlNodeTool.toSql(sqlNode));
+                SqlNodeUtils.toSqlNode(querySql, SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG);
+        Assert.assertEquals(expectQuerySql, SqlNodeUtils.toSql(sqlNode));
     }
 
     @Test
     public void testDDLSql() throws SqlParseException {
-        final SqlNode sqlNode = SqlNodeTool.toSqlNode(ddl1, SqlNodeTool.DEFAULT_DDL_PARSER_CONFIG);
-        Assert.assertEquals(ddl1, SqlNodeTool.toSql(sqlNode));
+        final SqlNode sqlNode =
+                SqlNodeUtils.toSqlNode(ddl1, SqlNodeUtils.DEFAULT_DDL_PARSER_CONFIG);
+        Assert.assertEquals(ddl1, SqlNodeUtils.toSql(sqlNode));
     }
 }

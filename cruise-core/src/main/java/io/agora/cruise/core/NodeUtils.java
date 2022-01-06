@@ -225,7 +225,7 @@ public class NodeUtils {
     private static <T> Node<T> lookAhead(Node<T> node, int ahead, Node<T> root) {
 
         if (ahead < 0) {
-            throw new RuntimeException("ahead must >= 0");
+            throw new IllegalArgumentException("ahead must >= 0");
         }
         int offset = ahead;
         Node<T> result = node;

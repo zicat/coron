@@ -3,7 +3,7 @@ package io.agora.cruise.analyzer.metrics;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Metrics. */
-public class Metrics {
+public class AnalyzerSpend {
 
     private final AtomicLong totalSql2NodeSpend = new AtomicLong();
 
@@ -11,19 +11,19 @@ public class Metrics {
 
     private final AtomicLong totalNode2SqlSpend = new AtomicLong();
 
-    public Metrics() {}
+    public AnalyzerSpend() {}
 
-    public Metrics addTotalSql2NodeSpend(long spend) {
+    public AnalyzerSpend addTotalSql2NodeSpend(long spend) {
         this.totalSql2NodeSpend.addAndGet(spend);
         return this;
     }
 
-    public Metrics addTotalSubSqlSpend(long spend) {
+    public AnalyzerSpend addTotalSubSqlSpend(long spend) {
         this.totalSubSqlSpend.addAndGet(spend);
         return this;
     }
 
-    public Metrics addTotalNode2SqlSpend(long spend) {
+    public AnalyzerSpend addTotalNode2SqlSpend(long spend) {
         this.totalNode2SqlSpend.addAndGet(spend);
         return this;
     }

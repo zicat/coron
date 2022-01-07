@@ -114,9 +114,9 @@ public class PartitionRelShuttle extends RelShuttleImpl {
         }
 
         final RexNode rexNode = filter.getCondition();
-        final RexNode leftExp = leftExpParser(rexNode, filter);
-        if (leftExp != null) {
-            return new Tuple2<>(input, Collections.singletonList(leftExp));
+        final RexNode firstOperand = compareCallFirstOperand(rexNode, filter);
+        if (firstOperand != null) {
+            return new Tuple2<>(input, Collections.singletonList(firstOperand));
         }
         if (rexNode.getKind() != SqlKind.AND) {
             return null;
@@ -126,11 +126,12 @@ public class PartitionRelShuttle extends RelShuttleImpl {
         final List<RexNode> partitionRexNode = new ArrayList<>();
         for (int i = 0; i < andRexCall.getOperands().size(); i++) {
             final RexNode childNode = andRexCall.getOperands().get(i);
-            final RexNode childLeftExp = leftExpParser(andRexCall.getOperands().get(i), filter);
-            if (childLeftExp == null) {
+            final RexNode childFirstOperand =
+                    compareCallFirstOperand(andRexCall.getOperands().get(i), filter);
+            if (childFirstOperand == null) {
                 noPartitionRexNode.add(childNode);
-            } else if (!partitionRexNode.contains(childLeftExp)) {
-                partitionRexNode.add(childLeftExp);
+            } else if (!partitionRexNode.contains(childFirstOperand)) {
+                partitionRexNode.add(childFirstOperand);
             }
         }
         if (partitionRexNode.isEmpty()) {
@@ -151,19 +152,19 @@ public class PartitionRelShuttle extends RelShuttleImpl {
     }
 
     /**
-     * containsPartitionField.
+     * containsPartitionField. like function(a) > 10 , return function(a)
      *
      * @param rexNode rexNode
      * @param filter filter
      * @return boolean
      */
-    private RexNode leftExpParser(RexNode rexNode, Filter filter) {
+    private RexNode compareCallFirstOperand(RexNode rexNode, Filter filter) {
 
         if (!containsCompareKind(rexNode)) {
             return null;
         }
         final RexCall functionCall = (RexCall) rexNode;
-        final RexNode leftExp = functionCall.getOperands().get(0);
+        final RexNode firstOperand = functionCall.getOperands().get(0);
         final RelDataType relDataType = filter.getInput().getRowType();
         for (int i = 1; i < functionCall.getOperands().size(); i++) {
             final RexNode rightRexNode = functionCall.getOperands().get(i);
@@ -171,7 +172,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
                 return null;
             }
         }
-        return PartitionFieldFounder.contains(leftExp, relDataType, partitionFields);
+        return PartitionFieldFounder.contains(firstOperand, relDataType, partitionFields);
     }
 
     /**

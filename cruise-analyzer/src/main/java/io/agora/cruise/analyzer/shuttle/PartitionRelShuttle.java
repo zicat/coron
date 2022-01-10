@@ -114,7 +114,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
         }
 
         final RexNode rexNode = filter.getCondition();
-        final RexNode firstOperand = compareCallFirstOperand(rexNode, filter);
+        final RexNode firstOperand = compareCallFirstOperand(rexNode, input);
         if (firstOperand != null) {
             return new Tuple2<>(input, Collections.singletonList(firstOperand));
         }
@@ -127,7 +127,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
         for (int i = 0; i < andRexCall.getOperands().size(); i++) {
             final RexNode childNode = andRexCall.getOperands().get(i);
             final RexNode childFirstOperand =
-                    compareCallFirstOperand(andRexCall.getOperands().get(i), filter);
+                    compareCallFirstOperand(andRexCall.getOperands().get(i), input);
             if (childFirstOperand == null) {
                 noPartitionRexNode.add(childNode);
             } else if (!partitionRexNode.contains(childFirstOperand)) {
@@ -155,17 +155,17 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      * containsPartitionField. like function(a) > 10 , return function(a)
      *
      * @param rexNode rexNode
-     * @param filter filter
+     * @param input filter
      * @return boolean
      */
-    private RexNode compareCallFirstOperand(RexNode rexNode, Filter filter) {
+    private RexNode compareCallFirstOperand(RexNode rexNode, RelNode input) {
 
         if (!containsCompareKind(rexNode)) {
             return null;
         }
         final RexCall functionCall = (RexCall) rexNode;
         final RexNode firstOperand = functionCall.getOperands().get(0);
-        final RelDataType relDataType = filter.getInput().getRowType();
+        final RelDataType relDataType = input.getRowType();
         for (int i = 1; i < functionCall.getOperands().size(); i++) {
             final RexNode rightRexNode = functionCall.getOperands().get(i);
             if (!PredictRexShuttle.predicts(rightRexNode).isEmpty()) {

@@ -30,20 +30,21 @@ import static io.agora.cruise.core.NodeUtils.findAllSubNode;
 public class SqlAnalyzer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzer.class);
+    private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 
     protected final SqlFilter sqlFilter;
-    protected final CalciteContext calciteContext;
+    protected final CalciteContext context;
     protected final ExceptionHandler handler;
     protected final SqlDialect sqlDialect;
 
     public SqlAnalyzer(
             SqlFilter sqlFilter,
             ExceptionHandler handler,
-            CalciteContext calciteContext,
+            CalciteContext context,
             SqlDialect sqlDialect) {
         this.sqlFilter = sqlFilter;
         this.handler = handler;
-        this.calciteContext = calciteContext;
+        this.context = context;
         this.sqlDialect = sqlDialect;
     }
 
@@ -53,7 +54,7 @@ public class SqlAnalyzer {
      * @return Map
      */
     public Map<String, RelNode> start(SqlIterable source, SqlIterable target) {
-        return start(source, target, Runtime.getRuntime().availableProcessors());
+        return start(source, target, DEFAULT_THREAD_COUNT);
     }
 
     /**
@@ -66,42 +67,31 @@ public class SqlAnalyzer {
 
         final Map<String, NodeRelMeta> cache = new ConcurrentHashMap<>();
         final Map<String, RelNode> viewQuerySet = new TreeMap<>();
-        final AnalyzerSpend analyzerSpend = new AnalyzerSpend();
+        final AnalyzerSpend spend = new AnalyzerSpend();
         final ExecutorService service = Executors.newFixedThreadPool(threadCount);
-        final int blockSize = threadCount * 2;
         try {
-            LOG.info("start building from sql node");
-            final List<NodeRelMeta> fMeta =
-                    buildMetas(source, cache, service, blockSize, analyzerSpend);
-            LOG.info("start building target sql node");
-            final List<NodeRelMeta> tMeta =
-                    buildMetas(target, cache, service, blockSize, analyzerSpend);
-            LOG.info("start found view query, {}", analyzerSpend);
-            for (int i = 0; i < fMeta.size(); i++) {
+            final int blockSize = threadCount * 2;
+            final List<NodeRelMeta> fMetas = buildMetas(source, cache, service, blockSize, spend);
+            final List<NodeRelMeta> tMetas = buildMetas(target, cache, service, blockSize, spend);
+            LOG.info("start found view query, {}", spend);
+            for (int i = 0; i < fMetas.size(); i++) {
                 final List<Future<ResultNodeList<RelNode>>> fs = new ArrayList<>(blockSize);
-                final NodeRelMeta fromNodeRelMeta = fMeta.get(i);
+                final NodeRelMeta fMeta = fMetas.get(i);
                 final Map<String, RelNode> matchResult = new TreeMap<>();
-                for (int j = source == target ? i : 0; j < tMeta.size(); j++) {
-                    final NodeRelMeta toNodeRelMeta = tMeta.get(j);
+                for (int j = source == target ? i : 0; j < tMetas.size(); j++) {
+                    final NodeRelMeta tMeta = tMetas.get(j);
                     final Future<ResultNodeList<RelNode>> future =
-                            service.submit(
-                                    () -> calculate(fromNodeRelMeta, toNodeRelMeta, analyzerSpend));
+                            service.submit(() -> calculate(fMeta, tMeta, spend));
                     fs.add(future);
                     if (fs.size() >= blockSize) {
-                        resultNodeListGet(fs, analyzerSpend, matchResult);
+                        resultNodeListGet(fs, spend, matchResult);
                     }
                 }
-                resultNodeListGet(fs, analyzerSpend, matchResult);
+                resultNodeListGet(fs, spend, matchResult);
                 findBestView(matchResult, viewQuerySet);
-                if (i % threadCount == 0) {
-                    LOG.info(
-                            "current_query:{}, view_size:{}, {}",
-                            i,
-                            viewQuerySet.size(),
-                            analyzerSpend);
-                }
+                LOG.debug("current_query:{}, view_size:{}, {}", i, viewQuerySet.size(), spend);
             }
-            LOG.info("finish match, view_size:{}, {}", viewQuerySet.size(), analyzerSpend);
+            LOG.info("finish match, view_size:{}, {}", viewQuerySet.size(), spend);
             return viewQuerySet;
         } finally {
             service.shutdownNow();
@@ -124,8 +114,7 @@ public class SqlAnalyzer {
                 final ResultNodeList<RelNode> resultNodeList = future.get();
                 final long start = System.currentTimeMillis();
                 for (ResultNode<RelNode> resultNode : resultNodeList) {
-                    final String viewQuery =
-                            calciteContext.toSql(resultNode.getPayload(), sqlDialect);
+                    final String viewQuery = context.toSql(resultNode.getPayload(), sqlDialect);
                     matchResult.put(viewQuery, resultNode.getPayload());
                 }
                 analyzerSpend.addTotalNode2SqlSpend(System.currentTimeMillis() - start);
@@ -151,6 +140,7 @@ public class SqlAnalyzer {
             int blockSize,
             AnalyzerSpend analyzerSpend) {
 
+        LOG.info("start building sql node");
         final List<NodeRelMeta> result = new ArrayList<>();
         final List<Future<NodeRelMeta>> fs = new ArrayList<>(blockSize);
         final SqlIterator it = sqlIterable.sqlIterator();
@@ -248,7 +238,7 @@ public class SqlAnalyzer {
      */
     @VisibleForTesting
     public String viewName(int viewId) {
-        return calciteContext.defaultDatabase() + ".view_" + viewId;
+        return context.defaultDatabase() + ".view_" + viewId;
     }
 
     /**
@@ -293,7 +283,7 @@ public class SqlAnalyzer {
         final long start = System.currentTimeMillis();
         nodeRelMeta = NodeRelMeta.empty();
         try {
-            final RelNode relNode = calciteContext.querySql2Rel(sql, createSqlShuttle(sql));
+            final RelNode relNode = context.querySql2Rel(sql, createSqlShuttle(sql));
             final RelNode chainedRelNode = createShuttleChain(relNode).accept(relNode);
             if (chainedRelNode != null) {
                 nodeRelMeta = new NodeRelMeta(createNodeRelRoot(chainedRelNode));
@@ -304,8 +294,8 @@ public class SqlAnalyzer {
             if (cache != null) {
                 cache.put(sql, nodeRelMeta);
             }
+            analyzerSpend.addTotalSql2NodeSpend(System.currentTimeMillis() - start);
         }
-        analyzerSpend.addTotalSql2NodeSpend(System.currentTimeMillis() - start);
         return nodeRelMeta;
     }
 

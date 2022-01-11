@@ -301,11 +301,11 @@ public class NodeUtils {
     public static int deep(RelNode relNode) {
         int deep = 1;
         if (!relNode.getInputs().isEmpty()) {
-            int childDeep = Integer.MIN_VALUE;
-            for (int i = 0; i < relNode.getInputs().size(); i++) {
-                childDeep = Math.max(deep(relNode.getInput(i)), childDeep);
+            int maxChildDeep = deep(relNode.getInput(0));
+            for (int i = 1; i < relNode.getInputs().size(); i++) {
+                maxChildDeep = Math.max(deep(relNode.getInput(i)), maxChildDeep);
             }
-            deep += childDeep;
+            deep += maxChildDeep;
         }
         return deep;
     }

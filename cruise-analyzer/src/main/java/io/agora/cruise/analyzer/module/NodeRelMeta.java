@@ -70,13 +70,7 @@ public final class NodeRelMeta {
      * @return intersectTables
      */
     public static Set<String> intersectTables(NodeRelMeta from, NodeRelMeta to) {
-        Set<String> intersectTables = new HashSet<>();
-        for (String a : from.tables) {
-            if (to.tables.contains(a)) {
-                intersectTables.add(a);
-            }
-        }
-        return intersectTables;
+        return intersectTables(from, to, false);
     }
 
     /**
@@ -87,6 +81,28 @@ public final class NodeRelMeta {
      * @return isTableIntersect
      */
     public static boolean isTableIntersect(NodeRelMeta from, NodeRelMeta to) {
-        return !intersectTables(from, to).isEmpty();
+        return !intersectTables(from, to, true).isEmpty();
+    }
+
+    /**
+     * intersectTables.
+     *
+     * @param from from
+     * @param to to
+     * @param breakWhenFirstMatch break if match first
+     * @return intersectTables
+     */
+    private static Set<String> intersectTables(
+            NodeRelMeta from, NodeRelMeta to, boolean breakWhenFirstMatch) {
+        Set<String> intersectTables = new HashSet<>();
+        for (String a : from.tables) {
+            if (to.tables.contains(a)) {
+                intersectTables.add(a);
+                if (breakWhenFirstMatch) {
+                    break;
+                }
+            }
+        }
+        return intersectTables;
     }
 }

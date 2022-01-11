@@ -78,7 +78,7 @@ public class SqlAnalyzer {
                 final List<Future<ResultNodeList<RelNode>>> fs = new ArrayList<>(blockSize);
                 final NodeRelMeta fMeta = fMetas.get(i);
                 final Map<String, RelNode> matchResult = new TreeMap<>();
-                for (int j = source == target ? i : 0; j < tMetas.size(); j++) {
+                for (int j = source == target ? i + 1 : 0; j < tMetas.size(); j++) {
                     final NodeRelMeta tMeta = tMetas.get(j);
                     final Future<ResultNodeList<RelNode>> future =
                             service.submit(() -> analyze(fMeta, tMeta, spend));

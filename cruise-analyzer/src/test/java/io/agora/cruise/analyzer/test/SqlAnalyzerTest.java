@@ -27,7 +27,7 @@ public class SqlAnalyzerTest {
                         + "WHERE send_pixel = 'bbb' OR send_pixel = 'aaa'";
         final SqlIterable source = new SqlListIterable(Collections.singletonList(sql1));
         final SqlIterable target = new SqlListIterable(Collections.singletonList(sql2));
-        final Map<String, RelNode> result = sqlAnalyzer.start(source, target);
+        final Map<String, RelNode> result = sqlAnalyzer.analyze(source, target);
         Assert.assertEquals(1, result.size());
         final RelNode relNode = result.get(sqlAnalyzer.viewName(0));
         final String viewQuery = queryTestBase.toSql(relNode);

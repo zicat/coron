@@ -30,7 +30,7 @@ public class SubSqlToolByQuery11Test {
         SqlIterable target = new SqlJsonIterable("/Users/zj/Desktop/query_21.json", parser);
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlAnalyzer sqlAnalyzer = queryTestBase.createSqlAnalyzer();
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(source, target);
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.analyze(source, target);
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         AtomicInteger total = new AtomicInteger(0);

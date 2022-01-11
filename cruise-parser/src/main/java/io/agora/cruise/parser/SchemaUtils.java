@@ -123,7 +123,9 @@ public class SchemaUtils {
 
             List<Map.Entry<String, RelDataType>> fieldList = new ArrayList<>();
             for (SqlColumnDeclaration declaration : columnList) {
-                RelDataType relDataType = declaration.dataType.deriveType(validator, true);
+                Boolean nullable = declaration.dataType.getNullable();
+                nullable = nullable != null && nullable;
+                RelDataType relDataType = declaration.dataType.deriveType(validator, nullable);
                 fieldList.add(Maps.immutableEntry(declaration.name.getSimple(), relDataType));
             }
             return typeFactory.createStructType(fieldList);

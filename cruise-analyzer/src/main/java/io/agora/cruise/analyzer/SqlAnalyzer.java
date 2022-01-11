@@ -53,8 +53,8 @@ public class SqlAnalyzer {
      *
      * @return Map
      */
-    public Map<String, RelNode> start(SqlIterable source, SqlIterable target) {
-        return start(source, target, DEFAULT_THREAD_COUNT);
+    public Map<String, RelNode> analyze(SqlIterable source, SqlIterable target) {
+        return analyze(source, target, DEFAULT_THREAD_COUNT);
     }
 
     /**
@@ -63,7 +63,7 @@ public class SqlAnalyzer {
      * @param threadCount threadCount
      * @return Map
      */
-    public Map<String, RelNode> start(SqlIterable source, SqlIterable target, int threadCount) {
+    public Map<String, RelNode> analyze(SqlIterable source, SqlIterable target, int threadCount) {
 
         final Map<String, NodeRelMeta> cache = new ConcurrentHashMap<>();
         final Map<String, RelNode> viewQuerySet = new TreeMap<>();
@@ -81,7 +81,7 @@ public class SqlAnalyzer {
                 for (int j = source == target ? i : 0; j < tMetas.size(); j++) {
                     final NodeRelMeta tMeta = tMetas.get(j);
                     final Future<ResultNodeList<RelNode>> future =
-                            service.submit(() -> calculate(fMeta, tMeta, spend));
+                            service.submit(() -> analyze(fMeta, tMeta, spend));
                     fs.add(future);
                     if (fs.size() >= blockSize) {
                         resultNodeListGet(fs, spend, matchResult);
@@ -249,7 +249,7 @@ public class SqlAnalyzer {
      * @param analyzerSpend metrics
      * @return subMap
      */
-    private ResultNodeList<RelNode> calculate(
+    private ResultNodeList<RelNode> analyze(
             NodeRelMeta fromNodeRelMeta, NodeRelMeta toNodeRelMeta, AnalyzerSpend analyzerSpend) {
 
         if (toNodeRelMeta == null

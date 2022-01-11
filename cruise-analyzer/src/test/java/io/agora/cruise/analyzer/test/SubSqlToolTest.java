@@ -22,7 +22,7 @@ public class SubSqlToolTest extends QueryTestBase {
 
         QueryTestBase queryTestBase = new QueryTestBase();
         SqlAnalyzer sqlAnalyzer = queryTestBase.createSqlAnalyzer();
-        Map<String, RelNode> viewQueryMap = sqlAnalyzer.start(sqlIterable, sqlIterable);
+        Map<String, RelNode> viewQueryMap = sqlAnalyzer.analyze(sqlIterable, sqlIterable);
         viewQueryMap.forEach(queryTestBase::addMaterializedView);
 
         int total = 0;

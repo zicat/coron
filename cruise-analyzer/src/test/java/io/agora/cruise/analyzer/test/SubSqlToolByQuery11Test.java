@@ -5,8 +5,8 @@ import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.analyzer.sql.SqlJsonIterable;
 import io.agora.cruise.analyzer.sql.SqlJsonIterator;
-import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
+import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.rel.RelNode;
 
 import java.util.ArrayList;
@@ -42,7 +42,6 @@ public class SubSqlToolByQuery11Test {
         int concurrent = Runtime.getRuntime().availableProcessors();
         List<Future<?>> fs = new ArrayList<>(concurrent);
         ExecutorService executorService = Executors.newFixedThreadPool(concurrent);
-        final Set<String> viewSqlSet = viewQueryMap.keySet();
         while (iterator.hasNext()) {
             String querySql = iterator.next();
             System.out.println("start to check materialized view " + iterator.currentOffset());
@@ -57,7 +56,7 @@ public class SubSqlToolByQuery11Test {
                                             queryTestBase.querySql2Rel(
                                                     querySql, new Int2BooleanConditionShuttle());
                                     final Tuple2<Set<String>, RelNode> tuple2 =
-                                            queryTestBase.tryMaterialized(relNode, viewSqlSet);
+                                            queryTestBase.tryMaterialized(relNode);
                                     if (!tuple2.f0.isEmpty()) {
                                         matched.incrementAndGet();
                                         allMatchedView.addAll(tuple2.f0);

@@ -5,9 +5,9 @@ import io.agora.cruise.analyzer.sql.SqlJsonIterable;
 import io.agora.cruise.analyzer.sql.SqlJsonIterator;
 import io.agora.cruise.analyzer.sql.SqlTextIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
-import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.SqlNodeUtils;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
+import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -28,13 +28,11 @@ public class SlowQueryTest {
         SqlTextIterable sqlTextIterable =
                 new SqlTextIterable("view_query.txt", StandardCharsets.UTF_8);
         SqlIterator it = sqlTextIterable.sqlIterator();
-        Map<String, String> allViews = new HashMap<>();
         String viewQuery = it.next();
         String viewName = queryTestBase.defaultDatabase() + ".view_query_0";
         SqlNode sqlNode =
                 SqlNodeUtils.toSqlNode(viewQuery, SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG);
         RelNode viewQueryRoot = queryTestBase.sqlNode2RelNode(sqlNode);
-        allViews.put(viewName, viewQuery);
         queryTestBase.addMaterializedView(viewName, viewQueryRoot);
 
         SqlJsonIterator.JsonParser parser = jsonNode -> jsonNode.get("presto_sql").asText();
@@ -51,8 +49,7 @@ public class SlowQueryTest {
                 }
                 RelNode relNode =
                         queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
-                Tuple2<Set<String>, RelNode> tuple2 =
-                        queryTestBase.tryMaterialized(relNode, allViews.keySet());
+                Tuple2<Set<String>, RelNode> tuple2 = queryTestBase.tryMaterialized(relNode);
                 if (!tuple2.f0.isEmpty()) {
                     matched++;
                     allMatchedView.addAll(tuple2.f0);

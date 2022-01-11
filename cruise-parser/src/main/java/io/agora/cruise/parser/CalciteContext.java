@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import io.agora.cruise.parser.sql.function.FunctionUtils;
 import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
 import io.agora.cruise.parser.util.LockUtils;
+import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -341,11 +342,13 @@ public class CalciteContext {
      * @param relNode query node
      * @return opt node
      */
-    public RelNode materializedViewOpt(RelNode relNode) {
+    public Tuple2<RelNode, List<RelOptMaterialization>> materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
         final HepPlanner materializedHepPlanner = createMaterializedHepPlanner();
-        addMaterializeView2Planner(tables, materializedHepPlanner);
-        return optimize(relNode, materializedHepPlanner);
+        List<RelOptMaterialization> views =
+                addMaterializeView2Planner(tables, materializedHepPlanner);
+        RelNode optRelNode = optimize(relNode, materializedHepPlanner);
+        return Tuple2.of(optRelNode, views);
     }
 
     /**
@@ -354,7 +357,8 @@ public class CalciteContext {
      * @param tables tables
      * @param materializedHepPlanner materializedHepPlanner
      */
-    private void addMaterializeView2Planner(Set<String> tables, HepPlanner materializedHepPlanner) {
+    private List<RelOptMaterialization> addMaterializeView2Planner(
+            Set<String> tables, HepPlanner materializedHepPlanner) {
         List<RelOptMaterialization> views =
                 readLock(
                         () -> {
@@ -370,6 +374,7 @@ public class CalciteContext {
                             return tmp;
                         });
         views.forEach(materializedHepPlanner::addMaterialization);
+        return views;
     }
 
     /**

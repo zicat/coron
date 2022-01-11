@@ -2,8 +2,9 @@ package io.agora.cruise.analyzer;
 
 import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.analyzer.sql.SqlTextIterable;
-import io.agora.cruise.core.util.Tuple2;
 import io.agora.cruise.parser.CalciteContext;
+import io.agora.cruise.parser.util.Tuple2;
+import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
 import org.slf4j.Logger;
@@ -11,7 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** PrestoContext. */
 public class FileContext extends CalciteContext {
@@ -41,15 +44,19 @@ public class FileContext extends CalciteContext {
      * check materializedViewOpt whether success.
      *
      * @param relNode query node
-     * @param viewNames view name
      * @return match view set and match result RelNode in tuple2
      */
-    public Tuple2<Set<String>, RelNode> tryMaterialized(RelNode relNode, Set<String> viewNames) {
-        final RelNode optRelNode = materializedViewOpt(relNode);
+    public Tuple2<Set<String>, RelNode> tryMaterialized(RelNode relNode) {
+        Tuple2<RelNode, List<RelOptMaterialization>> tuple = materializedViewOpt(relNode);
+        final RelNode optRelNode = tuple.f0;
+        final List<String> views =
+                tuple.f1.stream()
+                        .map(v -> String.join(".", v.qualifiedTableName))
+                        .collect(Collectors.toList());
         final Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode);
         final Set<String> matchedView = new HashSet<>();
         for (String opRelNode1Table : opRelNode1Tables) {
-            if (viewNames.contains(opRelNode1Table)) {
+            if (views.contains(opRelNode1Table)) {
                 matchedView.add(opRelNode1Table);
             }
         }

@@ -1,4 +1,4 @@
-package io.agora.cruise.core.util;
+package io.agora.cruise.parser.util;
 
 import java.util.Objects;
 

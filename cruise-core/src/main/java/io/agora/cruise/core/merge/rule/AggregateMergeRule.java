@@ -6,7 +6,7 @@ import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.Operand;
 import io.agora.cruise.core.util.ListComparator;
-import io.agora.cruise.core.util.Tuple2;
+import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;

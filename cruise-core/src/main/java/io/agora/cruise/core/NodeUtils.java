@@ -108,7 +108,7 @@ public class NodeUtils {
         final List<Node<T>> nodeToLeaves = findAllFirstLeafNode(rootTo);
         for (Node<T> nodeFrom : nodeFromLeaves) {
             for (Node<T> nodeTo : nodeToLeaves) {
-                final ResultNode<T> resultNode = merge(rootFrom, nodeFrom, nodeTo, false);
+                final ResultNode<T> resultNode = findSubNode(rootFrom, nodeFrom, nodeTo, false);
                 if (!resultNode.isEmpty()) {
                     return resultNode;
                 }
@@ -132,24 +132,24 @@ public class NodeUtils {
         final ResultNodeList<T> resultNodes = new ResultNodeList<>(size);
         for (int i = 0; i < size; i++) {
             final ResultNode<T> resultNode =
-                    merge(rootFrom, nodeFromLeaves.get(i), nodeToLeaves.get(i), false);
+                    findSubNode(rootFrom, nodeFromLeaves.get(i), nodeToLeaves.get(i), false);
             resultNodes.add(resultNode);
         }
         return resultNodes;
     }
 
     /**
-     * merge start from fromLeaf and to toLeaf, end to fromRoot.
+     * find SubNode from fromLeaf and to toLeaf, end to fromRoot.
      *
      * @param fromRoot the root of from.
      * @param fromLeaf the leaf of the fromRoot
      * @param toLeaf the to leaf
      * @param allMatch is all match
      * @param <T> type
-     * @return merge result if all match return from fromLeaf toLeaf to fromRoot mergeable, else
-     *     return max partial merge result
+     * @return ResultNode if all match return from fromLeaf toLeaf to fromRoot mergeable, else
+     *     return max partial RelNode
      */
-    private static <T> ResultNode<T> merge(
+    private static <T> ResultNode<T> findSubNode(
             Node<T> fromRoot, Node<T> fromLeaf, Node<T> toLeaf, boolean allMatch) {
 
         if (fromLeaf == null || toLeaf == null) {
@@ -169,7 +169,7 @@ public class NodeUtils {
             final int size = sameSize(fromOffset.rightBrotherSize(), toOffset.rightBrotherSize());
             for (int i = 0; i < size; i++) {
                 ResultNode<T> brotherMergeResult =
-                        merge(
+                        findSubNode(
                                 fromOffset.rightBrother(i),
                                 foundLeftLeaf(fromOffset.rightBrother(i)),
                                 foundLeftLeaf(toOffset.rightBrother(i)),

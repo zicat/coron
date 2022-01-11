@@ -42,21 +42,9 @@ public class FileContext extends CalciteContext {
      *
      * @param relNode query node
      * @param viewNames view name
-     * @return match view set
+     * @return match view set and match result RelNode in tuple2
      */
-    public Set<String> canMaterialized(RelNode relNode, Set<String> viewNames) {
-        return canMaterializedWithRelNode(relNode, viewNames).f0;
-    }
-
-    /**
-     * check materializedViewOpt whether success.
-     *
-     * @param relNode query node
-     * @param viewNames view name
-     * @return match view set
-     */
-    public Tuple2<Set<String>, RelNode> canMaterializedWithRelNode(
-            RelNode relNode, Set<String> viewNames) {
+    public Tuple2<Set<String>, RelNode> tryMaterialized(RelNode relNode, Set<String> viewNames) {
         final RelNode optRelNode = materializedViewOpt(relNode);
         final Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode);
         final Set<String> matchedView = new HashSet<>();

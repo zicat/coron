@@ -47,7 +47,7 @@ public class SqlAnalyzerByQuery10Test {
                 final RelNode relNode =
                         queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
                 final Tuple2<Set<String>, RelNode> tuple2 =
-                        queryTestBase.canMaterializedWithRelNode(relNode, viewQueryMap.keySet());
+                        queryTestBase.tryMaterialized(relNode, viewQueryMap.keySet());
                 if (!tuple2.f0.isEmpty()) {
                     matched++;
                     allMatchedView.addAll(tuple2.f0);

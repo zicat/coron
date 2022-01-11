@@ -52,7 +52,7 @@ public class SlowQueryTest {
                 RelNode relNode =
                         queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
                 Tuple2<Set<String>, RelNode> tuple2 =
-                        queryTestBase.canMaterializedWithRelNode(relNode, allViews.keySet());
+                        queryTestBase.tryMaterialized(relNode, allViews.keySet());
                 if (!tuple2.f0.isEmpty()) {
                     matched++;
                     allMatchedView.addAll(tuple2.f0);

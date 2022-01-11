@@ -57,8 +57,7 @@ public class SubSqlToolByQuery11Test {
                                             queryTestBase.querySql2Rel(
                                                     querySql, new Int2BooleanConditionShuttle());
                                     final Tuple2<Set<String>, RelNode> tuple2 =
-                                            queryTestBase.canMaterializedWithRelNode(
-                                                    relNode, viewSqlSet);
+                                            queryTestBase.tryMaterialized(relNode, viewSqlSet);
                                     if (!tuple2.f0.isEmpty()) {
                                         matched.incrementAndGet();
                                         allMatchedView.addAll(tuple2.f0);

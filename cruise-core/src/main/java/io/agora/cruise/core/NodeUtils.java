@@ -168,16 +168,15 @@ public class NodeUtils {
         while (fromOffset != fromRoot && toOffset != null) {
             final int size = sameSize(fromOffset.rightBrotherSize(), toOffset.rightBrotherSize());
             for (int i = 0; i < size; i++) {
-                ResultNode<T> brotherMergeResult =
+                ResultNode<T> brotherResult =
                         findSubNode(
                                 fromOffset.rightBrother(i),
                                 foundLeftLeaf(fromOffset.rightBrother(i)),
                                 foundLeftLeaf(toOffset.rightBrother(i)),
                                 true);
-                if (brotherMergeResult.isEmpty()) {
+                if (!resultOffset.add(brotherResult)) {
                     break;
                 }
-                resultOffset.add(brotherMergeResult);
             }
             // size mean all brother equals, 1 mean me equal
             if (size == -1 || resultOffset.size() != size + 1) {

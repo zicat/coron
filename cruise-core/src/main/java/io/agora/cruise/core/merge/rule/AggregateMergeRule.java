@@ -98,21 +98,25 @@ public class AggregateMergeRule extends MergeRule {
             return AggregateMergeableCheck.mergeable(fromAggregate)
                     && AggregateMergeableCheck.mergeable(toAggregate);
         }
+
         for (int i = 0; i < fromFilters.size(); i++) {
             Filter fromFilter = fromFilters.get(i);
             Filter toFilter = toFilters.get(i);
             Filter newFilter = newFilters.get(i);
+            final Map<String, Integer> fieldIndexMapping =
+                    dataTypeNameIndex(newFilter.getInput().getRowType());
             final RexNode newFromCondition =
                     createNewInputRexNode(
                             fromFilter.getCondition(),
                             fromFilter.getInput(),
                             newFilter.getInput(),
-                            0);
+                            fieldIndexMapping);
             final RexNode newToCondition =
                     createNewInputRexNode(
                             toFilter.getCondition(),
                             toFilter.getInput(),
                             newFilter.getInput(),
+                            fieldIndexMapping,
                             fromFilter.getInput().getRowType().getFieldCount());
             if (!newFromCondition.equals(newToCondition)
                     && (!AggregateMergeableCheck.mergeable(fromAggregate)

@@ -14,6 +14,7 @@ import org.apache.calcite.rex.RexUtil;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /** FilterMergeRule. */
 public class FilterMergeRule extends MergeRule {
@@ -42,14 +43,19 @@ public class FilterMergeRule extends MergeRule {
             return null;
         }
 
+        final Map<String, Integer> fieldIndexMapping = dataTypeNameIndex(newInput.getRowType());
         final RexNode newFromCondition =
                 createNewInputRexNode(
-                        fromFilter.getCondition(), fromFilter.getInput(), newInput, 0);
+                        fromFilter.getCondition(),
+                        fromFilter.getInput(),
+                        newInput,
+                        fieldIndexMapping);
         final RexNode newToCondition =
                 createNewInputRexNode(
                         toFilter.getCondition(),
                         toFilter.getInput(),
                         newInput,
+                        fieldIndexMapping,
                         fromFilter.getInput().getRowType().getFieldCount());
         final List<RexNode> orList = Arrays.asList(newFromCondition, newToCondition);
         orList.sort((o1, o2) -> o2.toString().compareTo(o1.toString()));

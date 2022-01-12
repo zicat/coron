@@ -1,5 +1,6 @@
 package io.agora.cruise.core.merge.rule;
 
+import com.google.common.collect.Maps;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
@@ -14,10 +15,12 @@ import org.apache.calcite.rex.RexShuttle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** MergeRule. */
 public abstract class MergeRule {
 
+    private static final int defaultIndex = -1;
     protected final MergeConfig mergeConfig;
 
     public MergeRule(MergeConfig mergeConfig) {
@@ -55,26 +58,32 @@ public abstract class MergeRule {
      * @param rexNode rexNode
      * @param originalInput originalInput
      * @param newInput newInput
+     * @param nameIndexMapping use dataTypeNameIndex(newInput.getRowType()) to build
+     * @param offset offset
      * @return RexNode
      */
     protected RexNode createNewInputRexNode(
-            RexNode rexNode, RelNode originalInput, RelNode newInput, int offset) {
+            RexNode rexNode,
+            RelNode originalInput,
+            RelNode newInput,
+            Map<String, Integer> nameIndexMapping,
+            int offset) {
         return rexNode.accept(
                 new RexShuttle() {
                     @Override
                     public RexNode visitInputRef(RexInputRef inputRef) {
-                        int index = inputRef.getIndex();
+                        final int index = inputRef.getIndex();
                         String name = originalInput.getRowType().getFieldNames().get(index);
-                        int newIndex = -1;
+                        int newIndex = defaultIndex;
                         if (offset > 0 && newInput instanceof Aggregate && name.startsWith("$f")) {
                             String newName =
                                     "$f" + (offset + Integer.parseInt(name.replace("$f", "")));
-                            newIndex = findIndexByName(newInput.getRowType(), newName);
+                            newIndex = nameIndexMapping.getOrDefault(newName, defaultIndex);
                         }
-                        if (newIndex == -1) {
-                            newIndex = findIndexByName(newInput.getRowType(), name);
+                        if (newIndex == defaultIndex) {
+                            newIndex = nameIndexMapping.getOrDefault(name, defaultIndex);
                         }
-                        if (newIndex == -1) {
+                        if (newIndex == defaultIndex) {
                             throw new CruiseParserException(
                                     "create new input RexNode fail, node detail: "
                                             + rexNode.toString());
@@ -82,6 +91,22 @@ public abstract class MergeRule {
                         return new RexInputRef(newIndex, inputRef.getType());
                     }
                 });
+    }
+
+    /**
+     * create new RexNode that inputRef replace from fromInput to newInput.
+     *
+     * @param rexNode rexNode
+     * @param originalInput originalInput
+     * @param newInput newInput
+     * @return RexNode
+     */
+    protected RexNode createNewInputRexNode(
+            RexNode rexNode,
+            RelNode originalInput,
+            RelNode newInput,
+            Map<String, Integer> nameIndexMapping) {
+        return createNewInputRexNode(rexNode, originalInput, newInput, nameIndexMapping, 0);
     }
 
     /**
@@ -106,18 +131,16 @@ public abstract class MergeRule {
     }
 
     /**
-     * find index by name from RelDataType.
+     * build relDataType Index.
      *
      * @param relDataType relDataType
-     * @param name name
-     * @return -1 if not found else return position
+     * @return mapIndex
      */
-    protected final int findIndexByName(RelDataType relDataType, String name) {
+    protected final Map<String, Integer> dataTypeNameIndex(RelDataType relDataType) {
+        Map<String, Integer> map = Maps.newHashMapWithExpectedSize(relDataType.getFieldCount());
         for (int i = 0; i < relDataType.getFieldNames().size(); i++) {
-            if (relDataType.getFieldNames().get(i).equals(name)) {
-                return i;
-            }
+            map.put(relDataType.getFieldNames().get(i), i);
         }
-        return -1;
+        return map;
     }
 }

@@ -1,5 +1,6 @@
 package io.agora.cruise.core.merge.rule;
 
+import com.google.common.collect.Maps;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
@@ -13,7 +14,10 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 /** ProjectMergeRule. */
 public class ProjectMergeRule extends MergeRule {
@@ -57,26 +61,33 @@ public class ProjectMergeRule extends MergeRule {
         final Project toProject = (Project) toNode;
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
-        final Map<RelDataTypeField, RexNode> projectRexMapping = new HashMap<>();
+        final Map<RelDataTypeField, RexNode> fieldMapping =
+                Maps.newHashMapWithExpectedSize(
+                        fromProject.getProjects().size() + toProject.getProjects().size());
+        final Map<String, RexNode> nameMapping =
+                Maps.newHashMapWithExpectedSize(
+                        fromProject.getProjects().size() + toProject.getProjects().size());
+        final Map<String, Integer> fieldIndexMapping = dataTypeNameIndex(newInput.getRowType());
         for (int i = 0; i < fromProject.getProjects().size(); i++) {
-            RexNode rexNode = fromProject.getProjects().get(i);
-            RexNode newRexNode =
-                    createNewInputRexNode(rexNode, fromProject.getInput(), newInput, 0);
-            projectRexMapping.put(fromProject.getRowType().getFieldList().get(i), newRexNode);
+            final RexNode rexNode = fromProject.getProjects().get(i);
+            final RexNode newRexNode =
+                    createNewInputRexNode(
+                            rexNode, fromProject.getInput(), newInput, fieldIndexMapping);
+            final RelDataTypeField field = fromProject.getRowType().getFieldList().get(i);
+            fieldMapping.put(field, newRexNode);
+            nameMapping.put(field.getName(), newRexNode);
         }
 
+        final int offset = fromProject.getInput().getRowType().getFieldCount();
         for (int i = 0; i < toProject.getProjects().size(); i++) {
-            RexNode rexNode = toProject.getProjects().get(i);
-            RexNode newRexNode =
+            final RexNode rexNode = toProject.getProjects().get(i);
+            final RexNode newRexNode =
                     createNewInputRexNode(
-                            rexNode,
-                            toProject.getInput(),
-                            newInput,
-                            fromProject.getInput().getRowType().getFieldCount());
-            RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
-            RexNode fromRexNode = findRexNode(projectRexMapping, field);
+                            rexNode, toProject.getInput(), newInput, fieldIndexMapping, offset);
+            final RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
+            final RexNode fromRexNode = nameMapping.get(field.getName());
             if (fromRexNode == null) {
-                projectRexMapping.put(field, newRexNode);
+                fieldMapping.put(field, newRexNode);
                 continue;
             }
 
@@ -89,31 +100,12 @@ public class ProjectMergeRule extends MergeRule {
         }
 
         // sort field to make output result uniqueness
-        final List<RelDataTypeField> newFields = new ArrayList<>(projectRexMapping.keySet());
+        final List<RelDataTypeField> newFields = new ArrayList<>(fieldMapping.keySet());
         newFields.sort(Comparator.comparing(RelDataTypeField::getName));
-        final List<RexNode> newRexNodes = new ArrayList<>();
-        newFields.forEach(field -> newRexNodes.add(projectRexMapping.get(field)));
-
+        final List<RexNode> newRexNodes = new ArrayList<>(fieldMapping.size());
+        newFields.forEach(field -> newRexNodes.add(fieldMapping.get(field)));
         return fromProject.copy(
                 newRelTraitSet, newInput, newRexNodes, new RelRecordType(newFields));
-    }
-
-    /**
-     * found RexNode by name.
-     *
-     * @param project projects
-     * @param field field
-     * @return null if not found else return RexNode
-     */
-    private RexNode findRexNode(Map<RelDataTypeField, RexNode> project, RelDataTypeField field) {
-        for (Map.Entry<RelDataTypeField, RexNode> entry : project.entrySet()) {
-            final RelDataTypeField oneField = entry.getKey();
-            final RexNode value = entry.getValue();
-            if (oneField.getName().equals(field.getName())) {
-                return value;
-            }
-        }
-        return null;
     }
 
     /** project config. */

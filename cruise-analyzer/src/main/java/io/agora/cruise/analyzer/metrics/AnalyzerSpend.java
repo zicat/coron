@@ -7,7 +7,7 @@ public class AnalyzerSpend {
 
     private final AtomicLong totalSql2NodeSpend = new AtomicLong();
 
-    private final AtomicLong totalSubSqlSpend = new AtomicLong();
+    private final AtomicLong totalSqlAnalysisSpend = new AtomicLong();
 
     private final AtomicLong totalNode2SqlSpend = new AtomicLong();
 
@@ -19,7 +19,7 @@ public class AnalyzerSpend {
     }
 
     public AnalyzerSpend addTotalSubSqlSpend(long spend) {
-        this.totalSubSqlSpend.addAndGet(spend);
+        this.totalSqlAnalysisSpend.addAndGet(spend);
         return this;
     }
 
@@ -34,7 +34,7 @@ public class AnalyzerSpend {
         return "metrics: totalSql2NodeSpend="
                 + totalSql2NodeSpend.get()
                 + ", totalSubSqlSpend="
-                + totalSubSqlSpend.get()
+                + totalSqlAnalysisSpend.get()
                 + ", totalNode2SqlSpend="
                 + totalNode2SqlSpend.get();
     }

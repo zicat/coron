@@ -15,4 +15,9 @@ public class SqlListIterable extends SqlIterable {
     public SqlIterator sqlIterator() {
         return new SqlListIterator(sql);
     }
+
+    @Override
+    public int size() {
+        return sql.size();
+    }
 }

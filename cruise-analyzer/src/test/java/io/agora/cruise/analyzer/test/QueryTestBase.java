@@ -21,7 +21,9 @@ public class QueryTestBase extends FileContext {
             sql ->
                     sql.startsWith("explain")
                             || sql.contains("system.runtime")
-                            || sql.toUpperCase().startsWith("SHOW ")
+                            || sql.startsWith("SHOW ")
+                            || sql.startsWith("Show ")
+                            || sql.startsWith("show ")
                             || sql.contains("levels_usage_dod_di_11");
     protected SqlAnalyzer.ExceptionHandler exceptionHandler =
             (sql, e) -> {

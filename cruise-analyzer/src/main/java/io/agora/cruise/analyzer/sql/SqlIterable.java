@@ -16,4 +16,20 @@ public abstract class SqlIterable implements Iterable<String> {
      * @return SqlIterator
      */
     public abstract SqlIterator sqlIterator();
+
+    /**
+     * calculate size.
+     *
+     * @return count
+     */
+    public int size() {
+
+        int size = 0;
+        SqlIterator it = sqlIterator();
+        while (it.hasNext()) {
+            it.next();
+            size++;
+        }
+        return size;
+    }
 }

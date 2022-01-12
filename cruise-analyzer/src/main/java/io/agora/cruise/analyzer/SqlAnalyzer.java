@@ -141,7 +141,7 @@ public class SqlAnalyzer {
             AnalyzerSpend analyzerSpend) {
 
         LOG.info("start building sql node");
-        final List<NodeRelMeta> result = new ArrayList<>();
+        final List<NodeRelMeta> result = new ArrayList<>(sqlIterable.size());
         final List<Future<NodeRelMeta>> fs = new ArrayList<>(blockSize);
         final SqlIterator it = sqlIterable.sqlIterator();
         while (it.hasNext()) {

@@ -47,4 +47,9 @@ public class SqlJsonIterable extends SqlReaderIterable {
     public SqlIterator sqlIterator() {
         return new SqlJsonIterator(jsonNode, parser);
     }
+
+    @Override
+    public int size() {
+        return jsonNode.size();
+    }
 }

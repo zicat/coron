@@ -1,6 +1,7 @@
 package io.agora.cruise.core.merge.rule;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import io.agora.cruise.core.Node;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
@@ -17,7 +18,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -107,15 +107,11 @@ public class AggregateMergeRule extends MergeRule {
                     dataTypeNameIndex(newFilter.getInput().getRowType());
             final RexNode newFromCondition =
                     createNewInputRexNode(
-                            fromFilter.getCondition(),
-                            fromFilter.getInput(),
-                            newFilter.getInput(),
-                            fieldIndexMapping);
+                            fromFilter.getCondition(), fromFilter.getInput(), fieldIndexMapping);
             final RexNode newToCondition =
                     createNewInputRexNode(
                             toFilter.getCondition(),
                             toFilter.getInput(),
-                            newFilter.getInput(),
                             fieldIndexMapping,
                             fromFilter.getInput().getRowType().getFieldCount());
             if (!newFromCondition.equals(newToCondition)
@@ -229,8 +225,9 @@ public class AggregateMergeRule extends MergeRule {
     private static Map<String, AggregateCall> createAllAggregateCalls(
             Aggregate aggregate, RelNode input) {
         final List<String> fromGroupFields = groupSetNames(aggregate);
-        final Map<String, AggregateCall> fromNameCallMapping = new LinkedHashMap<>();
-        for (int i = 0; i < aggregate.getRowType().getFieldNames().size(); i++) {
+        final Map<String, AggregateCall> fromNameCallMapping =
+                Maps.newLinkedHashMapWithExpectedSize(aggregate.getRowType().getFieldCount());
+        for (int i = 0; i < aggregate.getRowType().getFieldCount(); i++) {
             String aggregationName = aggregate.getRowType().getFieldNames().get(i);
             if (fromGroupFields.contains(aggregationName)) {
                 continue;

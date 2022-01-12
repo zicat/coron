@@ -7,7 +7,6 @@ import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.parser.util.CruiseParserException;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -21,6 +20,7 @@ import java.util.Map;
 public abstract class MergeRule {
 
     private static final int defaultIndex = -1;
+    private static final String AUTO_CREATE_NAME_PREFIX = "$f";
     protected final MergeConfig mergeConfig;
 
     public MergeRule(MergeConfig mergeConfig) {
@@ -57,38 +57,37 @@ public abstract class MergeRule {
      *
      * @param rexNode rexNode
      * @param originalInput originalInput
-     * @param newInput newInput
-     * @param nameIndexMapping use dataTypeNameIndex(newInput.getRowType()) to build
+     * @param newIndexMapping use dataTypeNameIndex(newInput.getRowType()) to build
      * @param offset offset
      * @return RexNode
      */
     protected RexNode createNewInputRexNode(
             RexNode rexNode,
             RelNode originalInput,
-            RelNode newInput,
-            Map<String, Integer> nameIndexMapping,
+            Map<String, Integer> newIndexMapping,
             int offset) {
         return rexNode.accept(
                 new RexShuttle() {
                     @Override
                     public RexNode visitInputRef(RexInputRef inputRef) {
                         final int index = inputRef.getIndex();
-                        String name = originalInput.getRowType().getFieldNames().get(index);
-                        int newIndex = defaultIndex;
-                        if (offset > 0 && newInput instanceof Aggregate && name.startsWith("$f")) {
-                            String newName =
-                                    "$f" + (offset + Integer.parseInt(name.replace("$f", "")));
-                            newIndex = nameIndexMapping.getOrDefault(newName, defaultIndex);
+                        final String name = originalInput.getRowType().getFieldNames().get(index);
+                        int realIndex = defaultIndex;
+                        if (offset > 0 && name.startsWith(AUTO_CREATE_NAME_PREFIX)) {
+                            final int newIndex =
+                                    Integer.parseInt(name.replace(AUTO_CREATE_NAME_PREFIX, ""));
+                            final String newName = AUTO_CREATE_NAME_PREFIX + (offset + newIndex);
+                            realIndex = newIndexMapping.getOrDefault(newName, defaultIndex);
                         }
-                        if (newIndex == defaultIndex) {
-                            newIndex = nameIndexMapping.getOrDefault(name, defaultIndex);
+                        if (realIndex == defaultIndex) {
+                            realIndex = newIndexMapping.getOrDefault(name, defaultIndex);
                         }
-                        if (newIndex == defaultIndex) {
+                        if (realIndex == defaultIndex) {
                             throw new CruiseParserException(
                                     "create new input RexNode fail, node detail: "
                                             + rexNode.toString());
                         }
-                        return new RexInputRef(newIndex, inputRef.getType());
+                        return new RexInputRef(realIndex, inputRef.getType());
                     }
                 });
     }
@@ -98,15 +97,12 @@ public abstract class MergeRule {
      *
      * @param rexNode rexNode
      * @param originalInput originalInput
-     * @param newInput newInput
+     * @param newIndexMapping newIndexMapping
      * @return RexNode
      */
     protected RexNode createNewInputRexNode(
-            RexNode rexNode,
-            RelNode originalInput,
-            RelNode newInput,
-            Map<String, Integer> nameIndexMapping) {
-        return createNewInputRexNode(rexNode, originalInput, newInput, nameIndexMapping, 0);
+            RexNode rexNode, RelNode originalInput, Map<String, Integer> newIndexMapping) {
+        return createNewInputRexNode(rexNode, originalInput, newIndexMapping, 0);
     }
 
     /**

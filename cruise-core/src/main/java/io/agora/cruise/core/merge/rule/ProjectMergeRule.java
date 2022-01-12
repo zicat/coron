@@ -62,17 +62,16 @@ public class ProjectMergeRule extends MergeRule {
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
         // first: add all from project field and field type
         final Map<RelDataTypeField, RexNode> fieldMapping =
-                Maps.newHashMapWithExpectedSize(
+                Maps.newLinkedHashMapWithExpectedSize(
                         fromProject.getProjects().size() + toProject.getProjects().size());
         final Map<String, RexNode> nameMapping =
-                Maps.newHashMapWithExpectedSize(
+                Maps.newLinkedHashMapWithExpectedSize(
                         fromProject.getProjects().size() + toProject.getProjects().size());
         final Map<String, Integer> fieldIndexMapping = dataTypeNameIndex(newInput.getRowType());
         for (int i = 0; i < fromProject.getProjects().size(); i++) {
             final RexNode rexNode = fromProject.getProjects().get(i);
             final RexNode newRexNode =
-                    createNewInputRexNode(
-                            rexNode, fromProject.getInput(), newInput, fieldIndexMapping);
+                    createNewInputRexNode(rexNode, fromProject.getInput(), fieldIndexMapping);
             final RelDataTypeField field = fromProject.getRowType().getFieldList().get(i);
             fieldMapping.put(field, newRexNode);
             nameMapping.put(field.getName(), newRexNode);
@@ -82,8 +81,7 @@ public class ProjectMergeRule extends MergeRule {
         for (int i = 0; i < toProject.getProjects().size(); i++) {
             final RexNode rexNode = toProject.getProjects().get(i);
             final RexNode newRexNode =
-                    createNewInputRexNode(
-                            rexNode, toProject.getInput(), newInput, fieldIndexMapping, offset);
+                    createNewInputRexNode(rexNode, toProject.getInput(), fieldIndexMapping, offset);
             final RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
             final RexNode fromRexNode = nameMapping.get(field.getName());
             if (fromRexNode == null) {

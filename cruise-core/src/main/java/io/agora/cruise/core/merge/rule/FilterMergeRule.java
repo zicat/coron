@@ -46,15 +46,11 @@ public class FilterMergeRule extends MergeRule {
         final Map<String, Integer> fieldIndexMapping = dataTypeNameIndex(newInput.getRowType());
         final RexNode newFromCondition =
                 createNewInputRexNode(
-                        fromFilter.getCondition(),
-                        fromFilter.getInput(),
-                        newInput,
-                        fieldIndexMapping);
+                        fromFilter.getCondition(), fromFilter.getInput(), fieldIndexMapping);
         final RexNode newToCondition =
                 createNewInputRexNode(
                         toFilter.getCondition(),
                         toFilter.getInput(),
-                        newInput,
                         fieldIndexMapping,
                         fromFilter.getInput().getRowType().getFieldCount());
         final List<RexNode> orList = Arrays.asList(newFromCondition, newToCondition);

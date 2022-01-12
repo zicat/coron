@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class TopFilterFinder extends RelShuttleImpl {
 
-    private List<Filter> filters = new ArrayList<>();
+    private final List<Filter> filters = new ArrayList<>();
 
     /**
      * Find the first filter from input rel node.

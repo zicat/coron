@@ -2,9 +2,9 @@ package io.agora.cruise.analyzer.test;
 
 import io.agora.cruise.analyzer.FileContext;
 import io.agora.cruise.analyzer.SqlAnalyzer;
+import io.agora.cruise.analyzer.rel.RelShuttleChain;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
-import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.util.SqlShuttle;

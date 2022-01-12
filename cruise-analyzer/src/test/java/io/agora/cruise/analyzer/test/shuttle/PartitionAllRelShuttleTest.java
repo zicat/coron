@@ -1,9 +1,9 @@
 package io.agora.cruise.analyzer.test.shuttle;
 
 import io.agora.cruise.analyzer.FileContext;
+import io.agora.cruise.analyzer.rel.RelShuttleChain;
 import io.agora.cruise.analyzer.shuttle.PartitionRelShuttle;
 import io.agora.cruise.core.NodeRel;
-import io.agora.cruise.core.rel.RelShuttleChain;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;

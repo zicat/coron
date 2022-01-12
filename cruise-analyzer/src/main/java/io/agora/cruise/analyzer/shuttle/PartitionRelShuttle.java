@@ -1,6 +1,6 @@
 package io.agora.cruise.analyzer.shuttle;
 
-import io.agora.cruise.core.rel.RelShuttleChainException;
+import io.agora.cruise.analyzer.rel.RelShuttleChainException;
 import io.agora.cruise.parser.CalciteContext;
 import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.rel.PredictRexShuttle;

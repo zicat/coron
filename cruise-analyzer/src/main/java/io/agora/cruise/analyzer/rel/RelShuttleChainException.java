@@ -1,4 +1,4 @@
-package io.agora.cruise.core.rel;
+package io.agora.cruise.analyzer.rel;
 
 /** RelShuttleChainException. */
 public class RelShuttleChainException extends RuntimeException {

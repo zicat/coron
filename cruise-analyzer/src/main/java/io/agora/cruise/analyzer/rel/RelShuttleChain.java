@@ -1,4 +1,4 @@
-package io.agora.cruise.core.rel;
+package io.agora.cruise.analyzer.rel;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -60,8 +60,14 @@ public class RelShuttleChain {
                 for (RelShuttleImpl relShuttle : offsetChain.shuttles) {
                     try {
                         result = result.accept(relShuttle);
-                    } catch (Throwable e) {
-                        LOG.warn(relShuttle.getClass().getName() + ": " + e.getMessage());
+                    } catch (RelShuttleChainException chainException) {
+                        LOG.warn(
+                                "RelShuttle Convert Fail {}, {}",
+                                relShuttle.getClass(),
+                                chainException.getMessage());
+                        return null;
+                    } catch (Exception e) {
+                        LOG.warn("RelShuttle Convert Fail " + relShuttle.getClass(), e);
                         return null;
                     }
                 }

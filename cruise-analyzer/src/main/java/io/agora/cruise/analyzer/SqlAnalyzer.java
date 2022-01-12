@@ -26,7 +26,7 @@ import java.util.concurrent.Future;
 import static io.agora.cruise.core.NodeUtils.createNodeRelRoot;
 import static io.agora.cruise.core.NodeUtils.findAllSubNode;
 
-/** PublicSqlTool. */
+/** SqlAnalyzer. */
 public class SqlAnalyzer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzer.class);
@@ -49,8 +49,10 @@ public class SqlAnalyzer {
     }
 
     /**
-     * start calculate with default threads.
+     * start analyze with default threads.
      *
+     * @param source source sql
+     * @param target target sql
      * @return Map
      */
     public Map<String, RelNode> analyze(SqlIterable source, SqlIterable target) {
@@ -58,8 +60,10 @@ public class SqlAnalyzer {
     }
 
     /**
-     * start calculate.
+     * start analyze.
      *
+     * @param source source sql
+     * @param target target sql
      * @param threadCount threadCount
      * @return Map
      */

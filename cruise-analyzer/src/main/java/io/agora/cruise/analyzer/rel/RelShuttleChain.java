@@ -11,15 +11,18 @@ public class RelShuttleChain {
     private static final Logger LOG = LoggerFactory.getLogger(RelShuttleChain.class);
 
     private final RelShuttleImpl[] shuttles;
-    private final RelShuttleChain nextChain;
 
-    public RelShuttleChain(RelShuttleImpl[] shuttles, RelShuttleChain nextChain) {
+    public RelShuttleChain(RelShuttleImpl[] shuttles) {
         this.shuttles = shuttles;
-        this.nextChain = nextChain;
     }
 
+    /**
+     * empty chain.
+     *
+     * @return RelShuttleChain
+     */
     public static RelShuttleChain empty() {
-        return new RelShuttleChain(null, null);
+        return new RelShuttleChain(null);
     }
 
     /**
@@ -29,51 +32,35 @@ public class RelShuttleChain {
      * @return RelShuttleChain
      */
     public static RelShuttleChain of(RelShuttleImpl... shuttles) {
-        return new RelShuttleChain(shuttles, null);
-    }
-
-    /**
-     * create RelShuttleChain.
-     *
-     * @param shuttles shuttles
-     * @return RelShuttleChain
-     */
-    public static RelShuttleChain of(RelShuttleChain nextChain, RelShuttleImpl... shuttles) {
-        return new RelShuttleChain(shuttles, nextChain);
+        return new RelShuttleChain(shuttles);
     }
 
     /**
      * translate RelNode struct by shuttles.
      *
      * @param relNode relNode
-     * @return RelNode
+     * @return RelNode, null if accept error
      */
     public final RelNode accept(RelNode relNode) {
 
-        if (relNode == null) {
-            return null;
+        if (relNode == null || shuttles == null) {
+            return relNode;
         }
-        RelShuttleChain offsetChain = this;
         RelNode result = relNode;
-        do {
-            if (offsetChain.shuttles != null && offsetChain.shuttles.length != 0) {
-                for (RelShuttleImpl relShuttle : offsetChain.shuttles) {
-                    try {
-                        result = result.accept(relShuttle);
-                    } catch (RelShuttleChainException chainException) {
-                        LOG.warn(
-                                "RelShuttle Convert Fail {}, {}",
-                                relShuttle.getClass(),
-                                chainException.getMessage());
-                        return null;
-                    } catch (Exception e) {
-                        LOG.warn("RelShuttle Convert Fail " + relShuttle.getClass(), e);
-                        return null;
-                    }
-                }
+        for (RelShuttleImpl relShuttle : shuttles) {
+            try {
+                result = result.accept(relShuttle);
+            } catch (RelShuttleChainException chainException) {
+                LOG.warn(
+                        "RelShuttle Convert Fail {}, {}",
+                        relShuttle.getClass(),
+                        chainException.getMessage());
+                return null;
+            } catch (Exception e) {
+                LOG.warn("RelShuttle Convert Fail " + relShuttle.getClass(), e);
+                return null;
             }
-            offsetChain = offsetChain.nextChain;
-        } while (offsetChain != null);
+        }
         return result;
     }
 }

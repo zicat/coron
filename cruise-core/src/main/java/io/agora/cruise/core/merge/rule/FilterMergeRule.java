@@ -49,10 +49,7 @@ public class FilterMergeRule extends MergeRule {
                         fromFilter.getCondition(), fromFilter.getInput(), fieldIndexMapping);
         final RexNode newToCondition =
                 createNewInputRexNode(
-                        toFilter.getCondition(),
-                        toFilter.getInput(),
-                        fieldIndexMapping,
-                        fromFilter.getInput().getRowType().getFieldCount());
+                        toFilter.getCondition(), toFilter.getInput(), fieldIndexMapping);
         final List<RexNode> orList = Arrays.asList(newFromCondition, newToCondition);
         orList.sort((o1, o2) -> o2.toString().compareTo(o1.toString()));
 

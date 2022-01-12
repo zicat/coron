@@ -110,10 +110,7 @@ public class AggregateMergeRule extends MergeRule {
                             fromFilter.getCondition(), fromFilter.getInput(), fieldIndexMapping);
             final RexNode newToCondition =
                     createNewInputRexNode(
-                            toFilter.getCondition(),
-                            toFilter.getInput(),
-                            fieldIndexMapping,
-                            fromFilter.getInput().getRowType().getFieldCount());
+                            toFilter.getCondition(), toFilter.getInput(), fieldIndexMapping);
             if (!newFromCondition.equals(newToCondition)
                     && (!AggregateMergeableCheck.mergeable(fromAggregate)
                             || !AggregateMergeableCheck.mergeable(toAggregate))) {
@@ -139,13 +136,12 @@ public class AggregateMergeRule extends MergeRule {
         if (newArgIds == null) {
             return null;
         }
+        final Map<String, Integer> dataMapping = dataTypeNameIndex(newInput.getRowType());
         final int newFilterArg =
                 call.filterArg < 0
                         ? call.filterArg
-                        : findIdByName(
-                                parentAggregate.getRowType().getFieldNames().get(call.filterArg),
-                                newInput.getRowType());
-
+                        : dataMapping.get(
+                                parentAggregate.getRowType().getFieldNames().get(call.filterArg));
         ImmutableBitSet newDistinctKey = null;
         if (call.distinctKeys != null) {
             ImmutableBitSet mapping =
@@ -261,13 +257,14 @@ public class AggregateMergeRule extends MergeRule {
             return null;
         }
 
-        final List<Integer> newGroupSet = new ArrayList<>();
+        final List<Integer> newGroupSet = new ArrayList<>(fromFields.size());
+        final Map<String, Integer> indexMapping = dataTypeNameIndex(relDataType);
         for (String field : fromFields) {
             if (!toFields.contains(field)) {
                 return null;
             }
-            int offset = findIdByName(field, relDataType);
-            if (offset == -1) {
+            Integer offset = indexMapping.get(field);
+            if (offset == null) {
                 return null;
             }
             newGroupSet.add(offset);
@@ -313,7 +310,7 @@ public class AggregateMergeRule extends MergeRule {
             return null;
         }
 
-        final List<ImmutableBitSet> newGroupSets = new ArrayList<>();
+        final List<ImmutableBitSet> newGroupSets = new ArrayList<>(fromField.size());
         for (int i = 0; i < fromField.size(); i++) {
             final List<String> groupValueFieldFrom = fromField.get(i);
             final List<String> groupValueFieldTo = toField.get(i);
@@ -334,7 +331,7 @@ public class AggregateMergeRule extends MergeRule {
      * @return list list field
      */
     private static List<List<String>> getNewSortedGroupField(Aggregate aggregate) {
-        final List<List<String>> toField = new ArrayList<>();
+        final List<List<String>> toField = new ArrayList<>(aggregate.getGroupSets().size());
         for (ImmutableBitSet bitSet : aggregate.getGroupSets()) {
             final List<String> fields =
                     createNameByBitSetType(bitSet, aggregate.getInput().getRowType());
@@ -390,22 +387,6 @@ public class AggregateMergeRule extends MergeRule {
     }
 
     /**
-     * find position from RelDataType by fieldName.
-     *
-     * @param fieldName fieldName
-     * @param relDataType RelDataType
-     * @return -1 if not found else return position
-     */
-    private static int findIdByName(String fieldName, RelDataType relDataType) {
-        for (int i = 0; i < relDataType.getFieldNames().size(); i++) {
-            if (fieldName.equals(relDataType.getFieldNames().get(i))) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
      * create GroupSet (name,id) mapping.
      *
      * @param aggregate aggregating
@@ -422,7 +403,7 @@ public class AggregateMergeRule extends MergeRule {
      */
     private static List<String> createNameByBitSetType(
             ImmutableBitSet bitSet, RelDataType relDataType) {
-        final List<String> result = new ArrayList<>();
+        final List<String> result = new ArrayList<>(bitSet.size());
         for (int i = 0; i < bitSet.size(); i++) {
             if (!bitSet.get(i)) {
                 continue;
@@ -454,10 +435,11 @@ public class AggregateMergeRule extends MergeRule {
         if (fields == null) {
             return null;
         }
-        final List<Integer> result = new ArrayList<>();
+        final List<Integer> result = new ArrayList<>(fields.size());
+        final Map<String, Integer> dataMapping = dataTypeNameIndex(to.getRowType());
         for (String field : fields) {
-            int index = findIdByName(field, to.getRowType());
-            if (index == -1) {
+            Integer index = dataMapping.get(field);
+            if (index == null) {
                 return null;
             }
             result.add(index);

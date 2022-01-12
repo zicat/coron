@@ -26,7 +26,6 @@ public class ProjectFilterMergeRule extends MergeRule {
             Node<RelNode> fromNode,
             Node<RelNode> toNode,
             ResultNodeList<RelNode> childrenResultNode) {
-        projectMergeRule.mergeConfig.materialized(mergeConfig.canMaterialized());
         return projectMergeRule.merge(fromNode, toNode.getParent(), childrenResultNode);
     }
 

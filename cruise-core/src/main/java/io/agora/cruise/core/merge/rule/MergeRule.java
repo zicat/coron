@@ -19,8 +19,6 @@ import java.util.Map;
 /** MergeRule. */
 public abstract class MergeRule {
 
-    private static final int defaultIndex = -1;
-    private static final String AUTO_CREATE_NAME_PREFIX = "$f";
     protected final MergeConfig mergeConfig;
 
     public MergeRule(MergeConfig mergeConfig) {
@@ -58,31 +56,18 @@ public abstract class MergeRule {
      * @param rexNode rexNode
      * @param originalInput originalInput
      * @param newIndexMapping use dataTypeNameIndex(newInput.getRowType()) to build
-     * @param offset offset
      * @return RexNode
      */
     protected RexNode createNewInputRexNode(
-            RexNode rexNode,
-            RelNode originalInput,
-            Map<String, Integer> newIndexMapping,
-            int offset) {
+            RexNode rexNode, RelNode originalInput, Map<String, Integer> newIndexMapping) {
         return rexNode.accept(
                 new RexShuttle() {
                     @Override
                     public RexNode visitInputRef(RexInputRef inputRef) {
                         final int index = inputRef.getIndex();
                         final String name = originalInput.getRowType().getFieldNames().get(index);
-                        int realIndex = defaultIndex;
-                        if (offset > 0 && name.startsWith(AUTO_CREATE_NAME_PREFIX)) {
-                            final int newIndex =
-                                    Integer.parseInt(name.replace(AUTO_CREATE_NAME_PREFIX, ""));
-                            final String newName = AUTO_CREATE_NAME_PREFIX + (offset + newIndex);
-                            realIndex = newIndexMapping.getOrDefault(newName, defaultIndex);
-                        }
-                        if (realIndex == defaultIndex) {
-                            realIndex = newIndexMapping.getOrDefault(name, defaultIndex);
-                        }
-                        if (realIndex == defaultIndex) {
+                        final Integer realIndex = newIndexMapping.get(name);
+                        if (realIndex == null) {
                             throw new CruiseParserException(
                                     "create new input RexNode fail, node detail: "
                                             + rexNode.toString());
@@ -90,19 +75,6 @@ public abstract class MergeRule {
                         return new RexInputRef(realIndex, inputRef.getType());
                     }
                 });
-    }
-
-    /**
-     * create new RexNode that inputRef replace from fromInput to newInput.
-     *
-     * @param rexNode rexNode
-     * @param originalInput originalInput
-     * @param newIndexMapping newIndexMapping
-     * @return RexNode
-     */
-    protected RexNode createNewInputRexNode(
-            RexNode rexNode, RelNode originalInput, Map<String, Integer> newIndexMapping) {
-        return createNewInputRexNode(rexNode, originalInput, newIndexMapping, 0);
     }
 
     /**
@@ -119,7 +91,7 @@ public abstract class MergeRule {
         if (relNode == null) {
             return null;
         }
-        final List<RelNode> inputs = new ArrayList<>();
+        final List<RelNode> inputs = new ArrayList<>(childrenResultNode.size());
         for (ResultNode<RelNode> resultNode : childrenResultNode) {
             inputs.add(resultNode.getPayload());
         }
@@ -132,11 +104,11 @@ public abstract class MergeRule {
      * @param relDataType relDataType
      * @return mapIndex
      */
-    protected final Map<String, Integer> dataTypeNameIndex(RelDataType relDataType) {
-        Map<String, Integer> map = Maps.newHashMapWithExpectedSize(relDataType.getFieldCount());
+    protected static Map<String, Integer> dataTypeNameIndex(RelDataType relDataType) {
+        Map<String, Integer> mapping = Maps.newHashMapWithExpectedSize(relDataType.getFieldCount());
         for (int i = 0; i < relDataType.getFieldNames().size(); i++) {
-            map.put(relDataType.getFieldNames().get(i), i);
+            mapping.put(relDataType.getFieldNames().get(i), i);
         }
-        return map;
+        return mapping;
     }
 }

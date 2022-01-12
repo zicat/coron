@@ -60,13 +60,12 @@ public class ProjectMergeRule extends MergeRule {
         final Project fromProject = (Project) fromNode;
         final Project toProject = (Project) toNode;
         final RelTraitSet newRelTraitSet = fromProject.getTraitSet().merge(toProject.getTraitSet());
+        final int newFieldSize = fromProject.getProjects().size() + toProject.getProjects().size();
         // first: add all from project field and field type
         final Map<RelDataTypeField, RexNode> fieldMapping =
-                Maps.newLinkedHashMapWithExpectedSize(
-                        fromProject.getProjects().size() + toProject.getProjects().size());
+                Maps.newLinkedHashMapWithExpectedSize(newFieldSize);
         final Map<String, RexNode> nameMapping =
-                Maps.newLinkedHashMapWithExpectedSize(
-                        fromProject.getProjects().size() + toProject.getProjects().size());
+                Maps.newLinkedHashMapWithExpectedSize(newFieldSize);
         final Map<String, Integer> fieldIndexMapping = dataTypeNameIndex(newInput.getRowType());
         for (int i = 0; i < fromProject.getProjects().size(); i++) {
             final RexNode rexNode = fromProject.getProjects().get(i);
@@ -77,11 +76,10 @@ public class ProjectMergeRule extends MergeRule {
             nameMapping.put(field.getName(), newRexNode);
         }
 
-        final int offset = fromProject.getInput().getRowType().getFieldCount();
         for (int i = 0; i < toProject.getProjects().size(); i++) {
             final RexNode rexNode = toProject.getProjects().get(i);
             final RexNode newRexNode =
-                    createNewInputRexNode(rexNode, toProject.getInput(), fieldIndexMapping, offset);
+                    createNewInputRexNode(rexNode, toProject.getInput(), fieldIndexMapping);
             final RelDataTypeField field = toProject.getRowType().getFieldList().get(i);
             final RexNode fromRexNode = nameMapping.get(field.getName());
             if (fromRexNode == null) {

@@ -6,9 +6,7 @@ import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.rule.MergeRule;
 import org.apache.calcite.rel.RelNode;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 /** RelNodeMergePlanner. */
 public class RelNodeMergePlanner {
@@ -37,35 +35,12 @@ public class RelNodeMergePlanner {
                 final MergeRule rule = config.toMergeRule();
                 final RelNode relNode = rule.merge(fromNode, toNode, childrenResultNode);
                 final ResultNode<RelNode> rn = ResultNode.of(relNode, childrenResultNode);
-                rn.setFromLookAhead(lookAhead(config.operand(), Operand::isAnyFromNodeType));
-                rn.setToLookAhead(lookAhead(config.operand(), Operand::isAnyToNodeType));
+                rn.setFromLookAhead(config.fromLookAhead);
+                rn.setToLookAhead(config.toLookAhead);
                 return rn;
             }
         }
         return ResultNode.of(null, childrenResultNode);
-    }
-
-    /**
-     * compute the look ahead size by TwoMergeType.
-     *
-     * @param root root TwoMergeType
-     * @param handler type handler
-     * @return look ahead size
-     */
-    private int lookAhead(Operand root, ConfigRelNodeTypeHandler handler) {
-        int ahead = 0;
-        final Queue<Operand> queue = new LinkedList<>();
-        queue.offer(root);
-        while (!queue.isEmpty()) {
-            final Operand operand = queue.poll();
-            if (operand.parent() != null) {
-                queue.offer(operand.parent());
-            }
-            if (!handler.isAnyNodeType(operand)) {
-                ahead++;
-            }
-        }
-        return ahead;
     }
 
     /**
@@ -91,17 +66,5 @@ public class RelNodeMergePlanner {
             return fromTrue && toTrue;
         }
         return false;
-    }
-
-    /** ConfigRelNodeTypeHandler. */
-    private interface ConfigRelNodeTypeHandler {
-
-        /**
-         * is any node type of config.
-         *
-         * @param operand operand
-         * @return true if is any node type
-         */
-        boolean isAnyNodeType(Operand operand);
     }
 }

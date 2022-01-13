@@ -90,3 +90,4 @@ Check max-public sub tree whether can convert materialized view query and replac
     FROM default_db.materialized_view_1
     WHERE d1 = 'bbb'
     ``` 
+ - [Learning more](doc/analayzer.md)  

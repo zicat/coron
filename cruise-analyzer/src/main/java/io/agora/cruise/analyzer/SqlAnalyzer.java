@@ -7,11 +7,15 @@ import io.agora.cruise.analyzer.rel.RelShuttleChain;
 import io.agora.cruise.analyzer.sql.SqlFilter;
 import io.agora.cruise.analyzer.sql.SqlIterable;
 import io.agora.cruise.analyzer.sql.SqlIterator;
+import io.agora.cruise.analyzer.util.RelNodeUtils;
 import io.agora.cruise.core.NodeUtils;
 import io.agora.cruise.core.ResultNode;
 import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.parser.CalciteContext;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.slf4j.Logger;
@@ -31,6 +35,8 @@ public class SqlAnalyzer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzer.class);
     private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final List<Class<?>> DEFAULT_NODE_RESERVE_LIST =
+            Arrays.asList(Filter.class, Aggregate.class, Join.class);
     private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER = LOG::error;
     private static final SqlFilter DEFAULT_SQL_FILTER = sql -> false;
 
@@ -237,7 +243,8 @@ public class SqlAnalyzer {
      */
     protected boolean filterView(
             Map.Entry<String, RelNode> entry, Map<String, RelNode> viewQuerySet) {
-        return !entry.getKey().contains("WHERE ") || viewQuerySet.containsKey(entry.getKey());
+        return (!RelNodeUtils.containsKind(entry.getValue(), DEFAULT_NODE_RESERVE_LIST)
+                || viewQuerySet.containsKey(entry.getKey()));
     }
 
     /**

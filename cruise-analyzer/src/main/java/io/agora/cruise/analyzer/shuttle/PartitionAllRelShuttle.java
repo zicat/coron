@@ -2,7 +2,6 @@ package io.agora.cruise.analyzer.shuttle;
 
 import io.agora.cruise.analyzer.rel.RelShuttleChainException;
 import io.agora.cruise.analyzer.util.Lists;
-import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -19,6 +18,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +40,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
     public RelNode visit(LogicalFilter filter) {
 
         final RelNode newInput = filter.getInput().accept(this);
-        final Tuple2<RelNode, List<RexNode>> tuple = transFilterCondition(filter, newInput);
+        final Pair<RelNode, List<RexNode>> tuple = transFilterCondition(filter, newInput);
         if (tuple == null) {
             final RexNode newCondition = newCondition(filter.getCondition(), newInput);
             return filter.copy(filter.getTraitSet(), newInput, newCondition);
@@ -53,16 +53,16 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
             newProjects.add(new RexInputRef(i, newRelTypeFields.get(i).getType()));
         }
 
-        for (int i = 0; i < tuple.f1.size(); i++) {
-            final RexNode rexNode = tuple.f1.get(i);
+        for (int i = 0; i < tuple.right.size(); i++) {
+            final RexNode rexNode = tuple.right.get(i);
             final int index = i + newRelTypeFields.size();
             final String name = getPrefixName() + index;
             newRelTypeFields.add(new RelDataTypeFieldImpl(name, index, rexNode.getType()));
         }
         return LogicalProject.create(
-                tuple.f0,
+                tuple.left,
                 new ArrayList<>(),
-                Lists.merge(newProjects, tuple.f1),
+                Lists.merge(newProjects, tuple.right),
                 new RelRecordType(newRelTypeFields));
     }
 
@@ -71,7 +71,7 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
 
         final RelNode newInput = project.getInput().accept(this);
         final List<RelDataTypeField> inputNames = newInput.getRowType().getFieldList();
-        final List<Tuple2<RexNode, String>> prefixProjects = getPrefixRexNode(inputNames);
+        final List<Pair<RexNode, String>> prefixProjects = getPrefixRexNode(inputNames);
         final List<RexNode> newProjects = new ArrayList<>();
         for (RexNode function : project.getProjects()) {
             newProjects.add(newCondition(function, newInput));
@@ -80,11 +80,11 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
         final List<RelDataTypeField> newRelTypeFields =
                 new ArrayList<>(project.getRowType().getFieldList());
         for (int i = 0; i < prefixProjects.size(); i++) {
-            Tuple2<RexNode, String> tuple2 = prefixProjects.get(i);
-            final RexNode rexNode = tuple2.f0;
+            Pair<RexNode, String> tuple2 = prefixProjects.get(i);
+            final RexNode rexNode = tuple2.left;
             final int index = i + newRelTypeFields.size();
-            newRelTypeFields.add(new RelDataTypeFieldImpl(tuple2.f1, index, rexNode.getType()));
-            newProjects.add(tuple2.f0);
+            newRelTypeFields.add(new RelDataTypeFieldImpl(tuple2.right, index, rexNode.getType()));
+            newProjects.add(tuple2.left);
         }
         return LogicalProject.create(
                 newInput, project.getHints(), newProjects, new RelRecordType(newRelTypeFields));
@@ -96,12 +96,12 @@ public class PartitionAllRelShuttle extends PartitionRelShuttle {
      * @param inputNames inputNames
      * @return boolean contains
      */
-    private List<Tuple2<RexNode, String>> getPrefixRexNode(List<RelDataTypeField> inputNames) {
-        final List<Tuple2<RexNode, String>> ids = new ArrayList<>();
+    private List<Pair<RexNode, String>> getPrefixRexNode(List<RelDataTypeField> inputNames) {
+        final List<Pair<RexNode, String>> ids = new ArrayList<>();
         for (int i = 0; i < inputNames.size(); i++) {
             RelDataTypeField field = inputNames.get(i);
             if (field.getName().startsWith(getPrefixName())) {
-                ids.add(Tuple2.of(new RexInputRef(i, field.getType()), field.getName()));
+                ids.add(Pair.of(new RexInputRef(i, field.getType()), field.getName()));
             }
         }
         return ids;

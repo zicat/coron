@@ -67,12 +67,12 @@ Check max-public sub tree whether can convert materialized view query and replac
 
         //register public sub sql and materialized view and rewrite query sql
         context.addMaterializedView("materialized_view_1", resultNode.getPayload());
-        Tuple2<RelNode, List<RelOptMaterialization>> rewriteQuery1Result = context.materializedViewOpt(relNode1);
-        Tuple2<RelNode, List<RelOptMaterialization>> rewriteQuery2Result = context.materializedViewOpt(relNode2);
+        Pair<RelNode, List<RelOptMaterialization>> rewriteQuery1Result = context.materializedViewOpt(relNode1);
+        Pair<RelNode, List<RelOptMaterialization>> rewriteQuery2Result = context.materializedViewOpt(relNode2);
         System.out.println("=======================");
-        System.out.println(context.toSql(rewriteQuery1Result.f0));
+        System.out.println(context.toSql(rewriteQuery1Result.left));
         System.out.println("-----------------------");
-        System.out.println(context.toSql(rewriteQuery2Result.f0));
+        System.out.println(context.toSql(rewriteQuery2Result.left));
     }
     ```   
  - Show result

@@ -25,7 +25,7 @@ public class NodeRelTest extends TestBase {
     public void assertMaterialized(
             String materializeViewName, ResultNode<RelNode> resultNode, RelNode node2Opt) {
         addMaterializedView(materializeViewName, resultNode.getPayload());
-        final RelNode optRelNode1 = materializedViewOpt(node2Opt).f0;
+        final RelNode optRelNode1 = materializedViewOpt(node2Opt).left;
         final Set<String> optTableNames = tables(optRelNode1);
         final String fullMaterializeViewName = defaultDatabase() + "." + materializeViewName;
         Assert.assertTrue(optTableNames.contains(fullMaterializeViewName));

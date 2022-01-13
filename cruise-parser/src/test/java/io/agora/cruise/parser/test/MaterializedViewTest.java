@@ -29,7 +29,7 @@ public class MaterializedViewTest extends TestBase {
                         "select sum(c) as s_c from test_db.test_table having count(*) > 1",
                         SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode = sqlNode2RelNode(sqlNode);
-        final RelNode optNode = materializedViewOpt(relNode).f0;
+        final RelNode optNode = materializedViewOpt(relNode).left;
         final Set<String> queryTables = TableRelShuttleImpl.tables(optNode);
         Assert.assertTrue(queryTables.contains(viewTableName));
     }
@@ -49,7 +49,7 @@ public class MaterializedViewTest extends TestBase {
         final SqlNode sqlNode2 =
                 SqlNodeUtils.toSqlNode(viewQuerySql, SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode2 = sqlNode2RelNode(sqlNode2);
-        final RelNode optRelNode = materializedViewOpt(relNode2).f0;
+        final RelNode optRelNode = materializedViewOpt(relNode2).left;
         final Set<String> queryTables = TableRelShuttleImpl.tables(optRelNode);
         Assert.assertTrue(queryTables.contains(viewTableName));
     }
@@ -64,7 +64,7 @@ public class MaterializedViewTest extends TestBase {
                         "select a,sum(c) from test_db.test_table group by a",
                         SqlNodeUtils.DEFAULT_QUERY_PARSER_CONFIG);
         final RelNode relNode = sqlNode2RelNode(sqlNode);
-        final RelNode optNode = materializedViewOpt(relNode).f0;
+        final RelNode optNode = materializedViewOpt(relNode).left;
         final Set<String> queryTables = TableRelShuttleImpl.tables(optNode);
         Assert.assertTrue(queryTables.contains(viewTableName));
     }

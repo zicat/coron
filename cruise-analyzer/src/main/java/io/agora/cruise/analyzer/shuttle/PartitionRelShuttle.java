@@ -2,7 +2,6 @@ package io.agora.cruise.analyzer.shuttle;
 
 import io.agora.cruise.analyzer.rel.RelShuttleChainException;
 import io.agora.cruise.parser.CalciteContext;
-import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.rel.PredictRexShuttle;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -11,6 +10,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
+import org.apache.calcite.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,7 +104,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      * @param filter filter
      * @return tuple2
      */
-    protected Tuple2<RelNode, List<RexNode>> transFilterCondition(Filter filter, RelNode input) {
+    protected Pair<RelNode, List<RexNode>> transFilterCondition(Filter filter, RelNode input) {
 
         // if input already has prefixName field, this filterNode skip check.
         for (String name : input.getRowType().getFieldNames()) {
@@ -116,7 +116,7 @@ public class PartitionRelShuttle extends RelShuttleImpl {
         final RexNode rexNode = filter.getCondition();
         final RexNode firstOperand = compareCallFirstOperand(rexNode, input);
         if (firstOperand != null) {
-            return new Tuple2<>(input, Collections.singletonList(firstOperand));
+            return Pair.of(input, Collections.singletonList(firstOperand));
         }
         if (rexNode.getKind() != SqlKind.AND) {
             return null;
@@ -141,14 +141,13 @@ public class PartitionRelShuttle extends RelShuttleImpl {
             throw new RelShuttleChainException("only support transfer one type filter");
         }
         if (noPartitionRexNode.isEmpty()) {
-            return new Tuple2<>(input, partitionRexNode);
+            return Pair.of(input, partitionRexNode);
         }
         final RexNode newCondition =
                 noPartitionRexNode.size() == 1
                         ? noPartitionRexNode.get(0)
                         : andRexCall.clone(andRexCall.type, noPartitionRexNode);
-        return new Tuple2<>(
-                filter.copy(filter.getTraitSet(), input, newCondition), partitionRexNode);
+        return Pair.of(filter.copy(filter.getTraitSet(), input, newCondition), partitionRexNode);
     }
 
     /**

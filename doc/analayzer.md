@@ -23,12 +23,12 @@ SqlAnalyzer is a tool which can find all subQuery from two sql iterators, and ba
       
             //register public sub sql and materialized view and rewrite query sql
             result.forEach(context::addMaterializedView);
-            Tuple2<RelNode, List<RelOptMaterialization>> rewriteQuery1Result = context.materializedViewOpt(context.querySql2Rel(query1));
-            Tuple2<RelNode, List<RelOptMaterialization>> rewriteQuery2Result = context.materializedViewOpt(context.querySql2Rel(query2));
+            Pair<RelNode, List<RelOptMaterialization>> rewriteQuery1Result = context.materializedViewOpt(context.querySql2Rel(query1));
+            Pair<RelNode, List<RelOptMaterialization>> rewriteQuery2Result = context.materializedViewOpt(context.querySql2Rel(query2));
             System.out.println("=======================");
-            System.out.println(context.toSql(rewriteQuery1Result.f0));
+            System.out.println(context.toSql(rewriteQuery1Result.left));
             System.out.println("-----------------------");
-            System.out.println(context.toSql(rewriteQuery2Result.f0));
+            System.out.println(context.toSql(rewriteQuery2Result.left));
         }
         ```
     - Result  
@@ -77,12 +77,12 @@ SqlAnalyzer is a tool which can find all subQuery from two sql iterators, and ba
             result.forEach(context::addMaterializedView);
             // convert sql query to relNode.
     
-            Tuple2<RelNode, List<RelOptMaterialization>> rewriteQuery1Result = context.materializedViewOpt(context.querySql2Rel(query1));
-            Tuple2<RelNode, List<RelOptMaterialization>> rewriteQuery2Result = context.materializedViewOpt(context.querySql2Rel(query2));
+            Pair<RelNode, List<RelOptMaterialization>> rewriteQuery1Result = context.materializedViewOpt(context.querySql2Rel(query1));
+            Pair<RelNode, List<RelOptMaterialization>> rewriteQuery2Result = context.materializedViewOpt(context.querySql2Rel(query2));
             System.out.println("=======================");
-            System.out.println(context.toSql(rewriteQuery1Result.f0));
+            System.out.println(context.toSql(rewriteQuery1Result.left));
             System.out.println("-----------------------");
-            System.out.println(context.toSql(rewriteQuery2Result.f0));
+            System.out.println(context.toSql(rewriteQuery2Result.left));
         }   
         ```
     - Result  

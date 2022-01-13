@@ -7,10 +7,10 @@ import io.agora.cruise.analyzer.sql.SqlTextIterable;
 import io.agora.cruise.analyzer.sql.dialect.PrestoDialect;
 import io.agora.cruise.parser.SqlNodeUtils;
 import io.agora.cruise.parser.sql.shuttle.Int2BooleanConditionShuttle;
-import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,12 +49,12 @@ public class SlowQueryTest {
                 }
                 RelNode relNode =
                         queryTestBase.querySql2Rel(querySql, new Int2BooleanConditionShuttle());
-                Tuple2<Set<String>, RelNode> tuple2 = queryTestBase.tryMaterialized(relNode);
-                if (!tuple2.f0.isEmpty()) {
+                Pair<Set<String>, RelNode> tuple2 = queryTestBase.tryMaterialized(relNode);
+                if (!tuple2.left.isEmpty()) {
                     matched++;
-                    allMatchedView.addAll(tuple2.f0);
+                    allMatchedView.addAll(tuple2.left);
                     newQueryMap.put(
-                            querySql, queryTestBase.toSql(tuple2.f1, PrestoDialect.DEFAULT));
+                            querySql, queryTestBase.toSql(tuple2.right, PrestoDialect.DEFAULT));
                 }
                 total++;
             } catch (Exception e) {
@@ -71,7 +71,7 @@ public class SlowQueryTest {
                     System.out.println(v);
                 });
         LOG.info("total:" + total + ",matched:" + matched + ",view count:" + allMatchedView.size());
-        Map<String, Tuple2<Long, Long>> result = new HashMap<>();
+        Map<String, Pair<Long, Long>> result = new HashMap<>();
         int tryCount = 1;
         for (Map.Entry<String, String> entry : newQueryMap.entrySet()) {
             String oldQuery = entry.getKey();
@@ -84,15 +84,15 @@ public class SlowQueryTest {
             for (int i = 0; i < tryCount; i++) {
                 newSpendMin = Math.min(newSpendMin, processByPrestoSql(newQuery));
             }
-            Tuple2<Long, Long> tuple2 = Tuple2.of(oldSpendMin, newSpendMin);
+            Pair<Long, Long> tuple2 = Pair.of(oldSpendMin, newSpendMin);
             result.put(oldQuery, tuple2);
             System.out.println(tuple2);
         }
         long oldTotal =
-                result.values().stream().mapToLong(longLongTuple2 -> longLongTuple2.f0).sum();
+                result.values().stream().mapToLong(longLongTuple2 -> longLongTuple2.left).sum();
         long newTotal =
-                result.values().stream().mapToLong(longLongTuple2 -> longLongTuple2.f1).sum();
-        System.out.println("total spend " + Tuple2.of(oldTotal, newTotal));
+                result.values().stream().mapToLong(longLongTuple2 -> longLongTuple2.right).sum();
+        System.out.println("total spend " + Pair.of(oldTotal, newTotal));
     }
 
     public static long processByPrestoSql(String inputSql) throws SQLException {

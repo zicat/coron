@@ -3,10 +3,10 @@ package io.agora.cruise.analyzer;
 import io.agora.cruise.analyzer.sql.SqlIterator;
 import io.agora.cruise.analyzer.sql.SqlTextIterable;
 import io.agora.cruise.parser.CalciteContext;
-import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.TableRelShuttleImpl;
+import org.apache.calcite.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +46,11 @@ public class FileContext extends CalciteContext {
      * @param relNode query node
      * @return match view set and match result RelNode in tuple2
      */
-    public Tuple2<Set<String>, RelNode> tryMaterialized(RelNode relNode) {
-        Tuple2<RelNode, List<RelOptMaterialization>> tuple = materializedViewOpt(relNode);
-        final RelNode optRelNode = tuple.f0;
+    public Pair<Set<String>, RelNode> tryMaterialized(RelNode relNode) {
+        Pair<RelNode, List<RelOptMaterialization>> pair = materializedViewOpt(relNode);
+        final RelNode optRelNode = pair.left;
         final List<String> views =
-                tuple.f1.stream()
+                pair.right.stream()
                         .map(v -> String.join(".", v.qualifiedTableName))
                         .collect(Collectors.toList());
         final Set<String> opRelNode1Tables = TableRelShuttleImpl.tables(optRelNode);
@@ -60,7 +60,7 @@ public class FileContext extends CalciteContext {
                 matchedView.add(opRelNode1Table);
             }
         }
-        return Tuple2.of(matchedView, optRelNode);
+        return Pair.of(matchedView, optRelNode);
     }
 
     /** init schema. */

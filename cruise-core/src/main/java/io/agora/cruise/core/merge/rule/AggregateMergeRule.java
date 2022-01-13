@@ -7,7 +7,6 @@ import io.agora.cruise.core.ResultNodeList;
 import io.agora.cruise.core.merge.MergeConfig;
 import io.agora.cruise.core.merge.Operand;
 import io.agora.cruise.core.util.ListComparator;
-import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
@@ -16,6 +15,7 @@ import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +62,7 @@ public class AggregateMergeRule extends MergeRule {
             return null;
         }
 
-        final Tuple2<ImmutableBitSet, ImmutableList<ImmutableBitSet>> newGroupSetTuple =
+        final Pair<ImmutableBitSet, ImmutableList<ImmutableBitSet>> newGroupSetTuple =
                 createNewGroupSet(fromAggregate, toAggregate, newInput);
         if (newGroupSetTuple == null) {
             return null;
@@ -76,7 +76,11 @@ public class AggregateMergeRule extends MergeRule {
         final RelTraitSet newRelTraitSet =
                 fromAggregate.getTraitSet().merge(toAggregate.getTraitSet());
         return fromAggregate.copy(
-                newRelTraitSet, newInput, newGroupSetTuple.f0, newGroupSetTuple.f1, newAggCalls);
+                newRelTraitSet,
+                newInput,
+                newGroupSetTuple.left,
+                newGroupSetTuple.right,
+                newAggCalls);
     }
 
     /**
@@ -281,7 +285,7 @@ public class AggregateMergeRule extends MergeRule {
      * @param input same input
      * @return null if create fail else ImmutableBitSet
      */
-    private Tuple2<ImmutableBitSet, ImmutableList<ImmutableBitSet>> createNewGroupSet(
+    private Pair<ImmutableBitSet, ImmutableList<ImmutableBitSet>> createNewGroupSet(
             Aggregate fromAggregate, Aggregate toAggregate, RelNode input) {
 
         // calcite not support materialized group sets, so merged group sets is meaningless
@@ -321,7 +325,7 @@ public class AggregateMergeRule extends MergeRule {
                     sameIndexMapping(groupValueFieldFrom, groupValueFieldTo, input.getRowType());
             newGroupSets.add(ImmutableBitSet.of(newGroupValue));
         }
-        return Tuple2.of(ImmutableBitSet.of(newGroupSet), ImmutableList.copyOf(newGroupSets));
+        return Pair.of(ImmutableBitSet.of(newGroupSet), ImmutableList.copyOf(newGroupSets));
     }
 
     /**

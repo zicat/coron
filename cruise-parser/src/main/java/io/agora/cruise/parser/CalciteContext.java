@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import io.agora.cruise.parser.sql.function.FunctionUtils;
 import io.agora.cruise.parser.sql.type.UTF16JavaTypeFactoryImp;
 import io.agora.cruise.parser.util.LockUtils;
-import io.agora.cruise.parser.util.Tuple2;
 import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -41,6 +40,7 @@ import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.util.Pair;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -342,13 +342,13 @@ public class CalciteContext {
      * @param relNode query node
      * @return opt node
      */
-    public Tuple2<RelNode, List<RelOptMaterialization>> materializedViewOpt(RelNode relNode) {
+    public Pair<RelNode, List<RelOptMaterialization>> materializedViewOpt(RelNode relNode) {
         final Set<String> tables = TableRelShuttleImpl.tables(relNode);
         final HepPlanner materializedHepPlanner = createMaterializedHepPlanner();
         List<RelOptMaterialization> views =
                 addMaterializeView2Planner(tables, materializedHepPlanner);
         RelNode optRelNode = optimize(relNode, materializedHepPlanner);
-        return Tuple2.of(optRelNode, views);
+        return Pair.of(optRelNode, views);
     }
 
     /**

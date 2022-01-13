@@ -31,11 +31,17 @@ public class SqlAnalyzer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqlAnalyzer.class);
     private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER = LOG::error;
+    private static final SqlFilter DEFAULT_SQL_FILTER = sql -> false;
 
     protected final SqlFilter sqlFilter;
     protected final CalciteContext context;
     protected final ExceptionHandler handler;
     protected final SqlDialect sqlDialect;
+
+    public SqlAnalyzer(CalciteContext context, SqlDialect sqlDialect) {
+        this(DEFAULT_SQL_FILTER, DEFAULT_EXCEPTION_HANDLER, context, sqlDialect);
+    }
 
     public SqlAnalyzer(
             SqlFilter sqlFilter,

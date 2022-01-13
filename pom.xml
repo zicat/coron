@@ -18,6 +18,20 @@
         <calcite.version>1.27.0</calcite.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>data-repo</id>
+            <name>Agora Artifactory DataPlatform Repo</name>
+            <url>https://artifactory-api.bj2.agoralab.co/artifactory/DataPlatform-local</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>User Project SNAPSHOTS</name>
+            <url>https://artifactory-api.bj2.agoralab.co/artifactory/DataPlatform-local</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

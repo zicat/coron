@@ -160,6 +160,21 @@ public class PartitionRelShuttle extends RelShuttleImpl {
      */
     private RexNode compareCallFirstOperand(RexNode rexNode, RelNode input) {
 
+        if (rexNode.getKind() == SqlKind.OR) {
+            final RexCall orCall = (RexCall) rexNode;
+            RexNode result = null;
+            for (RexNode operand : orCall.getOperands()) {
+                RexNode firstOperand = compareCallFirstOperand(operand, input);
+                if (firstOperand == null) {
+                    return null;
+                }
+                if (result == null || result.equals(firstOperand)) {
+                    result = firstOperand;
+                }
+            }
+            return result;
+        }
+
         if (!containsCompareKind(rexNode)) {
             return null;
         }

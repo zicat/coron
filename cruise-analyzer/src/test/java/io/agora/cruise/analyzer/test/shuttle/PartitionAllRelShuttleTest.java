@@ -117,6 +117,32 @@ public class PartitionAllRelShuttleTest extends FileContext {
         Assert.assertEquals(expectSql5, toSql(shuttleChain.accept(querySql2Rel(sql5))));
     }
 
+    @Test
+    public void test6() throws SqlParseException {
+        final String sql =
+                "SELECT d1, sum(m1) AS s1 FROM default_db.test WHERE d1 = 'aaa' and date in ('2022-01-01','2022-01-02') GROUP BY d1";
+        addTables(
+                "CREATE TABLE default_db.test(d1 varchar, d2 varchar, m1 int, m2 bigint, date varchar)");
+        final String expectSql =
+                "SELECT d1, date tmp_p_5, SUM(m1) s1\nFROM default_db.test\nWHERE d1 = 'aaa'\nGROUP BY d1, date";
+        final RelNode relNode = querySql2Rel(sql);
+        List<String> partitionFields = Collections.singletonList("date");
+        RelShuttleChain shuttleChain =
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields));
+        final RelNode newRelNode = shuttleChain.accept(relNode);
+        Assert.assertEquals(expectSql, toSql(newRelNode));
+
+        final String sql2 =
+                "SELECT d1, sum(m1) AS s1 FROM default_db.test WHERE date in ('2022-01-01','2022-01-02') GROUP BY d1";
+        final String expectSql2 =
+                "SELECT d1, date tmp_p_5, SUM(m1) s1\nFROM default_db.test\nGROUP BY d1, date";
+        final RelNode relNode2 = querySql2Rel(sql2);
+        final RelNode newRelNode2 =
+                RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(partitionFields))
+                        .accept(relNode2);
+        Assert.assertEquals(expectSql2, toSql(newRelNode2));
+    }
+
     private String expectSql5 =
             "SELECT t3.f1, t3.f2, t3.f3, t3.f4, t3.f5, t3.f6, t3.f7, t3.f8, t3.sum_totalUsage_ok, t3.f9, t3.f10, t3.level1, t14.__measure__0 sum_Calculation_4164281609521332225_ok, t3.sum_totalUsage_ok sum_totalUsage_ok0, t3.tmp_p_154, t14.tmp_p_154 tmp_p_1540, t14.tmp_p_1540 tmp_p_15400\n"
                     + "FROM (SELECT CASE WHEN level1 = 'unknown' THEN 'UNKNOWN' ELSE level1 END level1, SUM(audience_sd) f1, SUM(host_hd) f2, SUM(video) f3, SUM(audience_hd) f4, SUM(audience_hdp) f5, SUM(host_hdp) f6, SUM(host_audio) f7, SUM(audio) f8, SUM(audience_audio) f9, SUM(host_sd) f10, SUM(total) sum_totalUsage_ok, date tmp_p_154\n"

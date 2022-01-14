@@ -1,6 +1,7 @@
 package io.agora.cruise.analyzer;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import io.agora.cruise.analyzer.metrics.AnalyzerSpend;
 import io.agora.cruise.analyzer.module.NodeRelMeta;
 import io.agora.cruise.analyzer.rel.RelShuttleChain;
@@ -96,15 +97,14 @@ public class SqlAnalyzer {
                 final Map<String, RelNode> matchResult = new TreeMap<>();
                 for (int j = source == target ? i + 1 : 0; j < tMetas.size(); j++) {
                     final NodeRelMeta tMeta = tMetas.get(j);
-                    final Future<ResultNodeList<RelNode>> future =
-                            service.submit(() -> analyze(fMeta, tMeta, spend));
-                    fs.add(future);
+                    fs.add(service.submit(() -> analyze(fMeta, tMeta, spend)));
                     if (fs.size() >= blockSize) {
-                        resultNodeListGet(fs, spend, matchResult);
+                        matchResult.putAll(resultNodeListGet(fs, spend));
                     }
                 }
-                resultNodeListGet(fs, spend, matchResult);
-                findBestView(matchResult, viewQuerySet);
+                matchResult.putAll(resultNodeListGet(fs, spend));
+                final Collection<RelNode> bestViews = findBestView(matchResult, viewQuerySet);
+                bestViews.forEach(n -> viewQuerySet.put(viewName(viewQuerySet.size()), n));
                 LOG.debug("current_query:{}, view_size:{}, {}", i, viewQuerySet.size(), spend);
             }
             LOG.info("finish match, view_size:{}, {}", viewQuerySet.size(), spend);
@@ -119,19 +119,18 @@ public class SqlAnalyzer {
      *
      * @param fs future List
      * @param analyzerSpend metrics
-     * @param matchResult matchResult
      */
-    private void resultNodeListGet(
-            List<Future<ResultNodeList<RelNode>>> fs,
-            AnalyzerSpend analyzerSpend,
-            Map<String, RelNode> matchResult) {
+    private Map<String, RelNode> resultNodeListGet(
+            List<Future<ResultNodeList<RelNode>>> fs, AnalyzerSpend analyzerSpend) {
+
+        final Map<String, RelNode> result = Maps.newHashMapWithExpectedSize(fs.size());
         for (Future<ResultNodeList<RelNode>> future : fs) {
             try {
                 final ResultNodeList<RelNode> resultNodeList = future.get();
                 final long start = System.currentTimeMillis();
                 for (ResultNode<RelNode> resultNode : resultNodeList) {
                     final String viewQuery = context.toSql(resultNode.getPayload(), sqlDialect);
-                    matchResult.put(viewQuery, resultNode.getPayload());
+                    result.put(viewQuery, resultNode.getPayload());
                 }
                 analyzerSpend.addTotalNode2SqlSpend(System.currentTimeMillis() - start);
             } catch (Throwable e) {
@@ -139,6 +138,7 @@ public class SqlAnalyzer {
             }
         }
         fs.clear();
+        return result;
     }
 
     /**
@@ -167,10 +167,10 @@ public class SqlAnalyzer {
             }
             fs.add(service.submit(() -> getRelNode(sql, cache, analyzerSpend)));
             if (fs.size() >= blockSize) {
-                nodeRelMetaGet(fs, result);
+                result.addAll(nodeRelMetaGet(fs));
             }
         }
-        nodeRelMetaGet(fs, result);
+        result.addAll(nodeRelMetaGet(fs));
         return result;
     }
 
@@ -178,20 +178,22 @@ public class SqlAnalyzer {
      * nodeRelMetaGet.
      *
      * @param fs fs
-     * @param metaList metaList
      */
-    private void nodeRelMetaGet(List<Future<NodeRelMeta>> fs, List<NodeRelMeta> metaList) {
+    private List<NodeRelMeta> nodeRelMetaGet(List<Future<NodeRelMeta>> fs) {
+
+        final List<NodeRelMeta> result = new ArrayList<>(fs.size());
         for (Future<NodeRelMeta> future : fs) {
             try {
                 NodeRelMeta nodeRelMeta = future.get();
                 if (!nodeRelMeta.isEmpty()) {
-                    metaList.add(nodeRelMeta);
+                    result.add(nodeRelMeta);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
         fs.clear();
+        return result;
     }
 
     /**
@@ -210,41 +212,42 @@ public class SqlAnalyzer {
      * @param payloads payloads
      * @param viewQuerySet viewQuerySet
      */
-    protected void findBestView(Map<String, RelNode> payloads, Map<String, RelNode> viewQuerySet) {
+    protected Collection<RelNode> findBestView(
+            Map<String, RelNode> payloads, Map<String, RelNode> viewQuerySet) {
 
+        final List<RelNode> bestViews = new ArrayList<>();
         if (payloads == null || payloads.isEmpty()) {
-            return;
+            return bestViews;
         }
         final Set<Integer> deepLadder = new TreeSet<>();
-        final Map<String, RelNode> bestSqlMap = new TreeMap<>();
+        final Set<String> distinctView = new TreeSet<>();
         for (Map.Entry<String, RelNode> entry : payloads.entrySet()) {
-            if (filterView(entry, viewQuerySet)) {
-                continue;
-            }
             final String viewSql = entry.getKey();
             final RelNode viewRelNode = entry.getValue();
+            if (filterView(viewRelNode)) {
+                continue;
+            }
+            if (viewQuerySet.containsKey(entry.getKey())) {
+                continue;
+            }
             final int deep = NodeUtils.deep(viewRelNode);
-            if (!deepLadder.contains(deep) && !bestSqlMap.containsKey(viewSql)) {
+            if (!deepLadder.contains(deep) && !distinctView.contains(viewSql)) {
                 deepLadder.add(deep);
-                bestSqlMap.put(viewSql, viewRelNode);
+                distinctView.add(viewSql);
+                bestViews.add(viewRelNode);
             }
         }
-        for (Map.Entry<String, RelNode> bestSql : bestSqlMap.entrySet()) {
-            viewQuerySet.put(viewName(viewQuerySet.size()), bestSql.getValue());
-        }
+        return bestViews;
     }
 
     /**
      * filter view by viewSql.
      *
-     * @param entry viewSql, ViewNode
-     * @param viewQuerySet viewQuerySet
-     * @return return true if filter
+     * @param viewQueryRelNode viewQueryRelNode
+     * @return filter if return true
      */
-    protected boolean filterView(
-            Map.Entry<String, RelNode> entry, Map<String, RelNode> viewQuerySet) {
-        return (!RelNodeUtils.containsKind(entry.getValue(), DEFAULT_NODE_RESERVE_LIST)
-                || viewQuerySet.containsKey(entry.getKey()));
+    protected boolean filterView(RelNode viewQueryRelNode) {
+        return (!RelNodeUtils.containsKind(viewQueryRelNode, DEFAULT_NODE_RESERVE_LIST));
     }
 
     /**

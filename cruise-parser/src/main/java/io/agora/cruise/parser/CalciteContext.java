@@ -18,12 +18,10 @@ import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.TableRelShuttleImpl;
+import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.rules.*;
-import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyAggregateRule;
-import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewOnlyJoinRule;
-import org.apache.calcite.rel.rules.materialize.AliasMaterializedViewProjectAggregateRule;
-import org.apache.calcite.rel.rules.materialize.MaterializedViewRules;
+import org.apache.calcite.rel.rules.materialize.*;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
@@ -208,12 +206,17 @@ public class CalciteContext {
      */
     protected HepPlanner createMaterializedHepPlanner() {
         final HepProgramBuilder builder = new HepProgramBuilder();
-        builder.addRuleInstance(PruneEmptyRules.PROJECT_INSTANCE);
+        builder.addRuleInstance(
+                PruneEmptyRules.RemoveEmptySingleRule.Config.EMPTY
+                        .withDescription("PruneEmptyProject")
+                        .as(PruneEmptyRules.RemoveEmptySingleRule.Config.class)
+                        .withOperandFor(Project.class, project -> true)
+                        .toRule());
         ImmutableList.of(
-                        MaterializedViewRules.FILTER_SCAN,
-                        MaterializedViewRules.PROJECT_FILTER,
-                        MaterializedViewRules.FILTER,
-                        MaterializedViewRules.PROJECT_JOIN,
+                        MaterializedViewFilterScanRule.Config.DEFAULT.toRule(),
+                        MaterializedViewProjectFilterRule.Config.DEFAULT.toRule(),
+                        MaterializedViewOnlyFilterRule.Config.DEFAULT.toRule(),
+                        MaterializedViewProjectJoinRule.Config.DEFAULT.toRule(),
                         AliasMaterializedViewOnlyJoinRule.Config.DEFAULT.toRule(),
                         AliasMaterializedViewProjectAggregateRule.Config.DEFAULT.toRule(),
                         AliasMaterializedViewOnlyAggregateRule.Config.DEFAULT.toRule())

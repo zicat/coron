@@ -87,18 +87,21 @@ SqlAnalyzer is a tool which can find all subQuery from two sql iterators, and ba
         ```
     - Result  
         ```text
-        SELECT d1, date tmp_p_5, SUM(m1) s1, SUM(m2) s2
+        SELECT d1, date date_roll_up_5, SUM(m1) s1, SUM(m2) s2
         FROM default_db.test
         WHERE d1 = 'bbb' OR d1 = 'aaa'
         GROUP BY d1, date
         =======================
         SELECT d1, SUM(s1) s1
         FROM default_db.view_0
-        WHERE d1 = 'aaa' AND tmp_p_5 = '2022-01-01'
+        WHERE d1 = 'aaa' AND date_roll_up_5 = '2022-01-01'
         GROUP BY d1
         -----------------------
         SELECT d1, SUM(s2) s2
         FROM default_db.view_0
-        WHERE d1 = 'bbb' AND tmp_p_5 = '2022-01-02'
+        WHERE d1 = 'bbb' AND date_roll_up_5 = '2022-01-02'
         GROUP BY d1
         ```
+    - Note
+      
+        The rollup name(like date_roll_up_5) can be over write by FilterRexNodeRollUpBaseShuttle.getPrefixName

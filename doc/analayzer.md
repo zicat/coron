@@ -48,7 +48,7 @@ SqlAnalyzer is a tool which can find all subQuery from two sql iterators, and ba
         ```
 - RelShuttleChain Demo
 
-    RelShuttleChain can adjust the struct of RelNode before analysis, The most common usage is to adjust partition field.
+    RelShuttleChain can adjust the struct of RelNode before analysis, The most common usage is to rollup partition field in filter.
     
     - Create SqlAnalyzer with RelShuttleChain
         ```java
@@ -61,7 +61,7 @@ SqlAnalyzer is a tool which can find all subQuery from two sql iterators, and ba
                 protected RelShuttleChain createShuttleChain(RelNode relNode) {
                     // if relnode contains table default_db.test, use PartitionRelShuttle to adjust partition field
                     if(TableRelShuttleImpl.tables(relNode).contains("default_db.test")) {
-                        return RelShuttleChain.of(PartitionRelShuttle.partitionShuttles(Collections.singletonList("date")));
+                        return RelShuttleChain.of(FilterRexNodeRollUpShuttle.partitionShuttles("date"));
                     }
                     return super.createShuttleChain(relNode);
                 }

@@ -44,39 +44,4 @@ under the License.
             <url>https://maven.aliyun.com/repository/spring-plugin</url>
         </mirror>
     </mirrors>
-    <servers>
-        <server>
-            <id>data-repo</id>
-            <username>hongwei@agora.io</username>
-            <password>AP7vmxpcq6d486iCzoNxfFNtvCv</password>
-        </server>
-        <server>
-            <id>snapshots</id>
-            <username>hongwei@agora.io</username>
-            <password>AP7vmxpcq6d486iCzoNxfFNtvCv</password>
-        </server>
-    </servers>
-    <profiles>
-        <profile>
-            <id>agora-artifactory</id>
-            <repositories>
-                <repository>
-                    <id>data-repo</id>
-                    <name>Agora Artifactory DataPlatform Repo</name>
-                    <url>https://artifactory-api.bj2.agoralab.co/artifactory/DataPlatform-local
-                    </url>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <pluginRepositories/>
-        </profile>
-    </profiles>
-    <activeProfiles>
-        <activeProfile>agora-artifactory</activeProfile>
-    </activeProfiles>
 </settings>

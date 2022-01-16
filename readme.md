@@ -1,51 +1,28 @@
-# Introduce cruise
-Cruise is a tool to find the max-public sub tree on query list, and create the calcite materialized view query automatically. 
+# Introduce Coron
+Coron is a tool to find the max-public sub tree on query list, and create the calcite materialized view query automatically. 
 # Introduce sub modules
-## cruise-parser
+## coron-parser
 Provide CalciteContext to convert sql to RelNode conveniently. 
 
-## cruise-core
+## coron-core
 Find the max-public sub tree on two RelNodes.
 
-## cruise-analyzer
+## coron-analyzer
 Check max-public sub tree whether can convert materialized view query and replace the query, filter useless sub tree 
 
 # Example
+-  Compile and Install Project
+   ```shell
+   $ git clone https://github.com/zicat/coron.git
+   $ cd coron && maven clean install
+    ```
 -  Import dependency by maven like below
     ```xml
-    <project>
-        <repositories>
-            <repository>
-                <id>apache.snapshots</id>
-                <name>Apache Development Snapshot Repository</name>
-                <url>https://repository.apache.org/content/repositories/snapshots/</url>
-                <releases>
-                    <enabled>false</enabled>
-                </releases>
-                <snapshots>
-                    <enabled>true</enabled>
-                </snapshots>
-            </repository>
-            <repository>
-                <id>data-repo</id>
-                <name>Agora Artifactory DataPlatform Repo</name>
-                <url>https://artifactory-api.bj2.agoralab.co/artifactory/DataPlatform-local</url>
-                <releases>
-                    <enabled>true</enabled>
-                </releases>
-                <snapshots>
-                    <enabled>true</enabled>
-                </snapshots>
-            </repository>
-        </repositories>
-        <dependencies>
-            <dependency>
-                <artifactId>cruise-analyzer</artifactId>
-                <groupId>io.agora</groupId>
-                <version>1.0-SNAPSHOT</version>
-            </dependency>
-        </dependencies>
-    </project>
+    <dependency>
+        <artifactId>coron-analyzer</artifactId>
+        <groupId>org.zicat</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
     ```
 - Java code example
     ```java
